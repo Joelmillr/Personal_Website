@@ -9,7 +9,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: `Joel' Miller`,
+  title: `Joel's Personal Website`,
   description: `A website I have created to promote my personal brand:).`,
   // openGraph: {
   //   images: [HOME_OG_IMAGE_URL],
