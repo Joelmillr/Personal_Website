@@ -1,9 +1,6 @@
 import Link from "next/link";
 
 export function Header() {
-  const openPdfInNewTab = () => {
-    window.open('/Resume.pdf', '_blank');
-  };
 
   return (
     <section className="flex-col md:flex-row flex items-center mt-12 mb-6 md:mb-12 space-x-8">
@@ -11,7 +8,7 @@ export function Header() {
       <h1 className="text-6xl md:text-6xl font-bold tracking-tighter leading-tight">
         <Link href="/" className="hover:underline">
           joel miller
-          <img src="/Website_Logo.png" alt="Website Logo" className="h-14 w-14 inline-block ml-2" />
+          <img src="/website_icon.png" alt="Website Logo" className="h-14 w-14 inline-block ml-2" />
         </Link>
       </h1>
 

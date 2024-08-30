@@ -1,6 +1,6 @@
 "use client";
 
-import styles from "./switch.module.css";
+import styles from "@/styles/switch.module.css";
 import { memo, useEffect, useState } from "react";
 
 declare global {
