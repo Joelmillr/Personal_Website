@@ -14,19 +14,19 @@ export function Footer() {
             </a>
           </div>
 
+            {/* email */}
+          <div className="flex flex-col lg:flex-row justify-center items-center lg:pl-4 lg:w-7/8">
+            <a href="mailto:Joelmiller0430@gmail.com" target="_blank" rel="noopener noreferrer">
+              <img src="/email-icon.webp" alt="email Logo" className="h-14 w-14" />
+            </a>
+          </div>
+
             {/* GitHub */}
           <div className="flex flex-col lg:flex-row justify-center items-center lg:pl-4 lg:w-7/8">
             <a href="https://github.com/Joelmillr" target="_blank" rel="noopener noreferrer">
               <img src="/linkedIn-logo.png" alt="LinkedIn Logo" className="h-12 w-12" />
             </a>
 
-          </div>
-
-            {/* email */}
-          <div className="flex flex-col lg:flex-row justify-center items-center lg:pl-4 lg:w-7/8">
-            <a href="mailto:Joelmiller0430@gmail.com" target="_blank" rel="noopener noreferrer">
-              <img src="/email-icon.webp" alt="email Logo" className="h-14 w-14" />
-            </a>
           </div>
 
             {/* ORCID */}
