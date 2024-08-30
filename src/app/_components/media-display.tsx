@@ -36,7 +36,7 @@ const MediaDisplay: React.FC<MediaDisplayProps> = ({ media }) => {
           <img src={currentItem.src} alt={currentItem.alt} className="media-image" />
         ) : (
           <video
-            key={currentItem.src}  // Force re-render when the video src changes
+            key={currentItem.src}
             controls
             className="media-video"
           >
@@ -46,7 +46,7 @@ const MediaDisplay: React.FC<MediaDisplayProps> = ({ media }) => {
         )}
       </div>
 
-      <p className="media-description">{currentItem.description}</p>
+      {/* <p className="media-description">{currentItem.description}</p> */}
 
       <button className="arrow next" onClick={handleNextClick}>
         &gt;

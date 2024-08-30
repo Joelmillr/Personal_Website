@@ -1,45 +1,50 @@
 /* styles/MediaDisplay.css */
+
 .media-display {
+  position: relative;
+  max-width: 600px; /* Fixed width for the media display */
+  height: 400px; /* Fixed height for the media display */
+  margin: 0 auto; /* Center the media display */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
 
 .media-item {
+  width: 100%;
+  height: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  position: relative;
-  margin-bottom: 1rem; /* Add some space between the media and description */
+  justify-content: center;
 }
 
 .media-image, .media-video {
   max-width: 100%;
-  max-height: 80vh;
+  max-height: 100%;
+  object-fit: contain; /* Ensure media fits within the container */
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .media-description {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   font-size: 1rem;
   color: #555;
   text-align: center;
-  max-width: 80%;
+  max-width: 80%; /* Limit description width */
 }
 
 .arrow {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  z-index: 1;
+  font-size: 2rem;
+  background: none;
+  border: none;
+  cursor: pointer;
   color: #333;
+  z-index: 1;
 }
 
 .prev {

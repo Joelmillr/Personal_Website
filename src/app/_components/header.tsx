@@ -1,30 +1,71 @@
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
+import "@/styles/Header.css"; // Import the CSS file
 
 export function Header() {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
-    <section className="flex-col md:flex-row flex items-center mt-12 mb-6 md:mb-12 space-x-8">
+    <header className="header-container">
+      {/* Logo */}
+      <div className="flex items-center">
+        <h1 className="header-logo">
+          <Link href="/" className="hover:underline flex items-center">
+            joel miller
+            <img
+              src="/website_icon.png"
+              alt="Website Logo"
+              className="header-logo-icon"
+            />
+          </Link>
+        </h1>
+      </div>
 
-      <h1 className="text-6xl md:text-6xl font-bold tracking-tighter leading-tight">
-        <Link href="/" className="hover:underline">
-          joel miller
-          <img src="/website_icon.png" alt="Website Logo" className="h-14 w-14 inline-block ml-2" />
+      {/* Hamburger Menu Icon */}
+      <div className="md:hidden">
+        <button
+          onClick={toggleMenu}
+          className="header-hamburger"
+          aria-label="Toggle menu"
+        >
+          {isOpen ? "✕" : "☰"}
+        </button>
+      </div>
+
+      {/* Links for Larger Screens */}
+      <nav className="header-nav hidden md:flex space-x-8">
+        <Link href="/research" className="hover:underline">
+          research
         </Link>
-      </h1>
-
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
-        <Link href="/" className="hover:underline">
-          research & projects
+        <Link href="/research" className="hover:underline">
+          projects
         </Link>
-      </h2>
-
-      <h2 className="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
         <Link href="/Resume.pdf" target="_blank" className="hover:underline">
           resume
         </Link>
-      </h2>
+      </nav>
 
-    </section>
+      {/* Dropdown Menu for Smaller Screens */}
+      {isOpen && (
+        <div className="header-dropdown md:hidden">
+          <Link href="/research" className="hover:underline" onClick={toggleMenu}>
+            research
+          </Link>
+          <Link href="/research" className="hover:underline" onClick={toggleMenu}>
+            projects
+          </Link>
+          <Link href="/Resume.pdf" target="_blank" className="hover:underline" onClick={toggleMenu}>
+            resume
+          </Link>
+        </div>
+      )}
+    </header>
   );
 }
 
