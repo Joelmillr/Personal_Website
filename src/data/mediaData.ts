@@ -24,24 +24,24 @@ export const media: MediaItem[] = [
         alt: 'Me Running Triathlon',
         description: 'Captured mid-stride during my first triathlon. This moment marked the culmination of months of training and personal growth.',
     },
-    {
-        type: 'image',
-        src: '/me-photos/meinportugal2.jpg',
-        alt: 'Me in Portugal 2',
-        description: 'Another perspective from the rugged coastlines of Portugal. The sheer cliffs and expansive ocean views were awe-inspiring.',
-    },
+    // {
+    //     type: 'image',
+    //     src: '/me-photos/meinportugal2.jpg',
+    //     alt: 'Me in Portugal 2',
+    //     description: 'Another perspective from the rugged coastlines of Portugal. The sheer cliffs and expansive ocean views were awe-inspiring.',
+    // },
     {
         type: 'image',
         src: '/me-photos/meandturtle.png',
         alt: 'Me and Turtle',
         description: 'A close encounter with a friendly turtle during a day out at the cottage. A rare and memorable connection with nature.',
     },
-    {
-        type: 'image',
-        src: '/me-photos/canoeing.png',
-        alt: 'Canoeing',
-        description: 'A serene moment captured during a portage while canoeing through the Algonquin wilderness. The calm water and lush surroundings embody the peace of nature.',
-    },
+    // {
+    //     type: 'image',
+    //     src: '/me-photos/canoeing.png',
+    //     alt: 'Canoeing',
+    //     description: 'A serene moment captured during a portage while canoeing through the Algonquin wilderness. The calm water and lush surroundings embody the peace of nature.',
+    // },
     {
         type: 'image',
         src: '/me-photos/meandluna.png',
