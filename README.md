@@ -1,61 +1,61 @@
-`pnpm dev`
+# My personal website to showcase my research, projects, and resume.
 
-# A statically generated blog example using Next.js, Markdown, and TypeScript
+Built with Gatsby, React, and GraphQL.
 
-This is the existing [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter) plus TypeScript.
+Hosted on render.com at [https://www.joelandrewmiller.com](https://www.joelandrewmiller.com).
 
-This example showcases Next.js's [Static Generation](https://nextjs.org/docs/app/building-your-application/routing/layouts-and-templates) feature using Markdown files as the data source.
+Website design by [Brittany Chiang](https://brittanychiang.com).
+Loader design by [Chris Gannon](https://codepen.io/chrisgannon/pen/yXmbMg)
 
-The blog posts are stored in `/_posts` as Markdown files with front matter support. Adding a new Markdown file in there will create a new blog post.
+## 🛠 Installation & Set Up
 
-To create the blog posts we use [`remark`](https://github.com/remarkjs/remark) and [`remark-html`](https://github.com/remarkjs/remark-html) to convert the Markdown files into an HTML string, and then send it down as a prop to the page. The metadata of every post is handled by [`gray-matter`](https://github.com/jonschlinkert/gray-matter) and also sent in props to the page.
+1. Install the Gatsby CLI
 
-## Demo
+   ```sh
+   npm install -g gatsby-cli
+   ```
 
-[https://next-blog-starter.vercel.app/](https://next-blog-starter.vercel.app/)
+2. Install and use the correct version of Node using [NVM](https://github.com/nvm-sh/nvm)
 
-## Deploy your own
+   ```sh
+   nvm install
+   ```
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/blog-starter)
+3. Install dependencies
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/blog-starter&project-name=blog-starter&repository-name=blog-starter)
+   ```sh
+   yarn
+   ```
 
-### Related examples
+4. Start the development server
 
-- [WordPress](/examples/cms-wordpress)
-- [DatoCMS](/examples/cms-datocms)
-- [Sanity](/examples/cms-sanity)
-- [TakeShape](/examples/cms-takeshape)
-- [Prismic](/examples/cms-prismic)
-- [Contentful](/examples/cms-contentful)
-- [Strapi](/examples/cms-strapi)
-- [Agility CMS](/examples/cms-agilitycms)
-- [Cosmic](/examples/cms-cosmic)
-- [ButterCMS](/examples/cms-buttercms)
-- [Storyblok](/examples/cms-storyblok)
-- [GraphCMS](/examples/cms-graphcms)
-- [Kontent](/examples/cms-kontent)
-- [Umbraco Heartcore](/examples/cms-umbraco-heartcore)
-- [Builder.io](/examples/cms-builder-io)
-- [TinaCMS](/examples/cms-tina/)
-- [Enterspeed](/examples/cms-enterspeed)
+   ```sh
+   npm start
+   ```
 
-## How to use
+## 🚀 Building and Running for Production
 
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+1. Generate a full static production build
 
-```bash
-npx create-next-app --example blog-starter blog-starter-app
-```
+   ```sh
+   npm run build
+   ```
 
-```bash
-yarn create next-app --example blog-starter blog-starter-app
-```
+1. Preview the site as it will appear once deployed
 
-```bash
-pnpm create next-app --example blog-starter blog-starter-app
-```
+   ```sh
+   npm run serve
+   ```
 
-Your blog should be up and running on [http://localhost:3000](http://localhost:3000)! If it doesn't work, post on [GitHub discussions](https://github.com/vercel/next.js/discussions).
+## 🎨 Color Reference
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+| Color          | Hex                                                                |
+| -------------- | ------------------------------------------------------------------ |
+| Navy           | ![#0a192f](https://via.placeholder.com/10/0a192f?text=+) `#0a192f` |
+| Light Navy     | ![#112240](https://via.placeholder.com/10/0a192f?text=+) `#112240` |
+| Lightest Navy  | ![#233554](https://via.placeholder.com/10/303C55?text=+) `#233554` |
+| Slate          | ![#8892b0](https://via.placeholder.com/10/8892b0?text=+) `#8892b0` |
+| Light Slate    | ![#a8b2d1](https://via.placeholder.com/10/a8b2d1?text=+) `#a8b2d1` |
+| Lightest Slate | ![#ccd6f6](https://via.placeholder.com/10/ccd6f6?text=+) `#ccd6f6` |
+| White          | ![#e6f1ff](https://via.placeholder.com/10/e6f1ff?text=+) `#e6f1ff` |
+| Green          | ![#64ffda](https://via.placeholder.com/10/64ffda?text=+) `#64ffda` |
