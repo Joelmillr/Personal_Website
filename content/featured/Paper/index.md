@@ -3,6 +3,7 @@ date: '1'
 title: 'Navigating the Handover'
 cover: './paper.png'
 external: 'https://doi.org/10.1109/ojvt.2024.3443630'
+cta: 'https://doi.org/10.1109/ojvt.2024.3443630'
 tech:
   - IEEE
   - Review
