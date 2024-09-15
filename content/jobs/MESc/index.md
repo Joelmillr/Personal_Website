@@ -8,7 +8,7 @@ range: 'May 2023 - Present'
 url: 'https://www.uwo.ca/index.html'
 ---
 
-- Under the supervision Dr. Soodeh Nikan and Dr Mohamed Zaki Hussein.
+- Under the supervision of Dr. Soodeh Nikan and Dr Mohamed Zaki Hussein.
 - Studying safe control transitions in autonomous vehicles.
 - Working with physiological data to model driver state and intent in the context of autonomous vehicles.
 - Part of the AiX Lab and EMRC Lab.

@@ -67,9 +67,8 @@ const Hero = () => {
   const four = (
     <>
       <p>
-        I wanted to create a space where I could share my experience, projects I have worked on, and
-        research with others. Currently, I’m focused on completing my M.E.Sc. in Electrical and
-        Computer Engineering at at{' '}
+        I created this space to share my experience, projects, and research. Currently, I’m focused
+        on completing my M.E.Sc. in Electrical and Computer Engineering @{' '}
         <a href="https://www.uwo.ca/index.html" target="_blank" rel="noreferrer">
           Western Univeristy
         </a>
