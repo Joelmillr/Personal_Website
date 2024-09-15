@@ -2,10 +2,10 @@
   "name": "Personal_Website",
   "description": "Personal Website",
   "version": "1.0.0",
-  "author": "Brittany Chiang <brittany.chiang@gmail.com>",
+  "author": "Joel Miller <joelmiller0430@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/bchiang7/v4"
+    "url": "https://github.com/joelmillr/Personal_Website"
   },
   "keywords": [
     "gatsby"
