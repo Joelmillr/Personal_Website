@@ -1,6 +1,7 @@
 ---
 date: '2023-04-30'
 title: 'B.E.Sc Software Engineering with IBM Coop'
+short_title: 'B.E.Sc'
 company: 'Western University'
 location: 'Boston, MA'
 range: 'September 2018 – April 2023'

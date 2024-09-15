@@ -1,6 +1,7 @@
 ---
 date: '2022-09-30'
 title: 'Student Co-op'
+short_title: 'IBM Co-op'
 company: 'IBM'
 location: 'Markham, ON'
 range: 'May 2021 – September 2022'

@@ -1,6 +1,7 @@
 ---
 date: '2024-09-14'
 title: 'M.E.Sc Software Engineering with Collaborative Specialization in Artificial Intelligence'
+short_title: 'M.E.Sc'
 company: 'Western University'
 location: 'London, ON'
 range: 'May 2023 - Present'

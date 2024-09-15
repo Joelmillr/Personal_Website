@@ -1,6 +1,7 @@
 ---
 date: '2023-12-01'
 title: 'Student Intern'
+short_title: 'NRC Intern'
 company: 'National Research Council Canada'
 location: 'London, ON'
 range: 'September 2023 – December 2023'
