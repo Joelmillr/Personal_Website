@@ -12,7 +12,7 @@ module.exports = {
     },
     {
       name: 'Orcid',
-      url: 'https://www.instagram.com/bchiang7',
+      url: 'https://orcid.org/0009-0004-5678-6601',
     },
   ],
 
