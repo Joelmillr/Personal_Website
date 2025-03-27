@@ -1,61 +1,73 @@
-# My personal website to showcase my research, projects, and resume.
+# Personal Portfolio Website
 
-Built with Gatsby, React, and GraphQL.
+A modern, responsive personal portfolio website built with HTML, CSS, and JavaScript.
 
-Hosted on render.com at [https://www.joelandrewmiller.com](https://www.joelandrewmiller.com).
+## Features
 
-Website design by [Brittany Chiang](https://brittanychiang.com).
-Loader design by [Chris Gannon](https://codepen.io/chrisgannon/pen/yXmbMg)
+- Clean and professional design
+- Responsive layout that works on all devices
+- Smooth scrolling navigation
+- Animated project cards
+- Contact form
+- Skills showcase
+- Experience timeline
+- Social media integration
 
-## 🛠 Installation & Set Up
+## Setup
 
-1. Install the Gatsby CLI
+1. Clone this repository or download the files
+2. Open `index.html` in your web browser
+3. Customize the content to match your personal information
 
-   ```sh
-   npm install -g gatsby-cli
-   ```
+## Customization
 
-2. Install and use the correct version of Node using [NVM](https://github.com/nvm-sh/nvm)
+### Personal Information
 
-   ```sh
-   nvm install
-   ```
+1. Open `index.html` and update:
+   - Your name in the hero section
+   - Your tagline/role
+   - About section content
+   - Skills list
+   - Experience timeline
+   - Project details
+   - Contact information
 
-3. Install dependencies
+### Styling
 
-   ```sh
-   yarn
-   ```
+1. Open `styles.css` to modify:
+   - Colors (in the `:root` section)
+   - Font sizes
+   - Spacing
+   - Layout
 
-4. Start the development server
+### Projects
 
-   ```sh
-   npm start
-   ```
+1. Add your project images to the project cards
+2. Update project links to point to your GitHub repositories or live demos
+3. Add or remove project cards as needed
 
-## 🚀 Building and Running for Production
+### Contact Form
 
-1. Generate a full static production build
+The contact form currently shows a success message. To make it functional:
 
-   ```sh
-   npm run build
-   ```
+1. Set up a backend server
+2. Update the form submission handler in `script.js`
+3. Add your server endpoint to handle the form data
 
-1. Preview the site as it will appear once deployed
+## Technologies Used
 
-   ```sh
-   npm run serve
-   ```
+- HTML5
+- CSS3 (with CSS Variables and Flexbox/Grid)
+- JavaScript (ES6+)
+- Font Awesome Icons
 
-## 🎨 Color Reference
+## Browser Support
 
-| Color          | Hex                                                                |
-| -------------- | ------------------------------------------------------------------ |
-| Navy           | ![#0a192f](https://via.placeholder.com/10/0a192f?text=+) `#0a192f` |
-| Light Navy     | ![#112240](https://via.placeholder.com/10/0a192f?text=+) `#112240` |
-| Lightest Navy  | ![#233554](https://via.placeholder.com/10/303C55?text=+) `#233554` |
-| Slate          | ![#8892b0](https://via.placeholder.com/10/8892b0?text=+) `#8892b0` |
-| Light Slate    | ![#a8b2d1](https://via.placeholder.com/10/a8b2d1?text=+) `#a8b2d1` |
-| Lightest Slate | ![#ccd6f6](https://via.placeholder.com/10/ccd6f6?text=+) `#ccd6f6` |
-| White          | ![#e6f1ff](https://via.placeholder.com/10/e6f1ff?text=+) `#e6f1ff` |
-| Green          | ![#64ffda](https://via.placeholder.com/10/64ffda?text=+) `#64ffda` |
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## License
+
+This project is open source and available under the MIT License.
