@@ -6,4 +6,11 @@ services:
     startCommand: npm start
     envVars:
       - key: NODE_ENV
-        value: production 
+        value: production
+    plan: free
+    healthCheckPath: /
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1 
