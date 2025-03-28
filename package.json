@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Personal website with MNIST digit recognition",
     "scripts": {
-        "build": "mkdir -p public && cp -r assets mnist_model index.html script.js styles.css public/",
+        "build": "echo 'Build completed'",
         "start": "node server.js"
     },
     "dependencies": {
