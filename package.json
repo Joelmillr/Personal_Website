@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Personal website with MNIST digit recognition",
     "scripts": {
-        "build": "echo 'Build completed'",
+        "build": "echo 'Build completed' && exit 0",
         "start": "node server.js"
     },
     "dependencies": {
