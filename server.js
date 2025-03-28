@@ -26,35 +26,51 @@ if (!fs.existsSync(indexPath)) {
 
 console.log('index.html found at:', indexPath);
 
+// Log all files in public directory
+console.log('Files in public directory:');
+fs.readdirSync(publicDir).forEach(file => {
+    console.log(`- ${file}`);
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
     console.log('Health check requested');
     res.status(200).send('OK');
 });
 
-// Serve static files from the public directory
-app.use(express.static(publicDir));
-
-// Log all requests
+// Log all requests before any other middleware
 app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
     next();
 });
 
+// Serve static files from the public directory with detailed logging
+app.use(express.static(publicDir, {
+    setHeaders: (res, filePath) => {
+        console.log(`Attempting to serve static file: ${filePath}`);
+        res.set('Cache-Control', 'no-cache');
+    },
+    fallthrough: false // This will cause Express to send 404s instead of falling through
+}));
+
 // Serve index.html for the root route
 app.get('/', (req, res) => {
-    console.log('Serving index.html');
+    console.log('Root route requested, serving index.html');
     res.sendFile(indexPath, (err) => {
         if (err) {
             console.error('Error serving index.html:', err);
             res.status(500).send('Error loading page');
+        } else {
+            console.log('Successfully served index.html');
         }
     });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Error:', err.stack);
+    console.error('Error occurred:', err);
+    console.error('Stack trace:', err.stack);
     res.status(500).send('Something broke!');
 });
 
@@ -74,4 +90,5 @@ app.listen(port, '0.0.0.0', () => {
     console.log(`Server running on port ${port}`);
     console.log(`Static files being served from: ${publicDir}`);
     console.log('Server is ready to accept connections');
+    console.log(`Try accessing the health check at: http://localhost:${port}/health`);
 }); 
