@@ -4,7 +4,7 @@
     "description": "Personal website with MNIST digit recognition",
     "main": "server.js",
     "scripts": {
-        "build": "echo 'No build step needed'",
+        "build": "echo 'Build completed'",
         "start": "node server.js",
         "dev": "nodemon server.js"
     },
