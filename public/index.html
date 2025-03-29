@@ -7,12 +7,22 @@
     <title>Joel Andrew Miller</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
 </head>
 
 <body>
     <nav class="navbar">
         <div class="nav-content">
-            <div class="logo">JAM</div>
+            <a href="#hero" class="logo">JAM</a>
+            <button class="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <ul class="nav-links">
                 <li><a href="#about">About</a></li>
                 <li><a href="#experience">Experience</a></li>
@@ -22,15 +32,25 @@
             </ul>
         </div>
     </nav>
+    <div class="menu-overlay"></div>
 
     <!--Hero Section-->
-    <header class="hero">
+    <header id="hero" class="hero">
         <div class="hero-content">
-            <h1>Joel Andrew Miller</h1>
-            <p class="tagline">M.E.Sc. Software Engineer Specializing in Artificial Intelligence</p>
-            <div class="cta-buttons">
-                <a href="#projects" class="btn primary">View My Work</a>
-                <a href="#contact" class="btn secondary">Get in Touch</a>
+            <div class="hero-text">
+                <h1>Joel Andrew Miller</h1>
+                <p class="tagline">Aerospace Software Engineer Crafting Next-Gen Aviation Technology</p>
+                <div class="cta-buttons">
+                    <a href="#projects" class="btn primary">Explore My Research</a>
+                    <a href="#contact" class="btn secondary">Let's Connect</a>
+                </div>
+            </div>
+            <div class="hero-illustrations">
+                <img src="assets/Me_Ghiblified.png" alt="Joel Miller Illustration 1" class="hero-illustration main">
+                <img src="assets/Me_Ghiblified_2.png" alt="Joel Miller Illustration 2"
+                    class="hero-illustration floating">
+                <img src="assets/Me_Ghiblified_3.png" alt="Joel Miller Illustration 3"
+                    class="hero-illustration floating">
             </div>
         </div>
     </header>
@@ -41,20 +61,24 @@
             <h2>About Me</h2>
             <div class="about-content">
                 <div class="about-text">
-                    <p>I'm a passionate software engineer specializing in Artificial Intelligence, with a focus on
-                        leveraging machine learning and data-driven technologies to tackle complex challenges. My
-                        expertise spans model development, data analysis, and signal processing, with hands-on
-                        experience in research and application.</p>
-                    <div class="skills">
-                        <h3>Skills</h3>
-                        <div class="skill-tags">
-                            <span>Machine Learning</span>
-                            <span>Deep Learning</span>
-                            <span>Signal Processing</span>
-                            <span>AR</span>
-                            <span>Computer Vision</span>
-                            <span>R&D</span>
-                        </div>
+                    <p>I am an Aerospace Software Engineer at the International Test Pilots School (ITPS) Canada, where
+                        I focus on developing cutting-edge aviation technology. My current work involves leading R&D
+                        efforts to develop a helmet-mounted display system from scratch, enhancing pilot situational
+                        awareness through innovative software solutions.</p>
+                    <p>With a strong background in autonomous systems and software engineering, I combine expertise in
+                        human-AI interaction with practical implementation to create robust software applications. My
+                        experience spans from autonomous vehicles to aviation systems, always with a focus on safety and
+                        user experience.</p>
+                </div>
+                <div class="skills-container">
+                    <h3><i class="fas fa-code"></i> Skills & Expertise</h3>
+                    <div class="skill-tags">
+                        <span><i class="fas fa-plane"></i> Aerospace Systems</span>
+                        <span><i class="fas fa-user-shield"></i> Human-AI Interaction</span>
+                        <span><i class="fas fa-code"></i> Software Engineering</span>
+                        <span><i class="fas fa-vr-cardboard"></i> AR/VR Systems</span>
+                        <span><i class="fas fa-chart-line"></i> Data Analysis</span>
+                        <span><i class="fas fa-microchip"></i> AI Systems</span>
                     </div>
                 </div>
             </div>
@@ -93,7 +117,7 @@
                 <div class="timeline-item">
                     <div class="timeline-date">May 2023 - December 2025</div>
                     <div class="timeline-content">
-                        <h3>M.E.Sc Software Engineering with IBM Coop</h3>
+                        <h3>M.E.Sc Software Engineering</h3>
                         <p>Western Univsersity - London, Ontario</p>
                         <ul>
                             <li>Under the supervision of Dr. Soodeh Nikan and Dr Mohamed Zaki Hussein.</li>
@@ -131,58 +155,171 @@
         </div>
     </section>
 
-    <!--Projects-->
+    <!--Projects and Publications-->
+    <section id="publications" class="section">
+        <div class="container">
+            <h2>Featured Publication</h2>
+            <div class="projects-grid">
+                <div class="featured-project">
+                    <div class="featured-content no-image">
+                        <div class="featured-text">
+                            <h3>Navigating the Handover</h3>
+                            <div class="featured-header">
+                                <span class="featured-label">IEEE Review</span>
+                                <span class="featured-date">August 2024</span>
+                            </div>
+                            <p class="featured-subtitle">Published in IEEE Open Journal of Vehicular Technology</p>
+                            <div class="featured-metadata">
+                                <div class="metadata-item">
+                                    <i class="fas fa-users"></i>
+                                    <span>First Author</span>
+                                </div>
+                                <div class="metadata-item">
+                                    <i class="fas fa-book"></i>
+                                    <span>Review Paper</span>
+                                </div>
+                                <div class="metadata-item">
+                                    <i class="fas fa-car"></i>
+                                    <span>Autonomous Vehicles</span>
+                                </div>
+                            </div>
+                            <p class="featured-description">
+                                A comprehensive review of takeover requests in Level 3 autonomous vehicles, analyzing
+                                human-centered design approaches and exploring the Operational Design Domain (ODD)
+                                concept
+                                for safe autonomous operation.
+                            </p>
+                            <div class="featured-highlights">
+                                <div class="highlight-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>First-authored comprehensive review paper</span>
+                                </div>
+                                <div class="highlight-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Published in prestigious IEEE journal</span>
+                                </div>
+                                <div class="highlight-item">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Identified key research gaps in AV handovers</span>
+                                </div>
+                            </div>
+                            <div class="featured-actions">
+                                <a href="https://doi.org/10.1109/ojvt.2024.3443630" class="btn primary" target="_blank"
+                                    rel="noopener">
+                                    <i class="fas fa-external-link-alt"></i> Read Paper
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="projects" class="section">
         <div class="container">
-            <h2>Projects & Publications</h2>
+            <h2>Research Projects</h2>
             <div class="projects-grid">
-                <div class="project-card">
-                    <div class="project-content">
-                        <h3>Autonomous Vehicle Takeover Research</h3>
-                        <p>Published in IEEE Open Journal of Vehicular Technology, 2024</p>
-                        <ul class="project-list">
-                            <li>First-authored comprehensive review paper on takeover requests in Level 3 autonomous
-                                vehicles</li>
-                            <li>Analyzed human-centered design approaches for autonomous vehicle interfaces</li>
-                            <li>Explored the Operational Design Domain (ODD) concept and its implications for safe
-                                autonomous operation</li>
-                            <li>Identified key research gaps and future directions in autonomous vehicle handover
-                                scenarios</li>
-                        </ul>
-                        <a href="https://doi.org/10.1109/ojvt.2024.3443630" class="btn primary" target="_blank"
-                            rel="noopener">
-                            <i class="fas fa-external-link-alt"></i> Read Paper
-                        </a>
+                <div class="featured-project">
+                    <div class="featured-content with-image">
+                        <div class="featured-header-section">
+                            <h3>AiX Lab Simulation Environment</h3>
+                            <div class="featured-header">
+                                <span class="featured-label">Research Infrastructure</span>
+                                <span class="featured-date">2024</span>
+                            </div>
+                        </div>
+                        <div class="featured-metadata">
+                            <div class="metadata-item">
+                                <i class="fas fa-vr-cardboard"></i>
+                                <span>Simulation</span>
+                            </div>
+                            <div class="metadata-item">
+                                <i class="fas fa-car"></i>
+                                <span>Autonomous Vehicles</span>
+                            </div>
+                            <div class="metadata-item">
+                                <i class="fas fa-database"></i>
+                                <span>Data Collection</span>
+                            </div>
+                        </div>
+                        <div class="featured-content-grid">
+                            <div class="featured-image">
+                                <img src="assets/sim_setup.png" alt="Simulation Setup with Triple Monitors">
+                            </div>
+                            <div class="featured-text">
+                                <p class="featured-description">
+                                    A cost-effective simulation environment designed for autonomous driving research,
+                                    featuring an immersive triple-monitor setup and comprehensive data collection tools.
+                                </p>
+                                <div class="featured-highlights">
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Developed cost-effective simulation environment</span>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Integrated triple-monitor setup with racing wheel</span>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Created driver behavior analysis tools</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="project-card">
-                    <div class="project-content">
-                        <h3>AiX Lab Simulation Environment</h3>
-                        <div class="project-image">
-                            <img src="assets/sim_setup.png" alt="Simulation Setup with Triple Monitors">
+                <div class="featured-project">
+                    <div class="featured-content with-image">
+                        <div class="featured-header-section">
+                            <h3>Reinforcement Learning for Autonomous Driving</h3>
+                            <div class="featured-header">
+                                <span class="featured-label">Machine Learning Research</span>
+                                <span class="featured-date">2023</span>
+                            </div>
                         </div>
-                        <ul class="project-list">
-                            <li>Developed a cost-effective simulation environment for autonomous driving research</li>
-                            <li>Integrated triple-monitor setup with racing wheel for immersive driving experience</li>
-                            <li>Created tools for collecting and analyzing driver behavior data</li>
-                            <li>Designed for testing and validating autonomous driving algorithms</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="project-card">
-                    <div class="project-content">
-                        <h3>Reinforcement Learning for Autonomous Driving</h3>
-                        <div class="project-image">
-                            <img src="assets/carla_sim.png" alt="CARLA Simulator Environment">
+                        <div class="featured-metadata">
+                            <div class="metadata-item">
+                                <i class="fas fa-robot"></i>
+                                <span>Reinforcement Learning</span>
+                            </div>
+                            <div class="metadata-item">
+                                <i class="fas fa-car"></i>
+                                <span>Autonomous Vehicles</span>
+                            </div>
+                            <div class="metadata-item">
+                                <i class="fas fa-code"></i>
+                                <span>OpenAI Gym</span>
+                            </div>
                         </div>
-                        <ul class="project-list">
-                            <li>Implemented a reinforcement learning agent using OpenAI Gym framework</li>
-                            <li>Trained the agent to navigate complex driving scenarios in CARLA simulator</li>
-                            <li>Experimented with various optimization functions for improved performance</li>
-                            <li>Successfully demonstrated autonomous navigation capabilities</li>
-                        </ul>
+                        <div class="featured-content-grid">
+                            <div class="featured-image">
+                                <img src="assets/carla_sim.png" alt="CARLA Simulator Environment">
+                            </div>
+                            <div class="featured-text">
+                                <p class="featured-description">
+                                    Implementation of a reinforcement learning agent capable of navigating complex
+                                    driving
+                                    scenarios in the CARLA simulator, demonstrating autonomous navigation capabilities.
+                                </p>
+                                <div class="featured-highlights">
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Implemented RL agent using OpenAI Gym</span>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Trained for complex driving scenarios</span>
+                                    </div>
+                                    <div class="highlight-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>Demonstrated autonomous navigation</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -211,8 +348,6 @@
                     <div id="predictionResult" class="prediction-result">
                         <span class="prediction-number">-</span>
                     </div>
-                    <p class="prediction-instruction">Draw a number and click "Predict" to see what the neural network
-                        thinks it is!</p>
                     <p class="experiment-text">This model isn't perfect... Feel free to experiment! Can you find ways to
                         make the model confused? 😄</p>
                 </div>

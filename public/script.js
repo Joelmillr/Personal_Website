@@ -246,7 +246,7 @@ async function predict() {
         const confidence = (prediction[maxIndex] * 100).toFixed(1);
 
         // Update the prediction display with confidence
-        predictionNumber.innerHTML = `${maxIndex}<br><span class="confidence">${confidence}% confident</span>`;
+        predictionNumber.innerHTML = `${maxIndex}`;
     } catch (error) {
         console.error('Prediction error:', error);
         predictionNumber.textContent = 'Error';
@@ -259,4 +259,150 @@ async function predict() {
 predictBtn.addEventListener('click', predict);
 
 // Load the model when the page loads
-loadModel(); 
+loadModel();
+
+// Mobile Menu Functionality
+const hamburger = document.querySelector('.hamburger');
+const navLinks = document.querySelector('.nav-links');
+const navLinksItems = document.querySelectorAll('.nav-links a');
+const menuOverlay = document.querySelector('.menu-overlay');
+const body = document.body;
+
+function toggleMenu() {
+    hamburger.classList.toggle('active');
+    navLinks.classList.toggle('active');
+    menuOverlay.classList.toggle('active');
+    body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+}
+
+hamburger.addEventListener('click', toggleMenu);
+menuOverlay.addEventListener('click', toggleMenu);
+
+// Close menu when clicking a link
+navLinksItems.forEach(link => {
+    link.addEventListener('click', () => {
+        toggleMenu();
+    });
+});
+
+// Close menu on escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navLinks.classList.contains('active')) {
+        toggleMenu();
+    }
+});
+
+// Prevent scrolling when menu is open
+document.addEventListener('touchmove', (e) => {
+    if (navLinks.classList.contains('active')) {
+        e.preventDefault();
+    }
+}, { passive: false });
+
+// Hero Illustration Rotation
+document.addEventListener('DOMContentLoaded', function () {
+    const illustrations = document.querySelectorAll('.hero-illustration');
+    let currentIndex = 0;
+    let isTransitioning = false;
+    let hoverTimeout = null;
+
+    // Set initial state
+    illustrations.forEach((illustration, index) => {
+        if (index === 0) {
+            illustration.classList.add('main');
+            illustration.classList.remove('floating');
+        } else {
+            illustration.classList.remove('main');
+            illustration.classList.add('floating');
+        }
+    });
+
+    function rotateIllustrations() {
+        if (isTransitioning) return;
+        isTransitioning = true;
+
+        // Get current and next indices
+        const nextIndex = (currentIndex + 1) % illustrations.length;
+        const currentIllustration = illustrations[currentIndex];
+        const nextIllustration = illustrations[nextIndex];
+
+        // Clear any existing hover timeout
+        if (hoverTimeout) {
+            clearTimeout(hoverTimeout);
+        }
+
+        // Position next illustration
+        nextIllustration.style.transform = 'translate(-50%, -50%) scale(0.95) translateY(20px)';
+        nextIllustration.style.opacity = '0';
+
+        // Force reflow
+        nextIllustration.offsetHeight;
+
+        // Start transition
+        currentIllustration.style.transform = 'translate(-50%, -50%) scale(0.95) translateY(20px)';
+        currentIllustration.style.opacity = '0';
+        nextIllustration.style.transform = 'translate(-50%, -50%) scale(1) translateY(0)';
+        nextIllustration.style.opacity = '1';
+
+        // Update classes after transition
+        setTimeout(() => {
+            currentIllustration.classList.remove('main');
+            currentIllustration.classList.add('floating');
+            nextIllustration.classList.remove('floating');
+            nextIllustration.classList.add('main');
+            currentIndex = nextIndex;
+            isTransitioning = false;
+        }, 800); // Match the CSS transition duration
+    }
+
+    // Add hover event listeners
+    illustrations.forEach(illustration => {
+        illustration.addEventListener('mouseenter', () => {
+            if (illustration.classList.contains('main')) {
+                hoverTimeout = setTimeout(() => {
+                    illustration.style.transform = 'translate(-50%, -50%) scale(1.05) translateY(0)';
+                }, 50);
+            }
+        });
+
+        illustration.addEventListener('mouseleave', () => {
+            if (illustration.classList.contains('main')) {
+                if (hoverTimeout) {
+                    clearTimeout(hoverTimeout);
+                }
+                illustration.style.transform = 'translate(-50%, -50%) scale(1) translateY(0)';
+            }
+        });
+    });
+
+    // Rotate every 5 seconds
+    setInterval(rotateIllustrations, 5000);
+});
+
+// Smooth scroll handling
+document.addEventListener('DOMContentLoaded', function () {
+    // Handle all anchor links with hash
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href');
+            const targetElement = document.querySelector(targetId);
+
+            if (targetElement) {
+                const navbarHeight = document.querySelector('.navbar').offsetHeight;
+                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+
+                // Close mobile menu if open
+                const navLinks = document.querySelector('.nav-links');
+                const hamburger = document.querySelector('.hamburger');
+                navLinks.classList.remove('active');
+                hamburger.classList.remove('active');
+            }
+        });
+    });
+}); 
