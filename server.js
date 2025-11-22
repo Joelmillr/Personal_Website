@@ -1,9 +1,22 @@
+// ============================================
+// SERVER STARTUP - LOG IMMEDIATELY
+// ============================================
+console.log('========================================');
+console.log('SERVER STARTING...');
+console.log('========================================');
+console.log('Timestamp:', new Date().toISOString());
+console.log('Node version:', process.version);
+console.log('Platform:', process.platform);
+
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const app = express();
 const port = process.env.PORT || 3000;
+
+console.log('Express loaded');
+console.log('Port configured:', port);
 
 // Load environment variables
 // Try loading from webdisplay/.env first, then root .env
@@ -42,45 +55,65 @@ fs.readdirSync(publicDir).forEach(file => {
     console.log(`- ${file}`);
 });
 
-// Health check endpoint
+// Health check endpoint - will check webdisplayBackend at runtime
 app.get('/health', (req, res) => {
-    console.log('Health check requested');
-    res.status(200).send('OK');
+    console.log('[HEALTH] Health check requested');
+    res.status(200).json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        webdisplayAvailable: typeof webdisplayBackend !== 'undefined' && webdisplayBackend !== null
+    });
 });
+
+// Test endpoint to verify server is running
+app.get('/test', (req, res) => {
+    console.log('[TEST] Test endpoint called');
+    res.status(200).json({
+        message: 'Server is running!',
+        timestamp: new Date().toISOString(),
+        port: port,
+        webdisplayBackend: (typeof webdisplayBackend !== 'undefined' && webdisplayBackend) ? 'loaded' : 'not loaded'
+    });
+});
+
+// Declare webdisplayBackend early so it can be referenced in routes
+let webdisplayBackend = null;
 
 // Create HTTP server first (needed for Socket.IO)
 const server = http.createServer(app);
 
 // Integrate webdisplay backend BEFORE static file middleware and logging
-let webdisplayBackend = null;
+console.log('========================================');
+console.log('LOADING WEBDISPLAY BACKEND...');
+console.log('========================================');
 try {
     console.log('Attempting to load webdisplay backend...');
     const { initWebdisplayBackend } = require('./webdisplay/backend/webdisplayServer');
     console.log('Webdisplay backend module loaded, initializing...');
     webdisplayBackend = initWebdisplayBackend(server);
-    
+
     if (!webdisplayBackend || !webdisplayBackend.app) {
         throw new Error('Webdisplay backend initialization returned invalid object');
     }
-    
+
     // Mount webdisplay routes on /webdisplay path (must be before static middleware)
     app.use('/webdisplay', webdisplayBackend.app);
     console.log('✓ Webdisplay routes mounted at /webdisplay');
-    
+
     // Also mount API routes at root level for backward compatibility
     // This allows frontend to use /api/init instead of /webdisplay/api/init
     if (webdisplayBackend.apiRouter) {
         app.use('/api', webdisplayBackend.apiRouter);
         console.log('✓ Webdisplay API routes mounted at /api');
     }
-    
+
     console.log('✓ Webdisplay backend integrated successfully');
 } catch (error) {
     console.error('❌ ERROR: Webdisplay backend failed to load:');
     console.error('  Error message:', error.message);
     console.error('  Stack trace:', error.stack);
     console.error('  The webdisplay will not be functional without the backend');
-    
+
     // Add a fallback route for /webdisplay to show a helpful error message
     app.use('/webdisplay', (req, res) => {
         res.status(503).send(`
@@ -150,13 +183,54 @@ app.use((req, res) => {
 });
 
 // Listen on all available network interfaces
+console.log('========================================');
+console.log('ATTEMPTING TO START SERVER...');
+console.log('========================================');
+
 server.listen(port, '0.0.0.0', () => {
-    console.log(`Server running on port ${port}`);
-    console.log(`Static files being served from: ${publicDir}`);
-    if (webdisplayBackend) {
-        console.log('✓ Webdisplay backend is active');
-    }
-    console.log('Server is ready to accept connections');
-    console.log(`Try accessing the health check at: http://localhost:${port}/health`);
-    console.log(`Webdisplay available at: http://localhost:${port}/webdisplay`);
+    console.log('========================================');
+    console.log('✓ SERVER STARTED SUCCESSFULLY');
+    console.log('========================================');
+    console.log(`Port: ${port}`);
+    console.log(`Static files: ${publicDir}`);
+    console.log(`Webdisplay backend: ${webdisplayBackend ? '✓ ACTIVE' : '✗ NOT LOADED'}`);
+    console.log('========================================');
+    console.log('Available endpoints:');
+    console.log(`  - Health check: http://localhost:${port}/health`);
+    console.log(`  - Test endpoint: http://localhost:${port}/test`);
+    console.log(`  - Main site: http://localhost:${port}/`);
+    console.log(`  - Webdisplay: http://localhost:${port}/webdisplay`);
+    console.log('========================================');
+});
+
+// Handle server errors
+server.on('error', (err) => {
+    console.error('========================================');
+    console.error('❌ SERVER ERROR');
+    console.error('========================================');
+    console.error('Error:', err.message);
+    console.error('Stack:', err.stack);
+    console.error('========================================');
+    process.exit(1);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+    console.error('========================================');
+    console.error('❌ UNCAUGHT EXCEPTION');
+    console.error('========================================');
+    console.error('Error:', err.message);
+    console.error('Stack:', err.stack);
+    console.error('========================================');
+    process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('========================================');
+    console.error('❌ UNHANDLED REJECTION');
+    console.error('========================================');
+    console.error('Reason:', reason);
+    console.error('Promise:', promise);
+    console.error('========================================');
 }); 
