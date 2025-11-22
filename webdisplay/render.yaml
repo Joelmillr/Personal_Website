@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: flight-test-display
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start_server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: WS_URL
+        sync: false  # Set this manually after first deployment with your actual URL
+

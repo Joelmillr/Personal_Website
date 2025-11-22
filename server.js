@@ -1,8 +1,18 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Load environment variables
+// Try loading from webdisplay/.env first, then root .env
+const webdisplayEnvPath = path.join(__dirname, 'webdisplay', '.env');
+if (fs.existsSync(webdisplayEnvPath)) {
+    require('dotenv').config({ path: webdisplayEnvPath });
+} else {
+    require('dotenv').config();
+}
 
 // Log environment variables
 console.log('Environment:', process.env.NODE_ENV);
@@ -38,21 +48,51 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
-// Log all requests before any other middleware
+// Create HTTP server first (needed for Socket.IO)
+const server = http.createServer(app);
+
+// Integrate webdisplay backend BEFORE static file middleware and logging
+let webdisplayBackend = null;
+try {
+    const { initWebdisplayBackend } = require('./webdisplay/backend/webdisplayServer');
+    webdisplayBackend = initWebdisplayBackend(server);
+    
+    // Mount webdisplay routes on /webdisplay path (must be before static middleware)
+    app.use('/webdisplay', webdisplayBackend.app);
+    
+    // Also mount API routes at root level for backward compatibility
+    // This allows frontend to use /api/init instead of /webdisplay/api/init
+    if (webdisplayBackend.apiRouter) {
+        app.use('/api', webdisplayBackend.apiRouter);
+    }
+    
+    console.log('✓ Webdisplay backend integrated');
+} catch (error) {
+    console.log('⚠ Webdisplay backend not available:', error.message);
+    console.log('  The webdisplay will not be functional without the backend');
+}
+
+// Log all requests after webdisplay routes (so we can see what's being matched)
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    console.log('Headers:', req.headers);
     next();
 });
 
 // Serve static files from the public directory with detailed logging
-app.use(express.static(publicDir, {
-    setHeaders: (res, filePath) => {
-        console.log(`Attempting to serve static file: ${filePath}`);
-        res.set('Cache-Control', 'no-cache');
-    },
-    fallthrough: false // This will cause Express to send 404s instead of falling through
-}));
+// Skip /webdisplay and /api paths - they're handled by their own routers
+app.use((req, res, next) => {
+    // Don't serve static files for webdisplay or API routes
+    if (req.path.startsWith('/webdisplay') || req.path.startsWith('/api')) {
+        return next();
+    }
+    express.static(publicDir, {
+        setHeaders: (res, filePath) => {
+            console.log(`Attempting to serve static file: ${filePath}`);
+            res.set('Cache-Control', 'no-cache');
+        },
+        fallthrough: false
+    })(req, res, next);
+});
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {
@@ -86,9 +126,13 @@ app.use((req, res) => {
 });
 
 // Listen on all available network interfaces
-app.listen(port, '0.0.0.0', () => {
+server.listen(port, '0.0.0.0', () => {
     console.log(`Server running on port ${port}`);
     console.log(`Static files being served from: ${publicDir}`);
+    if (webdisplayBackend) {
+        console.log('✓ Webdisplay backend is active');
+    }
     console.log('Server is ready to accept connections');
     console.log(`Try accessing the health check at: http://localhost:${port}/health`);
+    console.log(`Webdisplay available at: http://localhost:${port}/webdisplay`);
 }); 

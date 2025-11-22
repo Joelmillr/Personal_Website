@@ -1,0 +1,923 @@
+/* ============================================
+   RETRO DESIGN SYSTEM - Matching Main Site
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Retro Color Palette - CSS Variables */
+:root {
+    /* Primary Background Colors */
+    --bg-primary: #E8E8E8;        /* Light Gray */
+    --bg-primary-alt: #F5F5F5;    /* Lighter Gray */
+    --bg-secondary: #D0D0D0;       /* Medium Gray */
+    --bg-secondary-alt: #FFFFFF;   /* White */
+    
+    /* Accent Colors - Toned Down */
+    --accent-green: #4CAF50;       /* Muted Green */
+    --accent-green-bright: #66BB6A; /* Lighter Green */
+    --accent-magenta: #9C27B0;      /* Muted Magenta */
+    --accent-yellow: #FFC107;       /* Amber Yellow */
+    --accent-cyan: #00BCD4;         /* Muted Cyan */
+    
+    /* Text Colors */
+    --text-light: #FFFFFF;          /* White on dark */
+    --text-dark: #212121;           /* Dark Gray */
+    
+    /* Link Colors */
+    --link-unvisited: #66BB6A;      /* Lighter Green */
+    --link-visited: #4CAF50;        /* Muted Green */
+    --link-hover: #FFC107;          /* Amber Yellow */
+    
+    /* Border Colors */
+    --border-light: #FFFFFF;
+    --border-dark: #808080;
+}
+
+body {
+    font-family: 'Courier New', 'Courier', monospace;
+    background: var(--bg-primary);
+    color: var(--text-dark);
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-size: 16px;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Allow container to grow beyond viewport */
+    width: 100vw;
+    padding-bottom: 80px; /* Add padding at bottom to prevent content from being hidden behind fixed footer */
+}
+
+/* Header - Retro Style */
+.header {
+    background: var(--bg-secondary);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--accent-green);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.header h1 {
+    font-size: 24px;
+    color: var(--accent-green);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.back-home-link {
+    color: var(--accent-green-bright);
+    text-decoration: none;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--accent-green);
+    font-family: 'Courier New', 'Courier', monospace;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.back-home-link:hover {
+    background-color: var(--accent-green);
+    color: var(--bg-primary);
+    border-color: var(--accent-green-bright);
+}
+
+.status {
+    padding: 8px 16px;
+    background: var(--bg-primary);
+    border: 2px outset var(--border-light);
+    font-size: 14px;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.status.connected {
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    border: 2px solid var(--accent-green-bright);
+}
+
+.status.error {
+    background: #d32f2f;
+    color: var(--text-light);
+    border: 2px solid #b71c1c;
+}
+
+/* Main Content */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: visible; /* Allow content to extend beyond viewport */
+    gap: 10px;
+    padding: 10px;
+    min-height: 0; /* Allow flex children to shrink */
+}
+
+/* 3D Viewer - Full Width Top Row - Retro Style */
+.viewer-3d-container {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 2px outset var(--border-light);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 45vh;
+    min-height: 400px;
+    flex: 0 0 auto;
+    overflow: visible;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.viewer-3d-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#godot-iframe {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    border-radius: 4px;
+    min-height: 350px;
+    display: block;
+    border: none;
+}
+
+.viewer-info {
+    margin-top: 10px;
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    flex-wrap: wrap;
+    padding: 8px 4px;
+    overflow: visible;
+    min-height: 40px;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'Courier New', 'Courier', monospace;
+}
+
+.viewer-info > div {
+    white-space: nowrap;
+    overflow: visible;
+    padding: 2px 4px;
+    line-height: 1.5;
+    flex-shrink: 0;
+    color: var(--text-dark);
+}
+
+.timestamp-display {
+    color: var(--accent-green);
+    font-weight: bold;
+    font-family: 'Courier New', 'Courier', monospace;
+}
+
+.viewer-info span {
+    color: var(--accent-green-bright);
+    font-weight: bold;
+}
+
+/* Bottom Row - Video and Map/Chart */
+.bottom-row {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    flex: 1 1 auto; /* Allow to grow and shrink */
+    min-height: 450px; /* Increased to ensure video controls are visible */
+    max-height: 50vh; /* Maximum 50% of viewport */
+    overflow: visible; /* Changed to visible to show video controls */
+}
+
+/* Video Container - Left Side (50% width) - Retro Style */
+.video-container {
+    background: var(--bg-secondary);
+    border: 2px outset var(--border-light);
+    padding: 10px;
+    flex: 0 0 50%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: visible;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.video-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.video-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border-radius: 4px;
+    overflow: visible; /* Changed to visible to show video controls */
+    position: relative;
+    min-height: 400px;
+    width: 100%;
+    margin-bottom: 0; /* Ensure no margin cutting off controls */
+}
+
+/* YouTube player container */
+#youtube-player-container {
+    width: 100%;
+    height: 100%;
+    min-height: 400px;
+    position: relative;
+    overflow: visible; /* Allow video controls to be visible */
+}
+
+#youtube-player-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    min-height: 400px; /* Ensure minimum height for controls */
+}
+
+
+/* Map and Chart Column - Right Side (50% width, stacked vertically) */
+.map-chart-column {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 0 0 50%;
+    min-width: 0;
+    overflow: hidden; /* Keep hidden for proper flex behavior */
+}
+
+.map-container {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 2px outset var(--border-light);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.map-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#map {
+    flex: 1;
+    border: 2px inset var(--border-dark);
+    min-height: 200px;
+    width: 100%;
+    height: 100%;
+}
+
+.chart-container {
+    flex: 1;
+    background: var(--bg-secondary);
+    border: 2px outset var(--border-light);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.chart-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#altitude-chart {
+    flex: 1;
+    min-height: 200px;
+    width: 100%;
+    height: 100%;
+}
+
+/* Attitude Chart Container - Full Width Below Bottom Row - Retro Style */
+.attitude-chart-container {
+    width: 100%;
+    background: var(--bg-secondary);
+    border: 2px outset var(--border-light);
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    height: 25vh;
+    min-height: 200px;
+    flex: 0 0 auto;
+    margin-top: 10px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.attitude-chart-container h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+#attitude-chart {
+    flex: 1;
+    min-height: 200px;
+    width: 100%;
+    height: 100%;
+}
+
+/* Controls Panel - Fixed Footer - Retro Style */
+.controls-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    padding: 15px 20px;
+    border-top: 2px solid var(--accent-green);
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    flex-wrap: wrap;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.btn {
+    padding: 8px 16px;
+    background: var(--bg-primary);
+    color: var(--text-dark);
+    border: 2px outset var(--border-light);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.btn:hover {
+    background: var(--button-hover-bg);
+    border: 2px inset var(--border-dark);
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn:active {
+    background: var(--bg-secondary);
+    border: 2px inset var(--border-dark);
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn-primary {
+    min-width: 80px;
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    border-top: 2px solid var(--accent-green-bright);
+    border-left: 2px solid var(--accent-green-bright);
+    border-bottom: 2px solid var(--link-visited);
+    border-right: 2px solid var(--link-visited);
+}
+
+.btn-primary:hover {
+    background: var(--accent-green-bright);
+    color: var(--bg-primary);
+    border-top: 2px solid var(--accent-yellow);
+    border-left: 2px solid var(--accent-yellow);
+    border-bottom: 2px solid var(--accent-green);
+    border-right: 2px solid var(--accent-green);
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.btn-jump {
+    background: var(--bg-primary);
+    color: var(--text-dark);
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 2px outset var(--border-light);
+}
+
+.btn-jump:hover {
+    background: rgba(76, 175, 80, 0.2);
+    border-color: var(--accent-green);
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.playback-controls {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.playback-controls h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.playback-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-play, .btn-pause, .btn-stop {
+    min-width: 100px;
+    font-size: 14px;
+    padding: 8px 16px;
+}
+
+.btn-play {
+    background: var(--accent-green);
+    color: var(--bg-primary);
+}
+
+.btn-play:hover {
+    background: var(--accent-green-bright);
+}
+
+.jump-controls {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.jump-controls h3 {
+    font-size: 14px;
+    color: var(--text-dark);
+    white-space: nowrap;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.jump-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Leaflet Map Retro Theme Override */
+.leaflet-container {
+    background: var(--bg-primary);
+}
+
+/* Scrollbar Styling - Retro Theme */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-green);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-green-bright);
+}
+
+/* Loading Overlay - Retro Style */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(232, 232, 232, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    display: none;
+}
+
+.loading-content {
+    text-align: center;
+    color: var(--text-dark);
+    font-family: 'Courier New', 'Courier', monospace;
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid var(--bg-secondary);
+    border-top: 4px solid var(--accent-green);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--accent-green);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.loading-status {
+    font-size: 14px;
+    color: var(--text-dark);
+    margin-top: 10px;
+    font-family: 'Courier New', 'Courier', monospace;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - Mobile First Approach
+   ============================================ */
+
+/* Mobile devices (phones, up to 768px) */
+@media screen and (max-width: 768px) {
+    /* Header adjustments */
+    .header {
+        padding: 10px 15px;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .header h1 {
+        font-size: 18px;
+        flex: 1 1 100%;
+        margin-bottom: 5px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.3;
+    }
+    
+    .status {
+        font-size: 12px;
+        padding: 4px 12px;
+    }
+    
+    /* Main content padding */
+    .main-content {
+        padding: 8px;
+        gap: 8px;
+    }
+    
+    /* 3D Viewer - smaller on mobile */
+    .viewer-3d-container {
+        height: 35vh;
+        min-height: 250px;
+        padding: 8px;
+    }
+    
+    .viewer-3d-container h2 {
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+    
+    #godot-iframe {
+        min-height: 200px;
+    }
+    
+    .viewer-info {
+        flex-direction: column;
+        gap: 5px;
+        font-size: 12px;
+        margin-top: 8px;
+    }
+    
+    .viewer-info > div {
+        white-space: normal; /* Allow wrapping on mobile */
+        overflow: visible;
+    }
+    
+    /* Bottom row - stack vertically on mobile */
+    .bottom-row {
+        flex-direction: column;
+        min-height: 0; /* Use 0 instead of auto for better browser support */
+        max-height: none;
+        gap: 8px;
+    }
+    
+    .video-container,
+    .map-chart-column {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+    
+    .video-container {
+        min-height: 250px;
+    }
+    
+    .video-wrapper,
+    #youtube-player-container {
+        min-height: 250px;
+    }
+    
+    /* Map and chart containers */
+    .map-container,
+    .chart-container {
+        min-height: 200px;
+    }
+    
+    .map-container h2,
+    .chart-container h2 {
+        font-size: 16px;
+    }
+    
+    #map,
+    #altitude-chart {
+        min-height: 180px;
+    }
+    
+    /* Attitude chart */
+    .attitude-chart-container {
+        height: 20vh;
+        min-height: 150px;
+        padding: 8px;
+    }
+    
+    .attitude-chart-container h2 {
+        font-size: 16px;
+    }
+    
+    #attitude-chart {
+        min-height: 120px;
+    }
+    
+    /* Controls panel - mobile friendly */
+    .controls-panel {
+        padding: 10px 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .jump-controls {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .jump-controls h3 {
+        font-size: 13px;
+        text-align: center;
+    }
+    
+    .jump-buttons {
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .btn-jump {
+        font-size: 11px;
+        padding: 5px 10px;
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: calc(50% - 3px);
+    }
+    
+    /* Container padding adjustment */
+    .container {
+        padding-bottom: 120px; /* More space for taller mobile controls */
+    }
+    
+    /* Loading overlay text */
+    .loading-text {
+        font-size: 20px;
+    }
+    
+    .loading-status {
+        font-size: 12px;
+    }
+}
+
+/* Tablet devices (768px to 1024px) */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+    .header h1 {
+        font-size: 20px;
+    }
+    
+    .viewer-3d-container {
+        height: 40vh;
+        min-height: 350px;
+    }
+    
+    #godot-iframe {
+        min-height: 300px;
+    }
+    
+    .bottom-row {
+        min-height: 350px;
+        max-height: 45vh;
+    }
+    
+    .video-wrapper,
+    #youtube-player-container {
+        min-height: 350px;
+    }
+    
+    .map-container,
+    .chart-container {
+        min-height: 160px;
+    }
+    
+    #map,
+    #altitude-chart {
+        min-height: 150px;
+    }
+    
+    .attitude-chart-container {
+        height: 22vh;
+        min-height: 180px;
+    }
+    
+    .jump-buttons {
+        gap: 8px;
+    }
+    
+    .btn-jump {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+}
+
+/* Large screens (1025px and up) - current desktop styles */
+@media screen and (min-width: 1025px) {
+    /* Desktop styles are already defined above */
+    /* Add any desktop-specific overrides here if needed */
+}
+
+/* Very small mobile devices (up to 480px) */
+@media screen and (max-width: 480px) {
+    .header h1 {
+        font-size: 16px;
+    }
+    
+    .viewer-3d-container {
+        height: 30vh;
+        min-height: 200px;
+    }
+    
+    #godot-iframe {
+        min-height: 150px;
+    }
+    
+    .viewer-info {
+        font-size: 11px;
+    }
+    
+    .viewer-info > div {
+        white-space: normal;
+    }
+    
+    .video-container,
+    .map-container,
+    .chart-container {
+        min-height: 200px;
+    }
+    
+    .video-wrapper,
+    #youtube-player-container {
+        min-height: 200px;
+    }
+    
+    #map,
+    #altitude-chart {
+        min-height: 150px;
+    }
+    
+    .attitude-chart-container {
+        height: 18vh;
+        min-height: 120px;
+    }
+    
+    #attitude-chart {
+        min-height: 100px;
+    }
+    
+    .btn-jump {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+    
+    .container {
+        padding-bottom: 140px;
+    }
+}
+
+/* Landscape orientation on mobile */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .viewer-3d-container {
+        height: 50vh;
+        min-height: 300px;
+    }
+    
+    #godot-iframe {
+        min-height: 250px;
+    }
+    
+    .bottom-row {
+        flex-direction: row;
+        min-height: 40vh;
+        max-height: 45vh;
+    }
+    
+    .video-container,
+    .map-chart-column {
+        flex: 0 0 50%;
+    }
+    
+    .attitude-chart-container {
+        height: 25vh;
+        min-height: 180px;
+    }
+    
+    .container {
+        padding-bottom: 100px;
+    }
+}
+
+/* High DPI displays */
+@media screen and (-webkit-min-device-pixel-ratio: 2),
+       screen and (min-resolution: 192dpi) {
+    /* Ensure crisp rendering on retina displays */
+    .btn,
+    .btn-jump {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets for mobile */
+    .btn,
+    .btn-jump {
+        min-height: 44px; /* Apple's recommended minimum touch target */
+        padding: 10px 16px;
+    }
+    
+    .viewer-info {
+        /* Larger text for easier reading on touch devices */
+        font-size: 14px;
+    }
+}
+

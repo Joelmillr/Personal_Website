@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Flight Test Playback - HMD Display</title>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- External Libraries -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Flight Test Data...</div>
+            <div class="loading-status" id="loading-status">Initializing...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>Flight Test Playback - HMD Display</h1>
+                <a href="/" class="back-home-link">← Back to Home</a>
+            </div>
+            <div class="status" id="status">Initializing...</div>
+        </header>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Top Row: 3D Viewer (Full Width) -->
+            <div class="viewer-3d-container">
+                <h2>3D View (HMD Display)</h2>
+                <iframe id="godot-iframe" src="godot/Display.html"
+                    style="width: 100%; height: 100%; border: none; background: #000;"></iframe>
+                <div class="viewer-info" id="viewer-info">
+                    <div>Altitude: <span id="alt-display">0</span> m</div>
+                    <div>Ground Speed: <span id="speed-display">0</span> m/s</div>
+                    <div class="timestamp-display" id="timestamp-display">Video: 0.00s | Data: 0.00s</div>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Video Feed and Map/Chart -->
+            <div class="bottom-row">
+                <!-- Left: YouTube Video Player (50% width) -->
+                <div class="video-container">
+                    <h2>Video Feed</h2>
+                    <div class="video-wrapper" id="youtube-player-container"
+                        style="width: 100%; height: 100%; position: relative; background: #000;">
+                        <!-- YouTube player will be embedded here -->
+                    </div>
+                </div>
+
+                <!-- Right: Map and Chart (50% width, stacked vertically) -->
+                <div class="map-chart-column">
+                    <!-- Map -->
+                    <div class="map-container">
+                        <h2>Flight Path</h2>
+                        <div id="map"></div>
+                    </div>
+
+                    <!-- Altitude Chart -->
+                    <div class="chart-container">
+                        <h2>Altitude Profile</h2>
+                        <canvas id="altitude-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attitude Chart Row (Full Width) -->
+            <div class="attitude-chart-container">
+                <h2>Attitude Profile</h2>
+                <canvas id="attitude-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <div class="jump-controls">
+                <h3>Jump to Timestamp:</h3>
+                <div class="jump-buttons">
+                    <button class="btn btn-jump" data-id="0">0: Takeoff</button>
+                    <button class="btn btn-jump" data-id="1">1: Head Move</button>
+                    <button class="btn btn-jump" data-id="2">2: 90&deg; Left</button>
+                    <button class="btn btn-jump" data-id="3">3: 90&deg; Right</button>
+                    <button class="btn btn-jump" data-id="4">4: 360&deg;</button>
+                    <button class="btn btn-jump" data-id="5">5: 5&deg; Up</button>
+                    <button class="btn btn-jump" data-id="6">6: 10&deg; Up</button>
+                    <button class="btn btn-jump" data-id="7">7: 15&deg; Up</button>
+                    <button class="btn btn-jump" data-id="8">8: 5&deg; Down</button>
+                    <button class="btn btn-jump" data-id="9">9: 10&deg; Down</button>
+                    <button class="btn btn-jump" data-id="10">10: Climb Turn</button>
+                    <button class="btn btn-jump" data-id="11">11: Descend Turn</button>
+                    <button class="btn btn-jump" data-id="12">12: Landing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts - Load in order -->
+    <script>
+        // Check if Three.js is loaded
+        if (typeof THREE === 'undefined') {
+            console.error('Three.js not loaded!');
+        }
+    </script>
+    <script src="js/playback.js"></script>
+    <script src="js/youtube-player.js"></script>
+    <script src="js/youtube-sync-debug.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/attitude-chart.js"></script>
+    <script src="js/viewer3d.js"></script>
+    <script src="js/controls.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
+</html>

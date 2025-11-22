@@ -1,48 +1,11 @@
-// Smooth scrolling for navigation links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    });
-});
-
-// Navbar background change on scroll
+// Navbar shadow change on scroll
 const navbar = document.querySelector('.navbar');
 window.addEventListener('scroll', () => {
     if (window.scrollY > 50) {
-        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-        navbar.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+        navbar.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.4)';
     } else {
-        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-        navbar.style.boxShadow = 'none';
+        navbar.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.3)';
     }
-});
-
-// Add animation to project cards on scroll
-const observerOptions = {
-    threshold: 0.1
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-document.querySelectorAll('.project-card').forEach(card => {
-    card.style.opacity = '0';
-    card.style.transform = 'translateY(20px)';
-    card.style.transition = 'all 0.5s ease-out';
-    observer.observe(card);
 });
 
 // Drawing Canvas Setup
@@ -138,23 +101,11 @@ let model;
 async function loadModel() {
     try {
         predictionNumber.textContent = 'Loading model...';
-        console.log('Loading model from:', '/mnist_model/model.json');
-
-        // Load our locally trained model
         model = await tf.loadLayersModel('/mnist_model/model.json');
-        console.log('Model loaded successfully');
         predictionNumber.textContent = 'Ready!';
     } catch (error) {
-        console.error('Error loading model:', error);
-        predictionNumber.textContent = 'Error loading model. Check console for details.';
-
-        // Log more details about the error
-        if (error.message) {
-            console.error('Error message:', error.message);
-        }
-        if (error.stack) {
-            console.error('Stack trace:', error.stack);
-        }
+        console.error('Error loading MNIST model:', error);
+        predictionNumber.textContent = 'Error loading model. Please refresh the page.';
     }
 }
 
@@ -261,124 +212,6 @@ predictBtn.addEventListener('click', predict);
 // Load the model when the page loads
 loadModel();
 
-// Mobile Menu Functionality
-const hamburger = document.querySelector('.hamburger');
-const navLinks = document.querySelector('.nav-links');
-const navLinksItems = document.querySelectorAll('.nav-links a');
-const menuOverlay = document.querySelector('.menu-overlay');
-const body = document.body;
-
-function toggleMenu() {
-    hamburger.classList.toggle('active');
-    navLinks.classList.toggle('active');
-    menuOverlay.classList.toggle('active');
-    body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
-}
-
-hamburger.addEventListener('click', toggleMenu);
-menuOverlay.addEventListener('click', toggleMenu);
-
-// Close menu when clicking a link
-navLinksItems.forEach(link => {
-    link.addEventListener('click', () => {
-        toggleMenu();
-    });
-});
-
-// Close menu on escape key
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && navLinks.classList.contains('active')) {
-        toggleMenu();
-    }
-});
-
-// Prevent scrolling when menu is open
-document.addEventListener('touchmove', (e) => {
-    if (navLinks.classList.contains('active')) {
-        e.preventDefault();
-    }
-}, { passive: false });
-
-// Hero Illustration Rotation
-document.addEventListener('DOMContentLoaded', function () {
-    const illustrations = document.querySelectorAll('.hero-illustration');
-    let currentIndex = 0;
-    let isTransitioning = false;
-    let hoverTimeout = null;
-
-    // Set initial state
-    illustrations.forEach((illustration, index) => {
-        if (index === 0) {
-            illustration.classList.add('main');
-            illustration.classList.remove('floating');
-        } else {
-            illustration.classList.remove('main');
-            illustration.classList.add('floating');
-        }
-    });
-
-    function rotateIllustrations() {
-        if (isTransitioning) return;
-        isTransitioning = true;
-
-        // Get current and next indices
-        const nextIndex = (currentIndex + 1) % illustrations.length;
-        const currentIllustration = illustrations[currentIndex];
-        const nextIllustration = illustrations[nextIndex];
-
-        // Clear any existing hover timeout
-        if (hoverTimeout) {
-            clearTimeout(hoverTimeout);
-        }
-
-        // Position next illustration
-        nextIllustration.style.transform = 'translate(-50%, -50%) scale(0.95) translateY(20px)';
-        nextIllustration.style.opacity = '0';
-
-        // Force reflow
-        nextIllustration.offsetHeight;
-
-        // Start transition
-        currentIllustration.style.transform = 'translate(-50%, -50%) scale(0.95) translateY(20px)';
-        currentIllustration.style.opacity = '0';
-        nextIllustration.style.transform = 'translate(-50%, -50%) scale(1) translateY(0)';
-        nextIllustration.style.opacity = '1';
-
-        // Update classes after transition
-        setTimeout(() => {
-            currentIllustration.classList.remove('main');
-            currentIllustration.classList.add('floating');
-            nextIllustration.classList.remove('floating');
-            nextIllustration.classList.add('main');
-            currentIndex = nextIndex;
-            isTransitioning = false;
-        }, 800); // Match the CSS transition duration
-    }
-
-    // Add hover event listeners
-    illustrations.forEach(illustration => {
-        illustration.addEventListener('mouseenter', () => {
-            if (illustration.classList.contains('main')) {
-                hoverTimeout = setTimeout(() => {
-                    illustration.style.transform = 'translate(-50%, -50%) scale(1.05) translateY(0)';
-                }, 50);
-            }
-        });
-
-        illustration.addEventListener('mouseleave', () => {
-            if (illustration.classList.contains('main')) {
-                if (hoverTimeout) {
-                    clearTimeout(hoverTimeout);
-                }
-                illustration.style.transform = 'translate(-50%, -50%) scale(1) translateY(0)';
-            }
-        });
-    });
-
-    // Rotate every 5 seconds
-    setInterval(rotateIllustrations, 5000);
-});
-
 // Smooth scroll handling
 document.addEventListener('DOMContentLoaded', function () {
     // Handle all anchor links with hash
@@ -396,12 +229,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     top: targetPosition,
                     behavior: 'smooth'
                 });
-
-                // Close mobile menu if open
-                const navLinks = document.querySelector('.nav-links');
-                const hamburger = document.querySelector('.hamburger');
-                navLinks.classList.remove('active');
-                hamburger.classList.remove('active');
             }
         });
     });
