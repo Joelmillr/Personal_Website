@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: personal-website
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: WS_URL
+        sync: false  # Set this manually after first deployment with your actual URL (e.g., https://your-app.onrender.com)
+      - key: YOUTUBE_VIDEO_ID
+        sync: false  # Set this manually with your YouTube video ID
+      - key: YOUTUBE_START_OFFSET
+        value: 0.0
+
