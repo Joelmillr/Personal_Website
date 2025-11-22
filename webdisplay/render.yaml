@@ -3,10 +3,12 @@ services:
     name: flight-test-display
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python start_server.py
+    startCommand: gunicorn -w 1 -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:$PORT --timeout 120 backend.app:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
       - key: WS_URL
         sync: false  # Set this manually after first deployment with your actual URL
+      - key: HOST
+        value: 0.0.0.0
 

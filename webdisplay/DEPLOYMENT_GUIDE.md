@@ -53,21 +53,25 @@ Before deploying, ensure you have:
    - **Root Directory**: `webdisplay` ⚠️ **IMPORTANT**
    - **Environment**: `Python 3`
    - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python start_server.py`
+   - **Start Command**: `gunicorn -w 1 -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:$PORT --timeout 120 backend.app:app`
    - **Python Version**: `3.11.0` (from runtime.txt)
+
+   ⚠️ **Note**: If using `render.yaml`, the start command is already configured. Otherwise, use the gunicorn command above.
 
 5. **Set Environment Variables** (in Render dashboard):
 
    ```
    HOST=0.0.0.0
-   PORT=10000
    YOUTUBE_VIDEO_ID=your_video_id_here
    YOUTUBE_START_OFFSET=0.0
    DEBUG=False
    WS_URL=https://your-service-name.onrender.com
    ```
 
-   ⚠️ **Important**: Set `WS_URL` AFTER first deployment with your actual Render URL
+   ⚠️ **Important Notes**:
+   - `PORT` is automatically provided by Render - do NOT set it manually
+   - Set `WS_URL` AFTER first deployment with your actual Render URL (e.g., `https://flight-test-display.onrender.com`)
+   - The `render.yaml` file already configures most settings, but you still need to set `YOUTUBE_VIDEO_ID` and `WS_URL` manually
 
 6. **Deploy**
    - Click "Create Web Service"

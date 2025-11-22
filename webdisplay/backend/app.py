@@ -25,7 +25,11 @@ from webdisplay.backend.video_timestamp_mapper import VideoTimestampMapper
 FRONTEND_DIR = Path(__file__).parent.parent / "frontend"
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+# Use gevent async mode for production (with gunicorn), threading for development
+# Flask-SocketIO will auto-detect gevent when running with gevent workers
+async_mode = os.environ.get("SOCKETIO_ASYNC_MODE", "gevent")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode=async_mode)
 
 # Initialize data processor
 # __file__ is webdisplay/backend/app.py
