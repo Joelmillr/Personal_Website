@@ -24,25 +24,53 @@ class FlightDataProcessor {
      * Load and process the merged_data.csv file
      */
     _loadData() {
-        console.log(`Loading data from ${this.dataFile}...`);
+        const startTime = Date.now();
+        console.log(`[DATA] Loading data from ${this.dataFile}...`);
         
-        const fileContent = fs.readFileSync(this.dataFile, 'utf-8');
-        const records = parse(fileContent, {
-            columns: true,
-            skip_empty_lines: true,
-            cast: (value, context) => {
-                // Don't cast timestamp column - it needs special parsing
-                if (context.column === 'timestamp') {
-                    return value; // Keep as string for timestamp parsing
+        try {
+            const fileStats = fs.statSync(this.dataFile);
+            const fileSizeMB = (fileStats.size / (1024 * 1024)).toFixed(2);
+            console.log(`[DATA] File size: ${fileSizeMB} MB`);
+        } catch (e) {
+            console.warn(`[DATA] Could not get file stats: ${e.message}`);
+        }
+        
+        let fileContent;
+        try {
+            fileContent = fs.readFileSync(this.dataFile, 'utf-8');
+            const loadTime = Date.now() - startTime;
+            console.log(`[DATA] File read completed in ${loadTime}ms`);
+        } catch (error) {
+            console.error(`[DATA] ❌ Error reading file: ${error.message}`);
+            throw new Error(`Failed to read data file: ${error.message}`);
+        }
+        console.log(`[DATA] Parsing CSV (${(fileContent.length / 1024 / 1024).toFixed(2)} MB)...`);
+        const parseStartTime = Date.now();
+        
+        let records;
+        try {
+            records = parse(fileContent, {
+                columns: true,
+                skip_empty_lines: true,
+                cast: (value, context) => {
+                    // Don't cast timestamp column - it needs special parsing
+                    if (context.column === 'timestamp') {
+                        return value; // Keep as string for timestamp parsing
+                    }
+                    // Try to parse as number for other columns
+                    const num = parseFloat(value);
+                    if (!isNaN(num) && isFinite(num)) {
+                        return num;
+                    }
+                    return value;
                 }
-                // Try to parse as number for other columns
-                const num = parseFloat(value);
-                if (!isNaN(num) && isFinite(num)) {
-                    return num;
-                }
-                return value;
-            }
-        });
+            });
+            const parseTime = Date.now() - parseStartTime;
+            console.log(`[DATA] CSV parsed: ${records.length} records in ${parseTime}ms`);
+        } catch (error) {
+            console.error(`[DATA] ❌ Error parsing CSV: ${error.message}`);
+            throw new Error(`Failed to parse CSV: ${error.message}`);
+        }
 
         // Process timestamps and convert to seconds
         this.dataList = records.map((row, index) => {
@@ -74,12 +102,21 @@ class FlightDataProcessor {
         });
 
         // Sort by timestamp
+        console.log(`[DATA] Sorting ${this.dataList.length} records by timestamp...`);
+        const sortStartTime = Date.now();
         this.dataList.sort((a, b) => a.timestampSeconds - b.timestampSeconds);
+        const sortTime = Date.now() - sortStartTime;
+        console.log(`[DATA] Sorting completed in ${sortTime}ms`);
 
         // Pre-compute numeric timestamps for fast binary search
+        console.log(`[DATA] Pre-computing timestamp list...`);
+        const mapStartTime = Date.now();
         this.timestampNsList = this.dataList.map(d => d.timestampNs);
+        const mapTime = Date.now() - mapStartTime;
+        console.log(`[DATA] Timestamp list computed in ${mapTime}ms`);
 
-        console.log(`Loaded ${this.dataList.length} data rows`);
+        const totalTime = Date.now() - startTime;
+        console.log(`[DATA] ✓ Successfully loaded ${this.dataList.length} data rows in ${totalTime}ms (${(totalTime/1000).toFixed(2)}s)`);
     }
 
     /**

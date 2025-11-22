@@ -249,9 +249,31 @@ try {
 
     // API: Initialize
     apiRouter.get('/init', (req, res) => {
+    console.log('[API] /init called - starting data load...');
+    const startTime = Date.now();
+    
     try {
-        processor = new FlightDataProcessor(DATA_FILE);
+        // Check if processor already exists (cached)
+        if (!processor) {
+            console.log('[API] Creating new FlightDataProcessor (this may take a moment for large files)...');
+            try {
+                processor = new FlightDataProcessor(DATA_FILE);
+                const loadTime = Date.now() - startTime;
+                console.log(`[API] ✓ Data loaded successfully in ${loadTime}ms`);
+            } catch (loadError) {
+                console.error('[API] ❌ Error loading data:', loadError.message);
+                console.error('[API] Stack:', loadError.stack);
+                return res.status(500).json({
+                    success: false,
+                    error: `Failed to load flight data: ${loadError.message}`
+                });
+            }
+        } else {
+            console.log('[API] Using cached processor');
+        }
+        
         const summary = processor.getSummary();
+        console.log(`[API] Summary: ${summary.total_points} points, duration: ${summary.duration_seconds}s`);
 
         let bounds = null;
         let completePath = [];
@@ -283,20 +305,28 @@ try {
             }
 
             // Extract all path data
+            console.log('[API] Extracting path data...');
+            const pathExtractStart = Date.now();
             const pathData = processor.getAllPathData();
             const allLats = pathData.lats;
             const allLons = pathData.lons;
             const allAlts = pathData.alts;
+            console.log(`[API] Path data extracted: ${allLats.length} points in ${Date.now() - pathExtractStart}ms`);
 
             // Extract all attitude data
+            console.log('[API] Extracting attitude data...');
+            const attitudeExtractStart = Date.now();
             const attitudeData = processor.getAllAttitudeData();
             completeAttitudes = {
                 yaws: attitudeData.yaws,
                 pitches: attitudeData.pitches,
                 rolls: attitudeData.rolls
             };
+            console.log(`[API] Attitude data extracted in ${Date.now() - attitudeExtractStart}ms`);
 
             // Calculate bounds (use reduce to avoid stack overflow with large arrays)
+            console.log('[API] Calculating bounds...');
+            const boundsStart = Date.now();
             if (allLats.length > 0 && allLons.length > 0) {
                 bounds = {
                     min_lat: allLats.reduce((a, b) => Math.min(a, b)),
@@ -304,7 +334,11 @@ try {
                     min_lon: allLons.reduce((a, b) => Math.min(a, b)),
                     max_lon: allLons.reduce((a, b) => Math.max(a, b))
                 };
+                console.log(`[API] Bounds calculated in ${Date.now() - boundsStart}ms`);
 
+                // Build complete path array
+                console.log('[API] Building complete path array...');
+                const pathBuildStart = Date.now();
                 completePath = allLats.map((lat, i) => ({
                     lat,
                     lon: allLons[i],
@@ -312,9 +346,21 @@ try {
                     index: i
                 }));
                 completeAltitudes = allAlts;
+                console.log(`[API] Path array built: ${completePath.length} points in ${Date.now() - pathBuildStart}ms`);
             }
+            
+            // Log memory usage
+            if (global.gc) {
+                global.gc();
+            }
+            const memUsage = process.memoryUsage();
+            console.log(`[API] Memory usage: RSS=${(memUsage.rss/1024/1024).toFixed(2)}MB, Heap=${(memUsage.heapUsed/1024/1024).toFixed(2)}MB/${(memUsage.heapTotal/1024/1024).toFixed(2)}MB`);
         }
 
+        const responseTime = Date.now() - startTime;
+        console.log(`[API] ✓ /init completed successfully in ${responseTime}ms`);
+        console.log(`[API] Returning response with ${completePath.length} path points`);
+        
         res.json({
             success: true,
             summary,
@@ -335,10 +381,17 @@ try {
             } : null
         });
     } catch (error) {
-        console.error('Error in /api/init:', error);
-        res.status(500).json({ success: false, error: error.message });
+        const errorTime = Date.now() - startTime;
+        console.error(`[API] ❌ Error in /api/init after ${errorTime}ms:`);
+        console.error(`[API] Error message: ${error.message}`);
+        console.error(`[API] Stack: ${error.stack}`);
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
-});
+    });
     
     // Mount API router at /api within this app (so routes become /webdisplay/api/init, etc.)
     app.use('/api', apiRouter);
