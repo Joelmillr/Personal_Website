@@ -155,6 +155,20 @@ try {
 
     // Global state
     let processor = null;
+    let useSupabase = false;
+    
+    // Check if Supabase is configured
+    const SUPABASE_URL = process.env.SUPABASE_URL || 'https://evqkatxibpkitspjjpmo.supabase.co';
+    const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2cWthdHhpYnBraXRzcGpqcG1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MjE4MTEsImV4cCI6MjA3OTM5NzgxMX0.Rl6x_mc0HaGtFusy9DvtgPSP_flgug9mBJgGHG2ygbQ';
+    
+    if (SUPABASE_URL && SUPABASE_KEY) {
+        useSupabase = true;
+        console.log('[WEBDISPLAY] ✓ Supabase configured - will use database instead of CSV');
+        console.log(`[WEBDISPLAY]   Supabase URL: ${SUPABASE_URL}`);
+    } else {
+        console.log('[WEBDISPLAY] ⚠ Supabase not configured - will use CSV file');
+        console.log('[WEBDISPLAY]   Set SUPABASE_URL and SUPABASE_KEY to use database');
+    }
     let playbackActive = false;
     let playbackIndex = 0;
     let playbackSpeed = 2.0;
@@ -210,10 +224,15 @@ try {
     app.use((req, res, next) => {
         // Only serve static files if mounted at /webdisplay (not /api)
         if (req.baseUrl !== '/api') {
+            // Don't serve static files for routes that are handled by specific routes
+            if (req.path === '/' || req.path.startsWith('/api/') || req.path.startsWith('/godot/')) {
+                return next();
+            }
             return express.static(FRONTEND_DIR, {
                 setHeaders: (res, filePath) => {
                     res.set('Cache-Control', 'no-cache');
-                }
+                },
+                fallthrough: false
             })(req, res, next);
         }
         next();
@@ -248,32 +267,80 @@ try {
     const apiRouter = express.Router();
 
     // API: Initialize
-    apiRouter.get('/init', (req, res) => {
+    apiRouter.get('/init', async (req, res) => {
     console.log('[API] /init called - starting data load...');
     const startTime = Date.now();
+    
+    // Set a longer timeout for this endpoint (60 seconds)
+    req.setTimeout(60000);
+    res.setTimeout(60000);
     
     try {
         // Check if processor already exists (cached)
         if (!processor) {
-            console.log('[API] Creating new FlightDataProcessor (this may take a moment for large files)...');
-            try {
-                processor = new FlightDataProcessor(DATA_FILE);
-                const loadTime = Date.now() - startTime;
-                console.log(`[API] ✓ Data loaded successfully in ${loadTime}ms`);
-            } catch (loadError) {
-                console.error('[API] ❌ Error loading data:', loadError.message);
-                console.error('[API] Stack:', loadError.stack);
-                return res.status(500).json({
-                    success: false,
-                    error: `Failed to load flight data: ${loadError.message}`
-                });
+            if (useSupabase) {
+                console.log('[API] Using Supabase database...');
+                try {
+                    const SupabaseFlightDataProcessor = require('./supabaseDataProcessor');
+                    processor = new SupabaseFlightDataProcessor(SUPABASE_URL, SUPABASE_KEY);
+                    // Test connection by getting count
+                    const count = await processor.getDataCount();
+                    console.log(`[API] ✓ Connected to Supabase - ${count} records available`);
+                } catch (supabaseError) {
+                    console.error('[API] ❌ Error connecting to Supabase:', supabaseError.message);
+                    return res.status(500).json({
+                        success: false,
+                        error: `Failed to connect to Supabase: ${supabaseError.message}`,
+                        suggestion: 'Check your SUPABASE_URL and SUPABASE_KEY environment variables'
+                    });
+                }
+            } else {
+                console.log('[API] Using CSV file (this may take a moment for large files)...');
+                console.log('[API] This operation may take 30-60 seconds for large CSV files...');
+                
+                // Load processor with timeout protection
+                try {
+                    // Wrap synchronous loading in a promise to add timeout
+                    const loadPromise = new Promise((resolve, reject) => {
+                        try {
+                            // Run in next tick to avoid blocking
+                            setImmediate(() => {
+                                try {
+                                    const proc = new FlightDataProcessor(DATA_FILE);
+                                    resolve(proc);
+                                } catch (err) {
+                                    reject(err);
+                                }
+                            });
+                        } catch (err) {
+                            reject(err);
+                        }
+                    });
+                    
+                    // Race between loading and timeout
+                    const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Data loading timeout after 60 seconds')), 60000);
+                    });
+                    
+                    processor = await Promise.race([loadPromise, timeoutPromise]);
+                    const loadTime = Date.now() - startTime;
+                    console.log(`[API] ✓ Data loaded successfully in ${loadTime}ms`);
+                } catch (loadError) {
+                    console.error('[API] ❌ Error loading data:', loadError.message);
+                    console.error('[API] Stack:', loadError.stack);
+                    return res.status(500).json({
+                        success: false,
+                        error: `Failed to load flight data: ${loadError.message}`,
+                        suggestion: 'The CSV file may be too large. Try using Supabase database instead.'
+                    });
+                }
             }
         } else {
             console.log('[API] Using cached processor');
         }
         
-        const summary = processor.getSummary();
-        console.log(`[API] Summary: ${summary.total_points} points, duration: ${summary.duration_seconds}s`);
+        const summary = await processor.getSummary();
+        console.log(`[API] Summary: ${summary.data_count} points`);
 
         let bounds = null;
         let completePath = [];
@@ -281,9 +348,10 @@ try {
         let completeAttitudes = { yaws: [], pitches: [], rolls: [] };
 
         let takeoffIndex = 0;
-        if (processor.getDataCount() > 0) {
-            const firstData = processor.getDataAtIndex(0);
-            const lastData = processor.getDataAtIndex(processor.getDataCount() - 1);
+        const dataCount = await processor.getDataCount();
+        if (dataCount > 0) {
+            const firstData = await processor.getDataAtIndex(0);
+            const lastData = await processor.getDataAtIndex(dataCount - 1);
             
             if (firstData && lastData) {
                 console.log(`Data range: ${firstData.timestamp_seconds.toFixed(2)}s to ${lastData.timestamp_seconds.toFixed(2)}s`);
@@ -292,7 +360,7 @@ try {
 
             // Find takeoff index
             const takeoffTimestamp = TIMESTAMPS[0] || 2643.0;
-            takeoffIndex = processor.findIndexForTimestamp(takeoffTimestamp);
+            takeoffIndex = await processor.findIndexForTimestamp(takeoffTimestamp);
             if (takeoffIndex === null) {
                 takeoffIndex = 0;
                 console.log("Warning: Could not find takeoff index, starting from 0");
@@ -307,7 +375,7 @@ try {
             // Extract all path data
             console.log('[API] Extracting path data...');
             const pathExtractStart = Date.now();
-            const pathData = processor.getAllPathData();
+            const pathData = await processor.getAllPathData();
             const allLats = pathData.lats;
             const allLons = pathData.lons;
             const allAlts = pathData.alts;
@@ -316,7 +384,7 @@ try {
             // Extract all attitude data
             console.log('[API] Extracting attitude data...');
             const attitudeExtractStart = Date.now();
-            const attitudeData = processor.getAllAttitudeData();
+            const attitudeData = await processor.getAllAttitudeData();
             completeAttitudes = {
                 yaws: attitudeData.yaws,
                 pitches: attitudeData.pitches,
@@ -627,30 +695,45 @@ apiRouter.get('/data-for-video-time', (req, res) => {
 
     // Serve Godot files
     app.get('/godot/:filename', (req, res) => {
+    console.log(`[WEBDISPLAY] Serving Godot file: ${req.params.filename}`);
     const godotDir = path.join(FRONTEND_DIR, 'godot');
     const filename = req.params.filename;
     
-    if (fs.existsSync(godotDir)) {
-        if (filename === 'Display.html') {
-            const htmlPath = path.join(godotDir, filename);
-            let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
-            const wsUrl = process.env.WS_URL || `${req.protocol}://${req.get('host')}`;
-            const injectScript = `<script>window.WS_URL = "${wsUrl}";</script>`;
-            htmlContent = htmlContent.replace(
-                '<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>',
-                `${injectScript}\n\t\t<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>`
-            );
-            res.send(htmlContent);
-        } else {
-            const filePath = path.join(godotDir, filename);
-            if (fs.existsSync(filePath)) {
-                res.sendFile(filePath);
-            } else {
-                res.status(404).send('File not found');
-            }
+    if (!fs.existsSync(godotDir)) {
+        console.error(`[WEBDISPLAY] Godot directory not found: ${godotDir}`);
+        return res.status(404).send('Godot directory not found');
+    }
+    
+    if (filename === 'Display.html') {
+        const htmlPath = path.join(godotDir, filename);
+        if (!fs.existsSync(htmlPath)) {
+            console.error(`[WEBDISPLAY] Display.html not found: ${htmlPath}`);
+            return res.status(404).send('Display.html not found');
         }
+        let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
+        const wsUrl = process.env.WS_URL || `${req.protocol}://${req.get('host')}`;
+        const injectScript = `<script>window.WS_URL = "${wsUrl}";</script>`;
+        htmlContent = htmlContent.replace(
+            '<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>',
+            `${injectScript}\n\t\t<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>`
+        );
+        console.log(`[WEBDISPLAY] ✓ Served Display.html`);
+        return res.send(htmlContent);
     } else {
-        res.status(404).send('Godot directory not found');
+        const filePath = path.join(godotDir, filename);
+        if (!fs.existsSync(filePath)) {
+            console.error(`[WEBDISPLAY] Godot file not found: ${filePath}`);
+            return res.status(404).send(`File not found: ${filename}`);
+        }
+        console.log(`[WEBDISPLAY] ✓ Sending Godot file: ${filename} (${(fs.statSync(filePath).size / 1024 / 1024).toFixed(2)} MB)`);
+        return res.sendFile(filePath, (err) => {
+            if (err) {
+                console.error(`[WEBDISPLAY] Error sending file ${filename}:`, err.message);
+                if (!res.headersSent) {
+                    res.status(500).send('Error serving file');
+                }
+            }
+        });
     }
 });
 

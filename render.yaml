@@ -13,4 +13,8 @@ services:
         sync: false  # Set this manually with your YouTube video ID
       - key: YOUTUBE_START_OFFSET
         value: 0.0
+      - key: SUPABASE_URL
+        value: https://evqkatxibpkitspjjpmo.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2cWthdHhpYnBraXRzcGpqcG1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MjE4MTEsImV4cCI6MjA3OTM5NzgxMX0.Rl6x_mc0HaGtFusy9DvtgPSP_flgug9mBJgGHG2ygbQ
 
