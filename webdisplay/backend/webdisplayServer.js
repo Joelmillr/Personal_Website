@@ -24,6 +24,8 @@ if (fs.existsSync(envPath)) {
  * @returns {Object} Express app and Socket.IO instance
  */
 function initWebdisplayBackend(httpServer) {
+    console.log('[WEBDISPLAY] Initializing webdisplay backend...');
+    
     // Initialize Express app
     const app = express();
     app.use(cors());
@@ -42,6 +44,13 @@ function initWebdisplayBackend(httpServer) {
     const FRONTEND_DIR = path.join(WEBDISPLAY_DIR, 'frontend');
     const DATA_FILE = path.join(WEBDISPLAY_DIR, 'merged_data.csv');
     const FRAMES_DIR = path.join(BASE_DIR, 'camera_frames_flipped');
+    
+    console.log('[WEBDISPLAY] Paths configured:');
+    console.log(`  BASE_DIR: ${BASE_DIR}`);
+    console.log(`  WEBDISPLAY_DIR: ${WEBDISPLAY_DIR}`);
+    console.log(`  FRONTEND_DIR: ${FRONTEND_DIR}`);
+    console.log(`  DATA_FILE: ${DATA_FILE} (exists: ${fs.existsSync(DATA_FILE)})`);
+    console.log(`  FRAMES_DIR: ${FRAMES_DIR} (exists: ${fs.existsSync(FRAMES_DIR)})`);
 
     // Pre-load frame information
     let framesInfo = [];
@@ -216,7 +225,9 @@ try {
         if (req.baseUrl === '/api') {
             return res.status(404).send('Not found');
         }
+        console.log(`[WEBDISPLAY] Serving index.html for ${req.url} (baseUrl: ${req.baseUrl})`);
         const htmlPath = path.join(FRONTEND_DIR, 'index.html');
+        console.log(`[WEBDISPLAY] Looking for HTML at: ${htmlPath} (exists: ${fs.existsSync(htmlPath)})`);
         if (fs.existsSync(htmlPath)) {
             let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
             // Set WS_URL to current server origin (Socket.IO will use same origin if not set)
@@ -225,9 +236,11 @@ try {
             // Add base tag to ensure relative paths resolve correctly
             const baseTag = `<base href="/webdisplay/">`;
             htmlContent = htmlContent.replace('</head>', `${baseTag}\n${injectScript}</head>`);
+            console.log(`[WEBDISPLAY] Successfully serving index.html with WS_URL=${wsUrl}`);
             res.send(htmlContent);
         } else {
-            res.status(404).send('Webdisplay not found');
+            console.error(`[WEBDISPLAY] ERROR: index.html not found at ${htmlPath}`);
+            res.status(404).send(`Webdisplay frontend not found. Expected file: ${htmlPath}`);
         }
     });
 

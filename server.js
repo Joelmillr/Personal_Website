@@ -54,22 +54,46 @@ const server = http.createServer(app);
 // Integrate webdisplay backend BEFORE static file middleware and logging
 let webdisplayBackend = null;
 try {
+    console.log('Attempting to load webdisplay backend...');
     const { initWebdisplayBackend } = require('./webdisplay/backend/webdisplayServer');
+    console.log('Webdisplay backend module loaded, initializing...');
     webdisplayBackend = initWebdisplayBackend(server);
+    
+    if (!webdisplayBackend || !webdisplayBackend.app) {
+        throw new Error('Webdisplay backend initialization returned invalid object');
+    }
     
     // Mount webdisplay routes on /webdisplay path (must be before static middleware)
     app.use('/webdisplay', webdisplayBackend.app);
+    console.log('✓ Webdisplay routes mounted at /webdisplay');
     
     // Also mount API routes at root level for backward compatibility
     // This allows frontend to use /api/init instead of /webdisplay/api/init
     if (webdisplayBackend.apiRouter) {
         app.use('/api', webdisplayBackend.apiRouter);
+        console.log('✓ Webdisplay API routes mounted at /api');
     }
     
-    console.log('✓ Webdisplay backend integrated');
+    console.log('✓ Webdisplay backend integrated successfully');
 } catch (error) {
-    console.log('⚠ Webdisplay backend not available:', error.message);
-    console.log('  The webdisplay will not be functional without the backend');
+    console.error('❌ ERROR: Webdisplay backend failed to load:');
+    console.error('  Error message:', error.message);
+    console.error('  Stack trace:', error.stack);
+    console.error('  The webdisplay will not be functional without the backend');
+    
+    // Add a fallback route for /webdisplay to show a helpful error message
+    app.use('/webdisplay', (req, res) => {
+        res.status(503).send(`
+            <html>
+                <head><title>Webdisplay Unavailable</title></head>
+                <body>
+                    <h1>Webdisplay Backend Unavailable</h1>
+                    <p>The webdisplay backend failed to initialize. Please check the server logs for details.</p>
+                    <p>Error: ${error.message}</p>
+                </body>
+            </html>
+        `);
+    });
 }
 
 // Log all requests after webdisplay routes (so we can see what's being matched)
