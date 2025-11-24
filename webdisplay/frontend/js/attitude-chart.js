@@ -189,14 +189,14 @@ class AttitudeChartViewer {
                 this._lastIndex = index;
             } else {
                 // Throttled update for normal playback
-                if (!this._updateCounter) this._updateCounter = 0;
+            if (!this._updateCounter) this._updateCounter = 0;
                 if (this._lastIndex === undefined) this._lastIndex = index;
-                this._updateCounter++;
-                this._lastIndex = index;
-                
+            this._updateCounter++;
+            this._lastIndex = index;
+            
                 // Update chart on first call or every 5 calls
                 if (this._updateCounter === 1 || this._updateCounter % 5 === 0) {
-                    this.chart.update('none');
+                this.chart.update('none');
                 }
             }
         } else {

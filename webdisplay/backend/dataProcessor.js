@@ -295,33 +295,23 @@ class FlightDataProcessor {
      * Returns dict with 'lats', 'lons', 'alts' lists.
      */
     getAllPathData() {
-        console.log(`[getAllPathData] Starting extraction from ${this.dataList.length} rows`);
-        
         if (this.dataList.length === 0) {
             console.error('[getAllPathData] ERROR: dataList is empty!');
             return { lats: [], lons: [], alts: [] };
         }
         
-        // Check first row to see what columns are available
-        const firstRow = this.dataList[0].row;
-        console.log(`[getAllPathData] First row keys:`, Object.keys(firstRow).slice(0, 20).join(', '));
-        console.log(`[getAllPathData] Sample values:`, {
-            lat: firstRow.lat,
-            lon: firstRow.lon,
-            alt: firstRow.alt,
-            hasLat: 'lat' in firstRow,
-            hasLon: 'lon' in firstRow,
-            hasAlt: 'alt' in firstRow
-        });
+        // Memory-efficient extraction: use pre-allocated arrays
+        const length = this.dataList.length;
+        const lats = new Array(length);
+        const lons = new Array(length);
+        const alts = new Array(length);
         
-        // Use same approach as getDataAtIndex() - parseFloat with || 0 fallback
-        const lats = this.dataList.map(d => parseFloat(d.row.lat) || 0);
-        const lons = this.dataList.map(d => parseFloat(d.row.lon) || 0);
-        const alts = this.dataList.map(d => parseFloat(d.row.alt) || 0);
-        
-        // Only log if there's an issue
-        if (lats.length === 0) {
-            console.error(`[getAllPathData] WARNING: Extracted 0 points from ${this.dataList.length} rows`);
+        // Extract in single pass
+        for (let i = 0; i < length; i++) {
+            const row = this.dataList[i].row;
+            lats[i] = parseFloat(row.lat) || 0;
+            lons[i] = parseFloat(row.lon) || 0;
+            alts[i] = parseFloat(row.alt) || 0;
         }
         
         return {
@@ -336,44 +326,29 @@ class FlightDataProcessor {
      * Returns dict with 'yaws', 'pitches', 'rolls' lists (in degrees).
      */
     getAllAttitudeData() {
-        console.log(`[getAllAttitudeData] Starting extraction from ${this.dataList.length} rows`);
-        
-        const yaws = [];
-        const pitches = [];
-        const rolls = [];
+        const length = this.dataList.length;
+        const yaws = new Array(length);
+        const pitches = new Array(length);
+        const rolls = new Array(length);
 
-        if (this.dataList.length === 0) {
-            console.error('[getAllAttitudeData] ERROR: dataList is empty, cannot extract attitude data');
+        if (length === 0) {
+            console.error('[getAllAttitudeData] ERROR: dataList is empty');
             return { yaws: [], pitches: [], rolls: [] };
         }
 
-        // Check first row to see what columns are available
+        // Check first row for quaternion columns
         const firstRow = this.dataList[0].row;
-        console.log(`[getAllAttitudeData] First row keys:`, Object.keys(firstRow).slice(0, 20).join(', '));
-        console.log(`[getAllAttitudeData] Sample quaternion values:`, {
-            x_vehicle: firstRow.x_vehicle,
-            y_vehicle: firstRow.y_vehicle,
-            z_vehicle: firstRow.z_vehicle,
-            w_vehicle: firstRow.w_vehicle,
-            hasXVehicle: 'x_vehicle' in firstRow,
-            hasYVehicle: 'y_vehicle' in firstRow,
-            hasZVehicle: 'z_vehicle' in firstRow,
-            hasWVehicle: 'w_vehicle' in firstRow
-        });
-        
         const hasVehicleQuat = firstRow.x_vehicle !== undefined && firstRow.x_vehicle !== null;
         
         if (!hasVehicleQuat) {
-            console.error('[getAllAttitudeData] ERROR: No vehicle quaternion data found (x_vehicle, y_vehicle, z_vehicle, w_vehicle)');
-            console.error('[getAllAttitudeData] Available columns:', Object.keys(firstRow).join(', '));
+            console.error('[getAllAttitudeData] ERROR: No vehicle quaternion data found');
             return { yaws: [], pitches: [], rolls: [] };
         }
 
-        let processedCount = 0;
+        // Memory-efficient extraction: pre-allocated arrays, single pass
         let errorCount = 0;
-        for (let i = 0; i < this.dataList.length; i++) {
-            const data = this.dataList[i];
-            const row = data.row;
+        for (let i = 0; i < length; i++) {
+            const row = this.dataList[i].row;
             
             try {
                 const vehicleWorld = quat.fromValues(
@@ -384,31 +359,20 @@ class FlightDataProcessor {
                 );
 
                 const euler = this._quaternionToEuler(vehicleWorld);
-                rolls.push(euler.roll);
-                pitches.push(euler.pitch);
-                yaws.push(euler.yaw);
-                processedCount++;
+                rolls[i] = euler.roll;
+                pitches[i] = euler.pitch;
+                yaws[i] = euler.yaw;
             } catch (error) {
                 errorCount++;
-                if (errorCount <= 5) {
-                    console.error(`[getAllAttitudeData] Error at index ${i}:`, error);
-                    console.error(`[getAllAttitudeData] Row data:`, {
-                        x_vehicle: row.x_vehicle,
-                        y_vehicle: row.y_vehicle,
-                        z_vehicle: row.z_vehicle,
-                        w_vehicle: row.w_vehicle
-                    });
-                }
-                // Push default values to maintain array length
-                rolls.push(0);
-                pitches.push(0);
-                yaws.push(0);
+                // Push default values
+                rolls[i] = 0;
+                pitches[i] = 0;
+                yaws[i] = 0;
             }
         }
 
-        // Only log if there's an issue
-        if (yaws.length === 0) {
-            console.error(`[getAllAttitudeData] WARNING: Extracted 0 attitude points from ${this.dataList.length} rows (${errorCount} errors)`);
+        if (errorCount > 0 && errorCount <= 10) {
+            console.warn(`[getAllAttitudeData] ${errorCount} errors during extraction`);
         }
 
         return {

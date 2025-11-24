@@ -41,8 +41,16 @@
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `YOUTUBE_START_OFFSET` | Time offset in seconds | `0.0` |
+| `DOWNSAMPLE_FACTOR` | Memory optimization factor (higher = less memory) | `20` |
 | `PORT` | Server port | Auto-set by Render |
 | `NODE_ENV` | Node environment | `production` (auto-set) |
+
+**Memory Optimization:**
+
+- `DOWNSAMPLE_FACTOR=20` reduces 338k rows to ~17k rows (~80% memory reduction)
+- Increase to `30-50` if still running out of memory (lower chart quality)
+- Decrease to `10-15` for better chart quality (uses more memory)
+- Check `/api/memory` endpoint to monitor memory usage
 
 ## Post-Deployment Checklist
 

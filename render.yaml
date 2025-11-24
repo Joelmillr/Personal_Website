@@ -3,7 +3,7 @@ services:
     name: personal-website
     env: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node --max-old-space-size=512 server.js
     envVars:
       # ============================================
       # SERVER CONFIGURATION (Auto-set by Render)
@@ -22,4 +22,6 @@ services:
         value: 0.0  # Time offset in seconds (adjust if needed)
       - key: WS_URL
         sync: false  # REQUIRED: Your Render app URL (e.g., https://personal-website.onrender.com)
+      - key: DOWNSAMPLE_FACTOR
+        value: 20  # Memory optimization: higher = less memory (default: 20, increase to 30-50 if needed)
 
