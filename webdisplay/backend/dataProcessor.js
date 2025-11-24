@@ -33,9 +33,12 @@ class FlightDataProcessor {
             return;
         }
         
+        console.log(`[DataProcessor] Reading file...`);
         const fileContent = fs.readFileSync(this.dataFile, 'utf-8');
         console.log(`[DataProcessor] File size: ${fileContent.length} bytes`);
         
+        console.log(`[DataProcessor] Parsing CSV (this may take a while for large files)...`);
+        const parseStartTime = Date.now();
         const records = parse(fileContent, {
             columns: true,
             skip_empty_lines: true,
@@ -52,6 +55,8 @@ class FlightDataProcessor {
                 return value;
             }
         });
+        const parseDuration = Date.now() - parseStartTime;
+        console.log(`[DataProcessor] CSV parsed in ${parseDuration}ms: ${records.length} records`);
 
         // Only log errors
         if (records.length === 0) {
@@ -67,40 +72,68 @@ class FlightDataProcessor {
             }
         }
 
-        // Process timestamps and convert to seconds
-        this.dataList = records.map((row, index) => {
-            // Parse timestamp - handle both timedelta strings and numeric seconds
-            let timestampSeconds = 0;
-            if (typeof row.timestamp === 'string') {
-                // Try parsing as timedelta (e.g., "0 days 00:00:02.643000")
-                const tdMatch = row.timestamp.match(/(\d+) days?\s+(\d+):(\d+):([\d.]+)/);
-                if (tdMatch) {
-                    const days = parseInt(tdMatch[1]) || 0;
-                    const hours = parseInt(tdMatch[2]) || 0;
-                    const minutes = parseInt(tdMatch[3]) || 0;
-                    const seconds = parseFloat(tdMatch[4]) || 0;
-                    timestampSeconds = days * 86400 + hours * 3600 + minutes * 60 + seconds;
+        // Process timestamps and convert to seconds in chunks to avoid blocking
+        console.log(`[DataProcessor] Processing ${records.length} records...`);
+        const processStartTime = Date.now();
+        
+        // Process in chunks to allow event loop to breathe
+        const CHUNK_SIZE = 10000;
+        this.dataList = [];
+        
+        for (let i = 0; i < records.length; i += CHUNK_SIZE) {
+            const chunk = records.slice(i, Math.min(i + CHUNK_SIZE, records.length));
+            const chunkData = chunk.map((row, chunkIndex) => {
+                const index = i + chunkIndex;
+                // Parse timestamp - handle both timedelta strings and numeric seconds
+                let timestampSeconds = 0;
+                if (typeof row.timestamp === 'string') {
+                    // Try parsing as timedelta (e.g., "0 days 00:00:02.643000")
+                    const tdMatch = row.timestamp.match(/(\d+) days?\s+(\d+):(\d+):([\d.]+)/);
+                    if (tdMatch) {
+                        const days = parseInt(tdMatch[1]) || 0;
+                        const hours = parseInt(tdMatch[2]) || 0;
+                        const minutes = parseInt(tdMatch[3]) || 0;
+                        const seconds = parseFloat(tdMatch[4]) || 0;
+                        timestampSeconds = days * 86400 + hours * 3600 + minutes * 60 + seconds;
+                    } else {
+                        // Try as numeric seconds
+                        timestampSeconds = parseFloat(row.timestamp) || 0;
+                    }
                 } else {
-                    // Try as numeric seconds
                     timestampSeconds = parseFloat(row.timestamp) || 0;
                 }
-            } else {
-                timestampSeconds = parseFloat(row.timestamp) || 0;
-            }
 
-            return {
-                index,
-                timestampSeconds,
-                timestampNs: timestampSeconds * 1e9, // Convert to nanoseconds for binary search
-                row
-            };
-        });
+                return {
+                    index,
+                    timestampSeconds,
+                    timestampNs: timestampSeconds * 1e9, // Convert to nanoseconds for binary search
+                    row
+                };
+            });
+            
+            this.dataList.push(...chunkData);
+            
+            // Log progress every chunk
+            if ((i + CHUNK_SIZE) % 50000 === 0 || i + CHUNK_SIZE >= records.length) {
+                const progress = ((i + CHUNK_SIZE) / records.length * 100).toFixed(1);
+                console.log(`[DataProcessor] Processed ${Math.min(i + CHUNK_SIZE, records.length)}/${records.length} records (${progress}%)`);
+            }
+        }
+        
+        const processDuration = Date.now() - processStartTime;
+        console.log(`[DataProcessor] Processing completed in ${processDuration}ms`);
 
         // Sort by timestamp
+        console.log(`[DataProcessor] Sorting ${this.dataList.length} records by timestamp...`);
+        const sortStartTime = Date.now();
         this.dataList.sort((a, b) => a.timestampSeconds - b.timestampSeconds);
+        const sortDuration = Date.now() - sortStartTime;
+        console.log(`[DataProcessor] Sorting completed in ${sortDuration}ms`);
 
         // Pre-compute numeric timestamps for fast binary search
+        console.log(`[DataProcessor] Pre-computing timestamp list...`);
         this.timestampNsList = this.dataList.map(d => d.timestampNs);
+        console.log(`[DataProcessor] Timestamp list computed: ${this.timestampNsList.length} entries`);
 
         if (this.dataList.length === 0) {
             console.error(`[DataProcessor] ERROR: No data rows loaded! Check CSV file format.`);

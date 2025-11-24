@@ -267,16 +267,16 @@ function initWebdisplayBackend(httpServer) {
         console.log('[INIT] Starting initialization request...');
 
         try {
-            // Set timeout for the entire request (30 seconds)
+            // Set timeout for the entire request (120 seconds for large CSV processing)
             const requestTimeout = setTimeout(() => {
                 if (!res.headersSent) {
-                    console.error('[INIT] Request timeout after 30 seconds');
+                    console.error('[INIT] Request timeout after 120 seconds');
                     res.status(504).json({
                         success: false,
-                        error: 'Initialization timeout - server is processing large dataset'
+                        error: 'Initialization timeout - server is processing large dataset. This may take 60-90 seconds for 74MB CSV files.'
                     });
                 }
-            }, 30000);
+            }, 120000); // 2 minutes timeout
 
             if (!fs.existsSync(DATA_FILE)) {
                 clearTimeout(requestTimeout);

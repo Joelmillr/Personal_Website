@@ -193,8 +193,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         
         // Add timeout and better error handling for /api/init
+        // Large CSV files (74MB) can take 60-90 seconds to parse
         const initController = new AbortController();
-        const initTimeout = setTimeout(() => initController.abort(), 60000); // 60 second timeout
+        const initTimeout = setTimeout(() => initController.abort(), 120000); // 120 second timeout for large files
         
         let response;
         try {
