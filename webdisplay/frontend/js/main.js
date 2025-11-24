@@ -191,7 +191,39 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (loadingStatus) {
             loadingStatus.textContent = 'Loading flight data...';
         }
-        const response = await fetch('/api/init');
+        
+        // Add timeout and better error handling for /api/init
+        const initController = new AbortController();
+        const initTimeout = setTimeout(() => initController.abort(), 60000); // 60 second timeout
+        
+        let response;
+        try {
+            response = await fetch('/api/init', {
+                signal: initController.signal,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            clearTimeout(initTimeout);
+        } catch (error) {
+            clearTimeout(initTimeout);
+            if (error.name === 'AbortError') {
+                throw new Error('Initialization timed out after 60 seconds. The server may be processing a large dataset.');
+            }
+            throw new Error(`Failed to connect to server: ${error.message}`);
+        }
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            let errorData;
+            try {
+                errorData = JSON.parse(errorText);
+            } catch (e) {
+                errorData = { error: errorText || `HTTP ${response.status}: ${response.statusText}` };
+            }
+            throw new Error(errorData.error || `Server error: ${response.status} ${response.statusText}`);
+        }
+        
         const result = await response.json();
 
         if (!result.success) {
@@ -1541,30 +1573,55 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     } catch (error) {
         console.error('Initialization error:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        
         statusEl.textContent = `Error: ${error.message}`;
         statusEl.classList.add('error');
 
-        // Update loading status on error
+        // Update loading status on error with more details
         if (loadingStatus) {
-            loadingStatus.textContent = `Error: ${error.message}`;
+            let errorMsg = error.message;
+            if (error.message.includes('timeout')) {
+                errorMsg = 'Server is taking too long to respond. This may be due to processing a large dataset. Please wait or refresh the page.';
+            } else if (error.message.includes('Failed to connect')) {
+                errorMsg = 'Cannot connect to server. Please check your internet connection and try again.';
+            }
+            loadingStatus.textContent = `Error: ${errorMsg}`;
             loadingStatus.style.color = '#ff6b6b';
         }
 
-        // Hide overlay after showing error message (after 3 seconds)
+        // Try to get health check info
+        fetch('/api/health')
+            .then(res => res.json())
+            .then(health => {
+                console.log('[MAIN] Server health:', health);
+                if (health.data_file_exists === false) {
+                    if (loadingStatus) {
+                        loadingStatus.textContent = 'Error: Data file not found on server';
+                    }
+                }
+            })
+            .catch(e => console.warn('[MAIN] Could not fetch health check:', e));
+
+        // Hide overlay after showing error message (after 5 seconds to allow reading)
         setTimeout(() => {
             if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
                 console.log('[MAIN] Hiding loading overlay after error');
                 loadingOverlay.classList.add('hidden');
             }
-        }, 3000);
+        }, 5000);
 
-        // Fallback: Force hide overlay after 10 seconds even on error
+        // Fallback: Force hide overlay after 15 seconds even on error
         setTimeout(() => {
             if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
                 console.warn('[MAIN] Force hiding loading overlay after error timeout');
                 loadingOverlay.classList.add('hidden');
             }
-        }, 10000);
+        }, 15000);
     }
 });
 
