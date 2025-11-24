@@ -26,14 +26,29 @@ class FlightDataProcessor {
     _loadData() {
         console.log(`[DataProcessor] Loading data from ${this.dataFile}...`);
         
-        // Check if file exists
+        // Check for preprocessed JSON file first (much faster)
+        const jsonFile = this.dataFile.replace('.csv', '.json');
+        const usePreprocessed = process.env.USE_PREPROCESSED_DATA === 'true';
+        
+        if (usePreprocessed && fs.existsSync(jsonFile)) {
+            console.log(`[DataProcessor] Loading preprocessed JSON (much faster)...`);
+            const loadStart = Date.now();
+            const jsonContent = fs.readFileSync(jsonFile, 'utf-8');
+            this.dataList = JSON.parse(jsonContent);
+            this.timestampNsList = this.dataList.map(d => d.timestampNs);
+            const loadTime = Date.now() - loadStart;
+            console.log(`[DataProcessor] Loaded ${this.dataList.length} records from JSON in ${loadTime}ms`);
+            return;
+        }
+        
+        // Fallback to CSV parsing
         if (!fs.existsSync(this.dataFile)) {
             console.error(`[DataProcessor] ERROR: Data file not found: ${this.dataFile}`);
             this.dataList = [];
             return;
         }
         
-        console.log(`[DataProcessor] Reading file...`);
+        console.log(`[DataProcessor] Reading CSV file (slower - consider preprocessing)...`);
         const fileContent = fs.readFileSync(this.dataFile, 'utf-8');
         console.log(`[DataProcessor] File size: ${fileContent.length} bytes`);
         

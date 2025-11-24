@@ -42,6 +42,7 @@
 |----------|-------------|---------|
 | `YOUTUBE_START_OFFSET` | Time offset in seconds | `0.0` |
 | `DOWNSAMPLE_FACTOR` | Memory optimization factor (higher = less memory) | `20` |
+| `USE_PREPROCESSED_DATA` | Use preprocessed JSON instead of CSV (much faster) | `false` |
 | `PORT` | Server port | Auto-set by Render |
 | `NODE_ENV` | Node environment | `production` (auto-set) |
 
