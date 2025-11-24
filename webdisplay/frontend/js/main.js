@@ -1512,20 +1512,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         statusEl.classList.add('connected');
 
-        // Hide loading overlay after a short delay
-        // The video time monitoring will start requesting data once video is ready
-        setTimeout(() => {
+        // Hide loading overlay after initialization completes
+        // Always hide it, regardless of YouTube player state
+        const hideLoadingOverlay = () => {
             if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
                 if (loadingStatus) {
                     loadingStatus.textContent = 'Ready!';
                 }
                 setTimeout(() => {
                     if (loadingOverlay) {
-                loadingOverlay.classList.add('hidden');
+                        loadingOverlay.classList.add('hidden');
+                        console.log('[MAIN] Loading overlay hidden');
                     }
                 }, 500);
             }
-        }, 1000);
+        };
+
+        // Hide overlay after a short delay to ensure everything is rendered
+        setTimeout(hideLoadingOverlay, 1000);
+
+        // Fallback: Force hide overlay after 10 seconds maximum
+        setTimeout(() => {
+            if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+                console.warn('[MAIN] Force hiding loading overlay after timeout');
+                loadingOverlay.classList.add('hidden');
+            }
+        }, 10000);
 
     } catch (error) {
         console.error('Initialization error:', error);
@@ -1538,7 +1550,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingStatus.style.color = '#ff6b6b';
         }
 
-        // Keep overlay visible on error so user can see the error message
+        // Hide overlay after showing error message (after 3 seconds)
+        setTimeout(() => {
+            if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+                console.log('[MAIN] Hiding loading overlay after error');
+                loadingOverlay.classList.add('hidden');
+            }
+        }, 3000);
+
+        // Fallback: Force hide overlay after 10 seconds even on error
+        setTimeout(() => {
+            if (loadingOverlay && !loadingOverlay.classList.contains('hidden')) {
+                console.warn('[MAIN] Force hiding loading overlay after error timeout');
+                loadingOverlay.classList.add('hidden');
+            }
+        }, 10000);
     }
 });
 
