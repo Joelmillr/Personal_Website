@@ -281,7 +281,7 @@ try {
         
         // Memory optimization: Increase downsampling for production (20x reduction)
         // This reduces memory usage from ~500MB to ~100MB for 338k rows
-        const DOWNSAMPLE_FACTOR = parseInt(process.env.DOWNSAMPLE_FACTOR || '20');
+        const DOWNSAMPLE_FACTOR = parseInt(process.env.DOWNSAMPLE_FACTOR || '50');
         
         // Memory monitoring
         const memoryBefore = process.memoryUsage();
