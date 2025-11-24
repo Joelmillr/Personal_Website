@@ -27,10 +27,10 @@ class FlightDataProcessor {
         console.log(`[DataProcessor] Loading data from ${this.dataFile}...`);
         
         // Check for preprocessed JSON file first (much faster)
+        // JSON is generated during build process on Render, or can be created manually
         const jsonFile = this.dataFile.replace('.csv', '.json');
-        const usePreprocessed = process.env.USE_PREPROCESSED_DATA === 'true';
         
-        if (usePreprocessed && fs.existsSync(jsonFile)) {
+        if (fs.existsSync(jsonFile)) {
             console.log(`[DataProcessor] Loading preprocessed JSON (much faster)...`);
             const loadStart = Date.now();
             const jsonContent = fs.readFileSync(jsonFile, 'utf-8');
@@ -40,6 +40,8 @@ class FlightDataProcessor {
             console.log(`[DataProcessor] Loaded ${this.dataList.length} records from JSON in ${loadTime}ms`);
             return;
         }
+        
+        console.log(`[DataProcessor] JSON file not found, will parse CSV (slower). JSON will be generated during build on Render.`);
         
         // Fallback to CSV parsing
         if (!fs.existsSync(this.dataFile)) {

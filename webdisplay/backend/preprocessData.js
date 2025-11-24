@@ -85,7 +85,8 @@ function preprocessCSV() {
     
     console.log('\n✅ Preprocessing complete!');
     console.log(`Total time: ${Date.now() - parseStart}ms`);
-    console.log(`\nTo use preprocessed data, set USE_PREPROCESSED_DATA=true in environment`);
+    console.log(`\nJSON file created: ${JSON_FILE}`);
+    console.log(`The JSON file will be used automatically if it exists (generated during build on Render)`);
 }
 
 if (require.main === module) {

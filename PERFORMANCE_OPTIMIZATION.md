@@ -82,16 +82,26 @@ Store data in PostgreSQL or SQLite for:
 
 ## Quick Start
 
+### For Local Development:
 ```bash
-# 1. Pre-process CSV
+# Pre-process CSV (optional, for faster local testing)
 npm run preprocess
 
-# 2. Set environment variable
-export USE_PREPROCESSED_DATA=true
-
-# 3. Deploy (or run locally)
+# Run server - will use JSON if it exists, otherwise CSV
 npm start
 ```
 
-The preprocessed JSON will be loaded instead of parsing CSV, making initialization 10-50x faster!
+### For Production (Render):
+```yaml
+# render.yaml already configured to run preprocessing during build
+buildCommand: npm install && npm run preprocess
+```
+
+**How it works:**
+1. During Render build: `npm run preprocess` generates `merged_data.json` from CSV
+2. JSON file is created on Render's filesystem (not committed to Git)
+3. On startup: Server automatically uses JSON if it exists (much faster)
+4. Fallback: If JSON doesn't exist, parses CSV (slower but works)
+
+**No environment variables needed** - JSON is used automatically if it exists!
 

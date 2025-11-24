@@ -42,9 +42,15 @@
 |----------|-------------|---------|
 | `YOUTUBE_START_OFFSET` | Time offset in seconds | `0.0` |
 | `DOWNSAMPLE_FACTOR` | Memory optimization factor (higher = less memory) | `20` |
-| `USE_PREPROCESSED_DATA` | Use preprocessed JSON instead of CSV (much faster) | `false` |
 | `PORT` | Server port | Auto-set by Render |
 | `NODE_ENV` | Node environment | `production` (auto-set) |
+
+**Performance Optimization:**
+
+- JSON preprocessing runs automatically during build (`npm run preprocess`)
+- JSON file is generated on Render during build (not committed to Git)
+- If JSON exists, it's used automatically (10-50x faster than CSV parsing)
+- If JSON doesn't exist, falls back to CSV parsing (slower but works)
 
 **Memory Optimization:**
 
