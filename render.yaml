@@ -5,16 +5,21 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      # ============================================
+      # SERVER CONFIGURATION (Auto-set by Render)
+      # ============================================
       - key: NODE_ENV
         value: production
-      - key: WS_URL
-        sync: false  # Set this manually after first deployment with your actual URL (e.g., https://your-app.onrender.com)
+      # PORT is automatically set by Render - don't override
+      
+      # ============================================
+      # WEBDISPLAY CONFIGURATION
+      # ============================================
+      # REQUIRED: Set these in Render dashboard after first deployment
       - key: YOUTUBE_VIDEO_ID
-        sync: false  # Set this manually with your YouTube video ID
+        sync: false  # REQUIRED: Your YouTube video ID (e.g., 6CBOZGQqOI0)
       - key: YOUTUBE_START_OFFSET
-        value: 0.0
-      - key: SUPABASE_URL
-        value: https://evqkatxibpkitspjjpmo.supabase.co
-      - key: SUPABASE_KEY
-        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2cWthdHhpYnBraXRzcGpqcG1vIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MjE4MTEsImV4cCI6MjA3OTM5NzgxMX0.Rl6x_mc0HaGtFusy9DvtgPSP_flgug9mBJgGHG2ygbQ
+        value: 0.0  # Time offset in seconds (adjust if needed)
+      - key: WS_URL
+        sync: false  # REQUIRED: Your Render app URL (e.g., https://personal-website.onrender.com)
 

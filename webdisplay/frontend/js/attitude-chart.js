@@ -8,9 +8,10 @@ class AttitudeChartViewer {
         this.completeAttitudes = { yaws: [], pitches: [], rolls: [] };
         this.startIndex = 0;
         this.currentIndex = 0;
+        this.downsampleFactor = 1;  // Factor by which data was downsampled (default: no downsampling)
     }
     
-    initialize(completeAttitudes = null, startIndex = 0) {
+    initialize(completeAttitudes = null, startIndex = 0, downsampleFactor = 1) {
         const canvas = document.getElementById(this.canvasId);
         if (!canvas) {
             console.error(`Canvas element with id '${this.canvasId}' not found`);
@@ -21,10 +22,12 @@ class AttitudeChartViewer {
         if (completeAttitudes && completeAttitudes.yaws && completeAttitudes.yaws.length > 0) {
             this.completeAttitudes = completeAttitudes;
             this.startIndex = startIndex;
-            console.log(`Preloaded complete attitude profile with ${completeAttitudes.yaws.length} points, starting from index ${startIndex}`);
+            this.downsampleFactor = downsampleFactor || 1;
+            console.log(`Preloaded complete attitude profile with ${completeAttitudes.yaws.length} points, starting from index ${startIndex}, downsample factor: ${this.downsampleFactor}`);
         } else {
             this.completeAttitudes = { yaws: [], pitches: [], rolls: [] };
             this.startIndex = 0;
+            this.downsampleFactor = 1;
         }
         
         const ctx = canvas.getContext('2d');
@@ -125,9 +128,16 @@ class AttitudeChartViewer {
                 return;  // Don't display anything before takeoff
             }
             
-            // Slice from startIndex to current index
-            const startSlice = this.startIndex;
-            const maxIndex = Math.min(index + 1, this.completeAttitudes.yaws.length);
+            // Detect timestamp jumps (forward or backward) by comparing with currentIndex
+            const indexJumped = Math.abs(index - this.currentIndex) > 10;
+            
+            // Convert indices to downsampled indices if data was downsampled
+            const downsampledStartIndex = Math.floor(this.startIndex / this.downsampleFactor);
+            const downsampledCurrentIndex = Math.floor(index / this.downsampleFactor);
+            
+            // Slice from startIndex to current index (using downsampled indices)
+            const startSlice = Math.max(0, downsampledStartIndex);
+            const maxIndex = Math.min(downsampledCurrentIndex + 1, this.completeAttitudes.yaws.length);
             
             const traveledYaws = this.completeAttitudes.yaws.slice(startSlice, maxIndex);
             const traveledPitches = this.completeAttitudes.pitches.slice(startSlice, maxIndex);
@@ -141,12 +151,28 @@ class AttitudeChartViewer {
             }
             
             // Convert to chart data format (x = relative index from start, y = angle)
-            const yawData = traveledYaws.map((angle, i) => ({ x: i, y: angle }));
-            const pitchData = traveledPitches.map((angle, i) => ({ x: i, y: angle }));
-            const rollData = traveledRolls.map((angle, i) => ({ x: i, y: angle }));
+            // X-axis represents original indices (not downsampled), so we scale back
+            const yawData = traveledYaws.map((angle, i) => {
+                // Map back to original index space: (downsampledStartIndex + i) * downsampleFactor
+                // Then make relative to startIndex
+                const originalIndex = (downsampledStartIndex + i) * this.downsampleFactor;
+                const relativeIndex = originalIndex - this.startIndex;
+                return { x: relativeIndex, y: angle };
+            });
+            const pitchData = traveledPitches.map((angle, i) => {
+                const originalIndex = (downsampledStartIndex + i) * this.downsampleFactor;
+                const relativeIndex = originalIndex - this.startIndex;
+                return { x: relativeIndex, y: angle };
+            });
+            const rollData = traveledRolls.map((angle, i) => {
+                const originalIndex = (downsampledStartIndex + i) * this.downsampleFactor;
+                const relativeIndex = originalIndex - this.startIndex;
+                return { x: relativeIndex, y: angle };
+            });
             
-            // Only update if index actually changed (prevents updates when paused)
-            if (index === this.currentIndex && this.chart.data.datasets[0].data.length === yawData.length) {
+            // Only skip update if index hasn't changed AND not forcing update AND not a jump
+            // Always update on jumps or forced updates
+            if (!forceUpdate && !indexJumped && index === this.currentIndex && this.chart.data.datasets[0].data.length === yawData.length) {
                 return; // Same index, no update needed
             }
             
@@ -154,17 +180,24 @@ class AttitudeChartViewer {
             this.chart.data.datasets[1].data = pitchData;
             this.chart.data.datasets[2].data = rollData;
             
-            // Update chart (throttled to every 5 calls to reduce load)
-            // Always update on significant index changes (seeks/jumps)
-            if (!this._updateCounter) this._updateCounter = 0;
-            if (!this._lastIndex) this._lastIndex = index;
-            const indexJumped = Math.abs(index - this._lastIndex) > 50;
-            this._updateCounter++;
-            this._lastIndex = index;
-            
-            // Update chart on first call, significant jumps, or every 5 calls
-            if (this._updateCounter === 1 || this._updateCounter % 5 === 0 || indexJumped) {
+            // Update chart immediately on jumps or forced updates, otherwise throttle
+            if (forceUpdate || indexJumped) {
+                // Immediate update for jumps and forced updates
                 this.chart.update('none');
+                // Reset throttling counters on jump
+                this._updateCounter = 0;
+                this._lastIndex = index;
+            } else {
+                // Throttled update for normal playback
+                if (!this._updateCounter) this._updateCounter = 0;
+                if (this._lastIndex === undefined) this._lastIndex = index;
+                this._updateCounter++;
+                this._lastIndex = index;
+                
+                // Update chart on first call or every 5 calls
+                if (this._updateCounter === 1 || this._updateCounter % 5 === 0) {
+                    this.chart.update('none');
+                }
             }
         } else {
             // Fallback: build incrementally if complete profile not available

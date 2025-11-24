@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webdisplay Diagnostics</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .section { margin: 20px 0; padding: 15px; background: #2a2a2a; border-left: 3px solid #0f0; }
+        .error { border-left-color: #f00; color: #f88; }
+        .success { border-left-color: #0f0; color: #8f8; }
+        .warning { border-left-color: #ff0; color: #ff8; }
+        pre { background: #000; padding: 10px; overflow-x: auto; }
+        button { padding: 10px 20px; margin: 5px; background: #0f0; color: #000; border: none; cursor: pointer; }
+        button:hover { background: #0a0; }
+    </style>
+</head>
+<body>
+    <h1>Webdisplay Diagnostics</h1>
+    <button onclick="runDiagnostics()">Run Diagnostics</button>
+    <button onclick="testInit()">Test /api/init</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function runDiagnostics() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="section">Running diagnostics...</div>';
+            
+            try {
+                const response = await fetch('/api/diagnostics');
+                const data = await response.json();
+                
+                let html = '<div class="section ' + (data.success ? 'success' : 'error') + '">';
+                html += '<h2>Diagnostics Results</h2>';
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                html += '</div>';
+                
+                if (data.success && data.diagnostics) {
+                    const d = data.diagnostics;
+                    
+                    // Processor status
+                    html += '<div class="section ' + (d.processor.hasData ? 'success' : 'error') + '">';
+                    html += '<h3>Processor</h3>';
+                    html += '<p>Data Count: ' + d.processor.dataCount + '</p>';
+                    html += '</div>';
+                    
+                    // Path data status
+                    html += '<div class="section ' + (d.pathData.hasData ? 'success' : 'error') + '">';
+                    html += '<h3>Path Data</h3>';
+                    html += '<p>Lats: ' + d.pathData.latsCount + '</p>';
+                    html += '<p>Lons: ' + d.pathData.lonsCount + '</p>';
+                    html += '<p>Alts: ' + d.pathData.altsCount + '</p>';
+                    html += '<p>Sample: lat=' + d.pathData.sampleLat + ', lon=' + d.pathData.sampleLon + ', alt=' + d.pathData.sampleAlt + '</p>';
+                    html += '</div>';
+                    
+                    // Attitude data status
+                    html += '<div class="section ' + (d.attitudeData.hasData ? 'success' : 'error') + '">';
+                    html += '<h3>Attitude Data</h3>';
+                    html += '<p>Yaws: ' + d.attitudeData.yawsCount + '</p>';
+                    html += '<p>Pitches: ' + d.attitudeData.pitchesCount + '</p>';
+                    html += '<p>Rolls: ' + d.attitudeData.rollsCount + '</p>';
+                    html += '<p>Sample: yaw=' + d.attitudeData.sampleYaw + ', pitch=' + d.attitudeData.samplePitch + ', roll=' + d.attitudeData.sampleRoll + '</p>';
+                    html += '</div>';
+                    
+                    // Individual data test
+                    if (d.individualData) {
+                        html += '<div class="section ' + (d.individualData.hasData ? 'success' : 'error') + '">';
+                        html += '<h3>Individual Data Access Test</h3>';
+                        html += '<pre>' + JSON.stringify(d.individualData, null, 2) + '</pre>';
+                        html += '</div>';
+                    }
+                }
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = '<div class="section error"><h2>Error</h2><pre>' + error.message + '</pre></div>';
+            }
+        }
+        
+        async function testInit() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="section">Testing /api/init...</div>';
+            
+            try {
+                const start = performance.now();
+                const response = await fetch('/api/init');
+                const data = await response.json();
+                const duration = performance.now() - start;
+                
+                let html = '<div class="section ' + (data.success ? 'success' : 'error') + '">';
+                html += '<h2>/api/init Response</h2>';
+                html += '<p>Duration: ' + duration.toFixed(2) + 'ms</p>';
+                html += '<p>Success: ' + data.success + '</p>';
+                
+                if (data.success) {
+                    html += '<h3>Data Summary</h3>';
+                    html += '<p>Complete Altitudes: ' + (data.complete_altitudes?.length || 0) + '</p>';
+                    html += '<p>Complete Attitudes Yaws: ' + (data.complete_attitudes?.yaws?.length || 0) + '</p>';
+                    html += '<p>Complete Path: ' + (data.complete_path?.length || 0) + '</p>';
+                    html += '<p>Takeoff Index: ' + (data.takeoff_index || 0) + '</p>';
+                    html += '<p>Downsample Factor: ' + (data.downsample_factor || 1) + '</p>';
+                } else {
+                    html += '<p>Error: ' + (data.error || 'Unknown') + '</p>';
+                }
+                
+                html += '<h3>Full Response</h3>';
+                html += '<pre>' + JSON.stringify(data, null, 2).substring(0, 5000) + '...</pre>';
+                html += '</div>';
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = '<div class="section error"><h2>Error</h2><pre>' + error.message + '</pre></div>';
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            runDiagnostics();
+        });
+    </script>
+</body>
+</html>
+

@@ -155,6 +155,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         viewer3d = new Viewer3D('viewer-3d');
         controls = new Controls();
 
+        // CRITICAL: Initialize Godot with default/zero data immediately
+        // This prevents "NO DATA AVAILABLE" warnings while backend loads
+        const defaultGodotData = {
+            "VQX": 0, "VQY": 0, "VQZ": 0, "VQW": 1,
+            "HQX": 0, "HQY": 0, "HQZ": 0, "HQW": 1,
+            "GSPEED": 0, "VALT": 0
+        };
+        window._lastGodotDataSent = defaultGodotData;
+        window._godotDataCache = [{videoTime: 0, data: defaultGodotData}];
+        
+        // Try to send default data to Godot immediately (if iframe is ready)
+        const sendDefaultToGodot = () => {
+            try {
+                const godotIframe = document.getElementById('godot-iframe');
+                if (godotIframe && godotIframe.contentWindow) {
+                    if (typeof godotIframe.contentWindow.getGodotData === 'function') {
+                        godotIframe.contentWindow.godotLatestData = defaultGodotData;
+                        console.log('[MAIN] ✓ Default data sent to Godot immediately');
+                    } else {
+                        // Retry after a short delay if bridge not ready
+                        setTimeout(sendDefaultToGodot, 100);
+                    }
+                } else {
+                    // Retry if iframe not ready
+                    setTimeout(sendDefaultToGodot, 100);
+                }
+            } catch (e) {
+                // Cross-origin or other error - will retry later
+            }
+        };
+        sendDefaultToGodot();
+
         // Initialize backend connection
         if (loadingStatus) {
             loadingStatus.textContent = 'Loading flight data...';
@@ -166,7 +198,32 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error(result.error || 'Failed to initialize');
         }
 
-        console.log('Data loaded:', result.summary);
+        console.log('[MAIN] Data loaded:', result.summary);
+        console.log('[MAIN] Response structure:', {
+            hasCompleteAltitudes: !!result.complete_altitudes,
+            altitudesLength: result.complete_altitudes?.length || 0,
+            hasCompleteAttitudes: !!result.complete_attitudes,
+            attitudesYawsLength: result.complete_attitudes?.yaws?.length || 0,
+            attitudesPitchesLength: result.complete_attitudes?.pitches?.length || 0,
+            attitudesRollsLength: result.complete_attitudes?.rolls?.length || 0,
+            downsampleFactor: result.downsample_factor,
+            takeoffIndex: result.takeoff_index
+        });
+        
+        // Log full attitude data structure for debugging
+        if (result.complete_attitudes) {
+            console.log('[MAIN] complete_attitudes structure:', {
+                type: typeof result.complete_attitudes,
+                isArray: Array.isArray(result.complete_attitudes),
+                keys: Object.keys(result.complete_attitudes),
+                yawsType: typeof result.complete_attitudes.yaws,
+                yawsIsArray: Array.isArray(result.complete_attitudes.yaws),
+                yawsLength: result.complete_attitudes.yaws?.length,
+                sampleYaws: result.complete_attitudes.yaws?.slice(0, 5)
+            });
+        } else {
+            console.error('[MAIN] complete_attitudes is null/undefined');
+        }
 
         if (loadingStatus) {
             loadingStatus.textContent = 'Initializing display components...';
@@ -905,21 +962,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Initialize chart with preloaded altitude data
         try {
-            chartViewer.initialize(result.complete_altitudes, takeoffIndex);
+            const downsampleFactor = result.downsample_factor || 1;
+            chartViewer.initialize(result.complete_altitudes, takeoffIndex, downsampleFactor);
+            console.log(`Chart initialized with ${result.complete_altitudes?.length || 0} altitude points, downsample factor: ${downsampleFactor}`);
         } catch (error) {
             console.error('Chart initialization error:', error);
         }
 
         // Initialize attitude chart with preloaded attitude data
         try {
-            if (result.complete_attitudes) {
-                attitudeChartViewer.initialize(result.complete_attitudes, takeoffIndex);
+            console.log('[MAIN] Checking attitude data:', {
+                hasCompleteAttitudes: !!result.complete_attitudes,
+                yawsLength: result.complete_attitudes?.yaws?.length || 0,
+                pitchesLength: result.complete_attitudes?.pitches?.length || 0,
+                rollsLength: result.complete_attitudes?.rolls?.length || 0
+            });
+            
+            if (result.complete_attitudes && 
+                result.complete_attitudes.yaws && 
+                result.complete_attitudes.yaws.length > 0) {
+                const downsampleFactor = result.downsample_factor || 1;
+                attitudeChartViewer.initialize(result.complete_attitudes, takeoffIndex, downsampleFactor);
+                console.log(`[MAIN] ✓ Attitude chart initialized with ${result.complete_attitudes.yaws.length} attitude points, downsample factor: ${downsampleFactor}`);
             } else {
-                console.warn('No attitude data available from backend');
-                attitudeChartViewer.initialize(null, takeoffIndex);
+                console.error('[MAIN] ERROR: No attitude data available from backend');
+                console.error('[MAIN] result.complete_attitudes:', result.complete_attitudes);
+                attitudeChartViewer.initialize(null, takeoffIndex, 1);
             }
         } catch (error) {
-            console.error('Attitude chart initialization error:', error);
+            console.error('[MAIN] Attitude chart initialization error:', error);
+            console.error('[MAIN] Error stack:', error.stack);
         }
 
         // 3D viewer disabled - using Godot instead

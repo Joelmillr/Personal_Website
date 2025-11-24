@@ -44,6 +44,18 @@ webdisplay/
 └── runtime.txt          # Python version specification
 ```
 
+## Environment Variables
+
+See `ENV_VARIABLES.md` for complete documentation.
+
+**Required for production:**
+- `YOUTUBE_VIDEO_ID` - Your YouTube video ID
+- `WS_URL` - Your production URL (e.g., https://your-app.onrender.com)
+
+**Optional:**
+- `YOUTUBE_START_OFFSET` - Time offset in seconds (default: 0.0)
+- `PORT` - Server port (auto-set by Render)
+
 ## Quick Start
 
 ### 0. Verify Setup (Optional)

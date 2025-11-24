@@ -24,52 +24,47 @@ class FlightDataProcessor {
      * Load and process the merged_data.csv file
      */
     _loadData() {
-        const startTime = Date.now();
-        console.log(`[DATA] Loading data from ${this.dataFile}...`);
+        console.log(`[DataProcessor] Loading data from ${this.dataFile}...`);
         
-        try {
-            const fileStats = fs.statSync(this.dataFile);
-            const fileSizeMB = (fileStats.size / (1024 * 1024)).toFixed(2);
-            console.log(`[DATA] File size: ${fileSizeMB} MB`);
-        } catch (e) {
-            console.warn(`[DATA] Could not get file stats: ${e.message}`);
+        // Check if file exists
+        if (!fs.existsSync(this.dataFile)) {
+            console.error(`[DataProcessor] ERROR: Data file not found: ${this.dataFile}`);
+            this.dataList = [];
+            return;
         }
         
-        let fileContent;
-        try {
-            fileContent = fs.readFileSync(this.dataFile, 'utf-8');
-            const loadTime = Date.now() - startTime;
-            console.log(`[DATA] File read completed in ${loadTime}ms`);
-        } catch (error) {
-            console.error(`[DATA] ❌ Error reading file: ${error.message}`);
-            throw new Error(`Failed to read data file: ${error.message}`);
-        }
-        console.log(`[DATA] Parsing CSV (${(fileContent.length / 1024 / 1024).toFixed(2)} MB)...`);
-        const parseStartTime = Date.now();
+        const fileContent = fs.readFileSync(this.dataFile, 'utf-8');
+        console.log(`[DataProcessor] File size: ${fileContent.length} bytes`);
         
-        let records;
-        try {
-            records = parse(fileContent, {
-                columns: true,
-                skip_empty_lines: true,
-                cast: (value, context) => {
-                    // Don't cast timestamp column - it needs special parsing
-                    if (context.column === 'timestamp') {
-                        return value; // Keep as string for timestamp parsing
-                    }
-                    // Try to parse as number for other columns
-                    const num = parseFloat(value);
-                    if (!isNaN(num) && isFinite(num)) {
-                        return num;
-                    }
-                    return value;
+        const records = parse(fileContent, {
+            columns: true,
+            skip_empty_lines: true,
+            cast: (value, context) => {
+                // Don't cast timestamp column - it needs special parsing
+                if (context.column === 'timestamp') {
+                    return value; // Keep as string for timestamp parsing
                 }
-            });
-            const parseTime = Date.now() - parseStartTime;
-            console.log(`[DATA] CSV parsed: ${records.length} records in ${parseTime}ms`);
-        } catch (error) {
-            console.error(`[DATA] ❌ Error parsing CSV: ${error.message}`);
-            throw new Error(`Failed to parse CSV: ${error.message}`);
+                // Try to parse as number for other columns
+                const num = parseFloat(value);
+                if (!isNaN(num) && isFinite(num)) {
+                    return num;
+                }
+                return value;
+            }
+        });
+
+        // Only log errors
+        if (records.length === 0) {
+            console.error(`[DataProcessor] ERROR: No records parsed from CSV file!`);
+        } else {
+            const firstRecord = records[0];
+            const columns = Object.keys(firstRecord);
+            const requiredColumns = ['lat', 'lon', 'alt', 'x_vehicle', 'y_vehicle', 'z_vehicle', 'w_vehicle'];
+            const missingColumns = requiredColumns.filter(col => !columns.includes(col));
+            if (missingColumns.length > 0) {
+                console.error(`[DataProcessor] ERROR: Missing required columns: ${missingColumns.join(', ')}`);
+                console.error(`[DataProcessor] Available columns: ${columns.join(', ')}`);
+            }
         }
 
         // Process timestamps and convert to seconds
@@ -102,21 +97,14 @@ class FlightDataProcessor {
         });
 
         // Sort by timestamp
-        console.log(`[DATA] Sorting ${this.dataList.length} records by timestamp...`);
-        const sortStartTime = Date.now();
         this.dataList.sort((a, b) => a.timestampSeconds - b.timestampSeconds);
-        const sortTime = Date.now() - sortStartTime;
-        console.log(`[DATA] Sorting completed in ${sortTime}ms`);
 
         // Pre-compute numeric timestamps for fast binary search
-        console.log(`[DATA] Pre-computing timestamp list...`);
-        const mapStartTime = Date.now();
         this.timestampNsList = this.dataList.map(d => d.timestampNs);
-        const mapTime = Date.now() - mapStartTime;
-        console.log(`[DATA] Timestamp list computed in ${mapTime}ms`);
 
-        const totalTime = Date.now() - startTime;
-        console.log(`[DATA] ✓ Successfully loaded ${this.dataList.length} data rows in ${totalTime}ms (${(totalTime/1000).toFixed(2)}s)`);
+        if (this.dataList.length === 0) {
+            console.error(`[DataProcessor] ERROR: No data rows loaded! Check CSV file format.`);
+        }
     }
 
     /**
@@ -307,10 +295,35 @@ class FlightDataProcessor {
      * Returns dict with 'lats', 'lons', 'alts' lists.
      */
     getAllPathData() {
+        console.log(`[getAllPathData] Starting extraction from ${this.dataList.length} rows`);
+        
+        if (this.dataList.length === 0) {
+            console.error('[getAllPathData] ERROR: dataList is empty!');
+            return { lats: [], lons: [], alts: [] };
+        }
+        
+        // Check first row to see what columns are available
+        const firstRow = this.dataList[0].row;
+        console.log(`[getAllPathData] First row keys:`, Object.keys(firstRow).slice(0, 20).join(', '));
+        console.log(`[getAllPathData] Sample values:`, {
+            lat: firstRow.lat,
+            lon: firstRow.lon,
+            alt: firstRow.alt,
+            hasLat: 'lat' in firstRow,
+            hasLon: 'lon' in firstRow,
+            hasAlt: 'alt' in firstRow
+        });
+        
+        // Use same approach as getDataAtIndex() - parseFloat with || 0 fallback
         const lats = this.dataList.map(d => parseFloat(d.row.lat) || 0);
         const lons = this.dataList.map(d => parseFloat(d.row.lon) || 0);
         const alts = this.dataList.map(d => parseFloat(d.row.alt) || 0);
-
+        
+        // Only log if there's an issue
+        if (lats.length === 0) {
+            console.error(`[getAllPathData] WARNING: Extracted 0 points from ${this.dataList.length} rows`);
+        }
+        
         return {
             lats,
             lons,
@@ -323,23 +336,79 @@ class FlightDataProcessor {
      * Returns dict with 'yaws', 'pitches', 'rolls' lists (in degrees).
      */
     getAllAttitudeData() {
+        console.log(`[getAllAttitudeData] Starting extraction from ${this.dataList.length} rows`);
+        
         const yaws = [];
         const pitches = [];
         const rolls = [];
 
-        for (const data of this.dataList) {
-            const row = data.row;
-            const vehicleWorld = quat.fromValues(
-                row.x_vehicle || 0,
-                row.y_vehicle || 0,
-                row.z_vehicle || 0,
-                row.w_vehicle || 1
-            );
+        if (this.dataList.length === 0) {
+            console.error('[getAllAttitudeData] ERROR: dataList is empty, cannot extract attitude data');
+            return { yaws: [], pitches: [], rolls: [] };
+        }
 
-            const euler = this._quaternionToEuler(vehicleWorld);
-            rolls.push(euler.roll);
-            pitches.push(euler.pitch);
-            yaws.push(euler.yaw);
+        // Check first row to see what columns are available
+        const firstRow = this.dataList[0].row;
+        console.log(`[getAllAttitudeData] First row keys:`, Object.keys(firstRow).slice(0, 20).join(', '));
+        console.log(`[getAllAttitudeData] Sample quaternion values:`, {
+            x_vehicle: firstRow.x_vehicle,
+            y_vehicle: firstRow.y_vehicle,
+            z_vehicle: firstRow.z_vehicle,
+            w_vehicle: firstRow.w_vehicle,
+            hasXVehicle: 'x_vehicle' in firstRow,
+            hasYVehicle: 'y_vehicle' in firstRow,
+            hasZVehicle: 'z_vehicle' in firstRow,
+            hasWVehicle: 'w_vehicle' in firstRow
+        });
+        
+        const hasVehicleQuat = firstRow.x_vehicle !== undefined && firstRow.x_vehicle !== null;
+        
+        if (!hasVehicleQuat) {
+            console.error('[getAllAttitudeData] ERROR: No vehicle quaternion data found (x_vehicle, y_vehicle, z_vehicle, w_vehicle)');
+            console.error('[getAllAttitudeData] Available columns:', Object.keys(firstRow).join(', '));
+            return { yaws: [], pitches: [], rolls: [] };
+        }
+
+        let processedCount = 0;
+        let errorCount = 0;
+        for (let i = 0; i < this.dataList.length; i++) {
+            const data = this.dataList[i];
+            const row = data.row;
+            
+            try {
+                const vehicleWorld = quat.fromValues(
+                    parseFloat(row.x_vehicle) || 0,
+                    parseFloat(row.y_vehicle) || 0,
+                    parseFloat(row.z_vehicle) || 0,
+                    parseFloat(row.w_vehicle) || 1
+                );
+
+                const euler = this._quaternionToEuler(vehicleWorld);
+                rolls.push(euler.roll);
+                pitches.push(euler.pitch);
+                yaws.push(euler.yaw);
+                processedCount++;
+            } catch (error) {
+                errorCount++;
+                if (errorCount <= 5) {
+                    console.error(`[getAllAttitudeData] Error at index ${i}:`, error);
+                    console.error(`[getAllAttitudeData] Row data:`, {
+                        x_vehicle: row.x_vehicle,
+                        y_vehicle: row.y_vehicle,
+                        z_vehicle: row.z_vehicle,
+                        w_vehicle: row.w_vehicle
+                    });
+                }
+                // Push default values to maintain array length
+                rolls.push(0);
+                pitches.push(0);
+                yaws.push(0);
+            }
+        }
+
+        // Only log if there's an issue
+        if (yaws.length === 0) {
+            console.error(`[getAllAttitudeData] WARNING: Extracted 0 attitude points from ${this.dataList.length} rows (${errorCount} errors)`);
         }
 
         return {

@@ -9,9 +9,10 @@ class ChartViewer {
         this.completeAltitudes = [];  // Store complete altitudes like playback.py's all_alts
         this.traveledAlts = [];
         this.currentIndex = 0;
+        this.downsampleFactor = 1;  // Factor by which data was downsampled (default: no downsampling)
     }
     
-    initialize(completeAltitudes = null, startIndex = 0) {
+    initialize(completeAltitudes = null, startIndex = 0, downsampleFactor = 1) {
         const canvas = document.getElementById(this.canvasId);
         if (!canvas) {
             console.error(`Canvas element with id '${this.canvasId}' not found`);
@@ -22,10 +23,12 @@ class ChartViewer {
         if (completeAltitudes && completeAltitudes.length > 0) {
             this.completeAltitudes = completeAltitudes;
             this.startIndex = startIndex;  // Index to start displaying from (e.g., takeoff)
-            console.log(`Preloaded complete altitude profile with ${completeAltitudes.length} points, starting from index ${startIndex}`);
+            this.downsampleFactor = downsampleFactor || 1;
+            console.log(`Preloaded complete altitude profile with ${completeAltitudes.length} points, starting from index ${startIndex}, downsample factor: ${this.downsampleFactor}`);
         } else {
             this.completeAltitudes = [];
             this.startIndex = 0;
+            this.downsampleFactor = 1;
         }
         
         // Build altitude profile incrementally (like playback.py)
@@ -120,9 +123,18 @@ class ChartViewer {
             if (index < this.startIndex) {
                 return;  // Don't display anything before takeoff
             }
-            // Slice from startIndex to current index
-            const startSlice = this.startIndex;
-            const maxIndex = Math.min(index + 1, this.completeAltitudes.length);
+            
+            // Detect timestamp jumps (forward or backward) by comparing with currentIndex
+            const indexJumped = Math.abs(index - this.currentIndex) > 10;
+            
+            // Convert indices to downsampled indices if data was downsampled
+            // Downsampled data contains every Nth point, so we need to map original indices
+            const downsampledStartIndex = Math.floor(this.startIndex / this.downsampleFactor);
+            const downsampledCurrentIndex = Math.floor(index / this.downsampleFactor);
+            
+            // Slice from startIndex to current index (using downsampled indices)
+            const startSlice = Math.max(0, downsampledStartIndex);
+            const maxIndex = Math.min(downsampledCurrentIndex + 1, this.completeAltitudes.length);
             const traveledAltsSlice = this.completeAltitudes.slice(startSlice, maxIndex);
             
             // Update the last point with current altitude for accuracy
@@ -131,29 +143,44 @@ class ChartViewer {
             }
             
             // Convert to chart data format (x = relative index from start, y = altitude)
-            const traveledData = traveledAltsSlice.map((altitude, i) => ({ x: i, y: altitude }));
-            // Current position is relative to startIndex
+            // X-axis represents original indices (not downsampled), so we scale back
+            const traveledData = traveledAltsSlice.map((altitude, i) => {
+                // Map back to original index space: (downsampledStartIndex + i) * downsampleFactor
+                // Then make relative to startIndex
+                const originalIndex = (downsampledStartIndex + i) * this.downsampleFactor;
+                const relativeIndex = originalIndex - this.startIndex;
+                return { x: relativeIndex, y: altitude };
+            });
+            // Current position uses original index (not downsampled)
             const relativeIndex = index - this.startIndex;
             
-            // Only update if index actually changed (prevents updates when paused)
-            if (index === this.currentIndex && this.chart.data.datasets[0].data.length === traveledData.length) {
+            // Only skip update if index hasn't changed AND not forcing update AND not a jump
+            // Always update on jumps or forced updates
+            if (!forceUpdate && !indexJumped && index === this.currentIndex && this.chart.data.datasets[0].data.length === traveledData.length) {
                 return; // Same index, no update needed
             }
             
             this.chart.data.datasets[0].data = traveledData;
             this.chart.data.datasets[1].data = [{ x: relativeIndex, y: alt }];
             
-            // Update chart (throttled to every 5 calls to reduce load)
-            // Always update on significant index changes (seeks/jumps)
-            if (!this._updateCounter) this._updateCounter = 0;
-            if (!this._lastIndex) this._lastIndex = index;
-            const indexJumped = Math.abs(index - this._lastIndex) > 50;
-            this._updateCounter++;
-            this._lastIndex = index;
-            
-            // Update chart on first call, significant jumps, or every 5 calls
-            if (this._updateCounter === 1 || this._updateCounter % 5 === 0 || indexJumped) {
+            // Update chart immediately on jumps or forced updates, otherwise throttle
+            if (forceUpdate || indexJumped) {
+                // Immediate update for jumps and forced updates
                 this.chart.update('none');
+                // Reset throttling counters on jump
+                this._updateCounter = 0;
+                this._lastIndex = index;
+            } else {
+                // Throttled update for normal playback
+                if (!this._updateCounter) this._updateCounter = 0;
+                if (this._lastIndex === undefined) this._lastIndex = index;
+                this._updateCounter++;
+                this._lastIndex = index;
+                
+                // Update chart on first call or every 5 calls
+                if (this._updateCounter === 1 || this._updateCounter % 5 === 0) {
+                    this.chart.update('none');
+                }
             }
         } else {
             // Fallback: build incrementally if complete profile not available
@@ -169,7 +196,10 @@ class ChartViewer {
             const traveledData = this.traveledAlts.map((alt, i) => ({ x: i, y: alt }));
             this.chart.data.datasets[0].data = traveledData;
             this.chart.data.datasets[1].data = [{ x: index, y: alt }];
-            if (index % 50 === 0) {
+            
+            // Detect jumps in fallback mode too
+            const indexJumped = Math.abs(index - this.currentIndex) > 10;
+            if (forceUpdate || indexJumped || index % 50 === 0) {
                 this.chart.update('none');
             }
         }
