@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const dgram = require('dgram');
 const cors = require('cors');
+const compression = require('compression');
 const FlightDataProcessor = require('./dataProcessor');
 const VideoTimestampMapper = require('./videoTimestampMapper');
 const { createDiagnostics } = require('./diagnostics');
@@ -27,6 +28,21 @@ if (fs.existsSync(envPath)) {
 function initWebdisplayBackend(httpServer) {
     // Initialize Express app
     const app = express();
+    
+    // Enable compression for all responses (critical for large Godot WASM/PCK files)
+    // This can reduce 36MB WASM to ~8-12MB and 33MB PCK to ~6-10MB
+    app.use(compression({
+        filter: (req, res) => {
+            // Compress all responses except when explicitly disabled
+            if (req.headers['x-no-compression']) {
+                return false;
+            }
+            return compression.filter(req, res);
+        },
+        level: 6, // Balance between compression ratio and CPU usage (0-9, 6 is good default)
+        threshold: 1024, // Only compress responses > 1KB
+    }));
+    
     app.use(cors());
 
     // Initialize Socket.IO
@@ -216,8 +232,37 @@ function initWebdisplayBackend(httpServer) {
             try {
                 return express.static(FRONTEND_DIR, {
                     setHeaders: (res, filePath) => {
-                        res.set('Cache-Control', 'no-cache');
-                    }
+                        // Determine cache strategy based on file type
+                        const ext = path.extname(filePath).toLowerCase();
+                        const filename = path.basename(filePath);
+                        
+                        // Long-term caching for immutable assets (Godot WASM/PCK, images, fonts)
+                        if (ext === '.wasm' || ext === '.pck' || ext === '.png' || ext === '.jpg' || 
+                            ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
+                            // Cache for 1 year - these files are versioned/hashed
+                            res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                        } 
+                        // Medium-term caching for JS/CSS (with revalidation)
+                        else if (ext === '.js' || ext === '.css') {
+                            // Cache for 1 day, but allow revalidation
+                            res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+                        }
+                        // Short-term caching for HTML (5 minutes)
+                        else if (ext === '.html') {
+                            res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+                        }
+                        // No cache for everything else (API responses, etc.)
+                        else {
+                            res.set('Cache-Control', 'no-cache');
+                        }
+                        
+                        // Add performance hints
+                        if (ext === '.wasm' || ext === '.pck') {
+                            // Preload hint for critical Godot files
+                            res.set('Link', `<${req.path}>; rel=preload; as=fetch; crossorigin=anonymous`);
+                        }
+                    },
+                    maxAge: '1y' // Default max age for static files
                 })(req, res, next);
             } catch (error) {
                 console.error(`[Static] Error serving static file ${req.path}:`, error);
@@ -606,12 +651,38 @@ function initWebdisplayBackend(httpServer) {
                 dataTimestamp = videoTime + YOUTUBE_START_OFFSET;
             }
 
+            // Get minimum available data timestamp (first data point)
+            const minDataTimestamp = processor.getDataCount() > 0 
+                ? processor.getDataAtIndex(0).timestamp_seconds 
+                : null;
+            
+            // Get takeoff timestamp
+            const takeoffTimestamp = TIMESTAMPS[0] || 2643.0;
+            
+            // Check if the requested video time maps to before takeoff
+            const isBeforeTakeoff = dataTimestamp < takeoffTimestamp;
+            
+            // Calculate takeoff video time for seeking
+            let takeoffVideoTime = null;
+            if (isBeforeTakeoff) {
+                // Convert takeoff timestamp to video time
+                if (videoTimestampMapper && videoTimestampMapper.isAvailable()) {
+                    takeoffVideoTime = videoTimestampMapper.dataToVideoTime(takeoffTimestamp);
+                }
+                if (takeoffVideoTime === null) {
+                    takeoffVideoTime = Math.max(0, takeoffTimestamp - YOUTUBE_START_OFFSET);
+                }
+            }
+            
+            // Use takeoff data if before takeoff
+            const dataTimestampToUse = isBeforeTakeoff ? takeoffTimestamp : dataTimestamp;
+
             // Find the index for this timestamp
-            const index = processor.findIndexForTimestamp(dataTimestamp);
+            const index = processor.findIndexForTimestamp(dataTimestampToUse);
             if (index === null) {
                 return res.json({
                     success: false,
-                    error: `No data found for timestamp ${dataTimestamp.toFixed(2)}s`
+                    error: `No data found for timestamp ${dataTimestampToUse.toFixed(2)}s`
                 });
             }
 
@@ -626,12 +697,15 @@ function initWebdisplayBackend(httpServer) {
                 data,
                 index,
                 video_time: videoTime,
-                data_timestamp: dataTimestamp,
+                data_timestamp: dataTimestampToUse,
+                is_before_takeoff: isBeforeTakeoff,
+                takeoff_video_time: takeoffVideoTime,
+                takeoff_data_timestamp: takeoffTimestamp,
                 timestamp_info: {
                     video_time: videoTime,
-                    data_timestamp: dataTimestamp,
+                    data_timestamp: dataTimestampToUse,
                     data_index: index,
-                    timestamp_display: `Video: ${videoTime.toFixed(2)}s | Data: ${dataTimestamp.toFixed(2)}s`
+                    timestamp_display: `Video: ${videoTime.toFixed(2)}s | Data: ${dataTimestampToUse.toFixed(2)}s`
                 }
             });
         } catch (error) {
@@ -898,9 +972,15 @@ function initWebdisplayBackend(httpServer) {
         });
     });
 
-    // Playback loop
+    // Playback loop with adaptive timing for CPU efficiency
     let lastTimestamp = null;
     let frameCount = 0;
+    let nextFrameTime = null;
+    let performanceMetrics = {
+        frameDrops: 0,
+        avgFrameTime: 0,
+        lastFrameTime: Date.now()
+    };
 
     function startPlaybackLoop() {
         if (playbackInterval) {
@@ -908,12 +988,20 @@ function initWebdisplayBackend(httpServer) {
         }
 
         console.log(`[PLAYBACK LOOP] ✓ Started (initial index=${playbackIndex}, active=${playbackActive})`);
-        console.log(`[PLAYBACK LOOP] Using timestamp-based timing to match variable frame rates`);
+        console.log(`[PLAYBACK LOOP] Using adaptive timestamp-based timing for CPU efficiency`);
 
         frameCount = 0;
         lastTimestamp = null;
+        nextFrameTime = Date.now();
+        performanceMetrics = {
+            frameDrops: 0,
+            avgFrameTime: 0,
+            lastFrameTime: Date.now()
+        };
 
-        playbackInterval = setInterval(() => {
+        // Use requestAnimationFrame-like approach with setTimeout for adaptive timing
+        // This is more CPU-efficient than setInterval with fixed 10ms checks
+        function scheduleNextFrame() {
             if (!playbackActive) {
                 return;
             }
@@ -932,55 +1020,45 @@ function initWebdisplayBackend(httpServer) {
                 return;
             }
 
+            const now = Date.now();
+            const elapsed = now - nextFrameTime;
+
             // Get data at current index
             const data = processor.getDataAtIndex(playbackIndex);
 
             if (data) {
                 const currentTimestamp = data.timestamp_seconds;
-                let sleepTime = 0.01 / playbackSpeed; // Default
+                let delayMs = 10; // Default 10ms (100 FPS max)
 
-                // Calculate sleep time based on timestamp difference
+                // Calculate delay based on timestamp difference
                 if (lastTimestamp !== null && currentTimestamp !== null) {
                     const timestampDiff = currentTimestamp - lastTimestamp;
 
-                    // Debug: Log first few timestamp differences
-                    if (frameCount < 10) {
-                        console.log(`[PLAYBACK LOOP] Frame ${frameCount}: ts=${currentTimestamp.toFixed(3)}, last_ts=${lastTimestamp.toFixed(3)}, diff=${timestampDiff.toFixed(6)}s`);
-                    }
-
                     // Handle timestamp jumps
-                    if (timestampDiff < 0) {
-                        console.log(`[PLAYBACK LOOP] Timestamp went backwards: ${timestampDiff.toFixed(6)}s, resetting timing`);
+                    if (timestampDiff < 0 || timestampDiff > 10.0) {
                         lastTimestamp = null;
-                        sleepTime = 0.01 / playbackSpeed;
-                    } else if (timestampDiff > 10.0) {
-                        console.log(`[PLAYBACK LOOP] Timestamp jump detected: ${timestampDiff.toFixed(2)}s, resetting timing`);
-                        lastTimestamp = null;
-                        sleepTime = 0.01 / playbackSpeed;
+                        delayMs = 10 / playbackSpeed;
                     } else if (timestampDiff === 0) {
-                        console.log(`[PLAYBACK LOOP] Warning: Zero timestamp difference at index ${playbackIndex}`);
-                        sleepTime = 0.001 / playbackSpeed;
+                        delayMs = 1 / playbackSpeed; // Minimum 1ms
                     } else {
-                        // Apply playback speed multiplier
-                        sleepTime = timestampDiff / playbackSpeed;
-                        // Clamp sleep time
-                        sleepTime = Math.max(0.001, Math.min(0.1, sleepTime));
+                        // Apply playback speed multiplier and convert to milliseconds
+                        delayMs = (timestampDiff * 1000) / playbackSpeed;
+                        // Clamp delay: min 1ms (1000 FPS), max 100ms (10 FPS)
+                        delayMs = Math.max(1, Math.min(100, delayMs));
                     }
+                }
+
+                // Adaptive timing: if we're running behind, reduce delay slightly
+                if (elapsed > delayMs * 1.5) {
+                    performanceMetrics.frameDrops++;
+                    // Reduce delay by 20% if we're falling behind
+                    delayMs = delayMs * 0.8;
                 }
 
                 lastTimestamp = currentTimestamp;
 
                 // Send to all connected clients
                 io.emit('frame_update', data);
-
-                // Debug logging
-                if (frameCount < 20 || playbackIndex % 1000 === 0) {
-                    const timestampInfo = currentTimestamp ? `ts=${currentTimestamp.toFixed(2)}` : 'ts=N/A';
-                    const diffInfo = lastTimestamp !== null && currentTimestamp !== null
-                        ? `, diff=${(currentTimestamp - lastTimestamp).toFixed(3)}s, sleep=${sleepTime.toFixed(3)}s`
-                        : '';
-                    console.log(`[PLAYBACK LOOP] ✓ Sent frame_update: index=${playbackIndex}, ${timestampInfo}${diffInfo}`);
-                }
 
                 // Send to Godot via UDP
                 if (udpSocket) {
@@ -1021,21 +1099,35 @@ function initWebdisplayBackend(httpServer) {
                     io.emit('godot_data', godotData);
                 }
 
+                // Performance tracking
+                const frameTime = Date.now() - performanceMetrics.lastFrameTime;
+                performanceMetrics.avgFrameTime = (performanceMetrics.avgFrameTime * 0.9) + (frameTime * 0.1);
+                performanceMetrics.lastFrameTime = Date.now();
+
                 frameCount++;
-                if (frameCount % 100 === 0) {
-                    console.log(`Sent ${frameCount} frames, current index: ${playbackIndex}`);
+                if (frameCount % 1000 === 0) {
+                    const dropRate = (performanceMetrics.frameDrops / frameCount * 100).toFixed(1);
+                    console.log(`[PLAYBACK LOOP] Sent ${frameCount} frames, avg frame time: ${performanceMetrics.avgFrameTime.toFixed(1)}ms, drop rate: ${dropRate}%`);
                 }
 
                 playbackIndex++;
+                nextFrameTime = now + delayMs;
             } else {
                 playbackIndex++;
+                nextFrameTime = now + 10; // Default delay if no data
             }
-        }, 10); // Check every 10ms, actual timing controlled by sleepTime calculation
+
+            // Schedule next frame with calculated delay
+            playbackInterval = setTimeout(scheduleNextFrame, Math.max(0, delayMs - elapsed));
+        }
+
+        // Start the loop
+        scheduleNextFrame();
     }
 
     function stopPlaybackLoop() {
         if (playbackInterval) {
-            clearInterval(playbackInterval);
+            clearTimeout(playbackInterval);
             playbackInterval = null;
             console.log('[PLAYBACK LOOP] Stopped');
         }

@@ -9,11 +9,18 @@ console.log('Node version:', process.version);
 console.log('Platform:', process.platform);
 
 const express = require('express');
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Enable compression for all responses
+app.use(compression({
+    level: 6,
+    threshold: 1024, // Only compress responses > 1KB
+}));
 
 console.log('Express loaded');
 console.log('Port configured:', port);
@@ -145,7 +152,18 @@ app.use((req, res, next) => {
     express.static(publicDir, {
         setHeaders: (res, filePath) => {
             console.log(`Attempting to serve static file: ${filePath}`);
-            res.set('Cache-Control', 'no-cache');
+            // Set appropriate cache headers based on file type
+            const ext = path.extname(filePath).toLowerCase();
+            if (ext === '.wasm' || ext === '.pck' || ext === '.png' || ext === '.jpg' ||
+                ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
+                res.set('Cache-Control', 'public, max-age=31536000, immutable');
+            } else if (ext === '.js' || ext === '.css') {
+                res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+            } else if (ext === '.html') {
+                res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+            } else {
+                res.set('Cache-Control', 'no-cache');
+            }
         },
         fallthrough: false
     })(req, res, next);

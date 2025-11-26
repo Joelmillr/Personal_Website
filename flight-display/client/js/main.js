@@ -4,6 +4,43 @@
 let playbackEngine, mapViewer, chartViewer, attitudeChartViewer, viewer3d, controls;
 
 /**
+ * Show a notification message to the user
+ * @param {string} message - The message to display
+ * @param {string} type - Notification type: 'info', 'warning', 'error', 'success' (default: 'info')
+ * @param {number} duration - Duration in milliseconds before auto-dismissing (default: 5000, 0 = no auto-dismiss)
+ */
+function showNotification(message, type = 'info', duration = 5000) {
+    const container = document.getElementById('notification-container');
+    if (!container) {
+        console.warn('[Notification] Container not found, logging instead:', message);
+        return;
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+
+    // Add to container
+    container.appendChild(notification);
+
+    // Auto-dismiss after duration (if duration > 0)
+    if (duration > 0) {
+        setTimeout(() => {
+            notification.classList.add('fade-out');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300); // Match fadeOut animation duration
+        }, duration);
+    }
+
+    // Return notification element for manual dismissal
+    return notification;
+}
+
+/**
  * Interpolate between two Godot data points using SLERP for quaternions
  * @param {Object} data1 - First data point
  * @param {Object} data2 - Second data point
@@ -787,6 +824,36 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     window._dataFetchFailures = 0; // Reset failure counter on success
                                     
                                     if (result.success && result.data) {
+                                        // Check if user sought before takeoff
+                                        if (result.is_before_takeoff && result.takeoff_video_time !== null && window.youtubePlayer) {
+                                            // Prevent infinite loop - only seek if we haven't already sought recently
+                                            const now = Date.now();
+                                            if (!window._lastTakeoffSeekTime || (now - window._lastTakeoffSeekTime) > 2000) {
+                                                window._lastTakeoffSeekTime = now;
+                                                
+                                                console.log(`[MAIN] Video time ${videoTime.toFixed(2)}s is before takeoff. Seeking to takeoff at ${result.takeoff_video_time.toFixed(2)}s`);
+                                                
+                                                // Seek video to takeoff
+                                                window.youtubePlayer.setUserControlling(true);
+                                                window.youtubePlayer.player.seekTo(result.takeoff_video_time, true);
+                                                
+                                                // Show notification to user
+                                                showNotification(
+                                                    `Flight data begins at takeoff (${result.takeoff_video_time.toFixed(1)}s). Video has been moved to this point.`,
+                                                    'info',
+                                                    5000
+                                                );
+                                                
+                                                // Reset video time tracking to force immediate update after seek
+                                                if (window.resetVideoTimeTracking) {
+                                                    window.resetVideoTimeTracking();
+                                                }
+                                                
+                                                // Don't process this data - wait for the seek to complete and fetch new data
+                                                return;
+                                            }
+                                        }
+                                        
                                         // Update displays with data corresponding to current video time
                                         const data = result.data;
                                         data.index = result.index;
