@@ -9,7 +9,6 @@ const path = require('path');
 const fs = require('fs');
 const dgram = require('dgram');
 const cors = require('cors');
-const compression = require('compression');
 const FlightDataProcessor = require('./dataProcessor');
 const VideoTimestampMapper = require('./videoTimestampMapper');
 const { createDiagnostics } = require('./diagnostics');
@@ -31,17 +30,17 @@ function initWebdisplayBackend(httpServer) {
     
     // Enable compression for all responses (critical for large Godot WASM/PCK files)
     // This can reduce 36MB WASM to ~8-12MB and 33MB PCK to ~6-10MB
-    app.use(compression({
-        filter: (req, res) => {
-            // Compress all responses except when explicitly disabled
-            if (req.headers['x-no-compression']) {
-                return false;
-            }
-            return compression.filter(req, res);
-        },
-        level: 6, // Balance between compression ratio and CPU usage (0-9, 6 is good default)
-        threshold: 1024, // Only compress responses > 1KB
-    }));
+    try {
+        const compression = require('compression');
+        app.use(compression({
+            level: 6, // Balance between compression ratio and CPU usage (0-9, 6 is good default)
+            threshold: 1024, // Only compress responses > 1KB
+        }));
+        console.log('[WEBDISPLAY] ✓ Compression middleware enabled');
+    } catch (error) {
+        console.warn('[WEBDISPLAY] ⚠ Compression middleware not available:', error.message);
+        console.warn('[WEBDISPLAY]   Server will continue without compression');
+    }
     
     app.use(cors());
 

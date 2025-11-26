@@ -50,21 +50,21 @@ function showNotification(message, type = 'info', duration = 5000) {
 function interpolateGodotData(data1, data2, t) {
     // Clamp t to [0, 1]
     t = Math.max(0, Math.min(1, t));
-    
+
     // SLERP for vehicle quaternion
-    const vq1 = {x: data1.VQX, y: data1.VQY, z: data1.VQZ, w: data1.VQW};
-    const vq2 = {x: data2.VQX, y: data2.VQY, z: data2.VQZ, w: data2.VQW};
+    const vq1 = { x: data1.VQX, y: data1.VQY, z: data1.VQZ, w: data1.VQW };
+    const vq2 = { x: data2.VQX, y: data2.VQY, z: data2.VQZ, w: data2.VQW };
     const vqInterp = slerp(vq1, vq2, t);
-    
+
     // SLERP for helmet quaternion
-    const hq1 = {x: data1.HQX, y: data1.HQY, z: data1.HQZ, w: data1.HQW};
-    const hq2 = {x: data2.HQX, y: data2.HQY, z: data2.HQZ, w: data2.HQW};
+    const hq1 = { x: data1.HQX, y: data1.HQY, z: data1.HQZ, w: data1.HQW };
+    const hq2 = { x: data2.HQX, y: data2.HQY, z: data2.HQZ, w: data2.HQW };
     const hqInterp = slerp(hq1, hq2, t);
-    
+
     // Linear interpolation for scalar values
     const gspeed = data1.GSPEED + t * (data2.GSPEED - data1.GSPEED);
     const valt = data1.VALT + t * (data2.VALT - data1.VALT);
-    
+
     return {
         "VQX": vqInterp.x,
         "VQY": vqInterp.y,
@@ -88,14 +88,14 @@ function interpolateGodotData(data1, data2, t) {
  */
 function slerp(q1, q2, t) {
     // Normalize quaternions
-    const len1 = Math.sqrt(q1.x*q1.x + q1.y*q1.y + q1.z*q1.z + q1.w*q1.w);
-    const len2 = Math.sqrt(q2.x*q2.x + q2.y*q2.y + q2.z*q2.z + q2.w*q2.w);
-    const nq1 = {x: q1.x/len1, y: q1.y/len1, z: q1.z/len1, w: q1.w/len1};
-    const nq2 = {x: q2.x/len2, y: q2.y/len2, z: q2.z/len2, w: q2.w/len2};
-    
+    const len1 = Math.sqrt(q1.x * q1.x + q1.y * q1.y + q1.z * q1.z + q1.w * q1.w);
+    const len2 = Math.sqrt(q2.x * q2.x + q2.y * q2.y + q2.z * q2.z + q2.w * q2.w);
+    const nq1 = { x: q1.x / len1, y: q1.y / len1, z: q1.z / len1, w: q1.w / len1 };
+    const nq2 = { x: q2.x / len2, y: q2.y / len2, z: q2.z / len2, w: q2.w / len2 };
+
     // Dot product
-    let dot = nq1.x*nq2.x + nq1.y*nq2.y + nq1.z*nq2.z + nq1.w*nq2.w;
-    
+    let dot = nq1.x * nq2.x + nq1.y * nq2.y + nq1.z * nq2.z + nq1.w * nq2.w;
+
     // If dot < 0, negate one quaternion to take shorter path
     if (dot < 0) {
         nq2.x = -nq2.x;
@@ -104,10 +104,10 @@ function slerp(q1, q2, t) {
         nq2.w = -nq2.w;
         dot = -dot;
     }
-    
+
     // Clamp dot to [-1, 1] for acos
     dot = Math.max(-1, Math.min(1, dot));
-    
+
     // If quaternions are very close, use linear interpolation
     if (dot > 0.9995) {
         return {
@@ -117,13 +117,13 @@ function slerp(q1, q2, t) {
             w: nq1.w + t * (nq2.w - nq1.w)
         };
     }
-    
+
     // SLERP
     const theta = Math.acos(dot);
     const sinTheta = Math.sin(theta);
     const w1 = Math.sin((1 - t) * theta) / sinTheta;
     const w2 = Math.sin(t * theta) / sinTheta;
-    
+
     return {
         x: w1 * nq1.x + w2 * nq2.x,
         y: w1 * nq1.y + w2 * nq2.y,
@@ -200,8 +200,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             "GSPEED": 0, "VALT": 0
         };
         window._lastGodotDataSent = defaultGodotData;
-        window._godotDataCache = [{videoTime: 0, data: defaultGodotData}];
-        
+        window._godotDataCache = [{ videoTime: 0, data: defaultGodotData }];
+
         // Try to send default data to Godot immediately (if iframe is ready)
         const sendDefaultToGodot = () => {
             try {
@@ -228,12 +228,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (loadingStatus) {
             loadingStatus.textContent = 'Loading flight data...';
         }
-        
+
         // Add timeout and better error handling for /api/init
         // Large CSV files (74MB) can take 60-90 seconds to parse
         const initController = new AbortController();
         const initTimeout = setTimeout(() => initController.abort(), 120000); // 120 second timeout for large files
-        
+
         let response;
         try {
             response = await fetch('/api/init', {
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             throw new Error(`Failed to connect to server: ${error.message}`);
         }
-        
+
         if (!response.ok) {
             const errorText = await response.text();
             let errorData;
@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             throw new Error(errorData.error || `Server error: ${response.status} ${response.statusText}`);
         }
-        
+
         const result = await response.json();
 
         if (!result.success) {
@@ -279,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             downsampleFactor: result.downsample_factor,
             takeoffIndex: result.takeoff_index
         });
-        
+
         // Log full attitude data structure for debugging
         if (result.complete_attitudes) {
             console.log('[MAIN] complete_attitudes structure:', {
@@ -301,7 +301,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Get takeoff index early so it's available for YouTube sync setup
         const takeoffIndex = result.takeoff_index || 0;
-        
+
         // Initialize YouTube video player
         if (!result.youtube || !result.youtube.enabled) {
             console.warn('YouTube video not configured. Please set YOUTUBE_VIDEO_ID environment variable.');
@@ -326,18 +326,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.youtubePlayer = youtubePlayer;
                     console.log('✓ YouTube player initialized');
                     console.log('  Debug tools: youtubeSyncDebug.status() in console');
-                    
+
                     // Enable video-driven sync: YouTube video is the master timeline
                     // Data updates are driven by YouTube video time, not by automatic playback loop
                     let lastRequestedVideoTime = -1;
                     let pendingDataRequest = null;
                     let updateCount = 0;
-                    
+
                     // Data cache for smooth interpolation - store multiple points for better interpolation
                     window._godotDataCache = []; // Array of {videoTime, data} objects, sorted by videoTime
                     window._displayDataCache = []; // Array of {videoTime, data} objects for map/chart displays
                     const MAX_CACHE_SIZE = 10; // Keep up to 10 data points for better interpolation coverage
-                    
+
                     // Make lastRequestedVideoTime accessible for jump buttons
                     window.lastRequestedVideoTime = () => lastRequestedVideoTime;
                     window.resetVideoTimeTracking = () => {
@@ -346,11 +346,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         window._displayDataCache = []; // Clear display cache on reset
                         console.log('[MAIN] Reset video time tracking and cache');
                     };
-                    
+
                     // Helper function to add data to cache (maintains sorted order) - make globally accessible
-                    window.addToCache = function(videoTime, data) {
+                    window.addToCache = function (videoTime, data) {
                         const cache = window._godotDataCache;
-                        cache.push({videoTime, data});
+                        cache.push({ videoTime, data });
                         // Sort by videoTime
                         cache.sort((a, b) => a.videoTime - b.videoTime);
                         // Keep only the most recent MAX_CACHE_SIZE points
@@ -359,11 +359,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             cache.splice(0, cache.length - MAX_CACHE_SIZE);
                         }
                     };
-                    
+
                     // Helper function to add full display data to cache
                     function addDisplayDataToCache(videoTime, fullData) {
                         const cache = window._displayDataCache;
-                        cache.push({videoTime, data: fullData});
+                        cache.push({ videoTime, data: fullData });
                         // Sort by videoTime
                         cache.sort((a, b) => a.videoTime - b.videoTime);
                         // Keep only the most recent MAX_CACHE_SIZE points
@@ -371,18 +371,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                             cache.splice(0, cache.length - MAX_CACHE_SIZE);
                         }
                     }
-                    
+
                     // Helper function to get interpolated display data from cache
                     function getInterpolatedDisplayData(videoTime) {
                         const cache = window._displayDataCache;
                         if (!cache || cache.length === 0) {
                             return null;
                         }
-                        
+
                         // Find the two closest data points for interpolation
                         let beforeIdx = -1;
                         let afterIdx = -1;
-                        
+
                         // Binary search for efficiency
                         let left = 0;
                         let right = cache.length - 1;
@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 right = mid - 1;
                             }
                         }
-                        
+
                         // If we have both before and after points, interpolate
                         if (beforeIdx >= 0 && afterIdx >= 0 && beforeIdx !== afterIdx) {
                             const before = cache[beforeIdx];
@@ -405,12 +405,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             if (timeDiff > 0 && timeDiff < 0.5) { // Allow up to 0.5s for display interpolation
                                 const t = (videoTime - before.videoTime) / timeDiff;
                                 const clampedT = Math.max(0, Math.min(1, t));
-                                
+
                                 // Interpolate all display fields
                                 const interpolated = {};
                                 const beforeData = before.data;
                                 const afterData = after.data;
-                                
+
                                 // Interpolate numeric fields
                                 for (const key in beforeData) {
                                     if (typeof beforeData[key] === 'number' && typeof afterData[key] === 'number') {
@@ -420,13 +420,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         interpolated[key] = beforeData[key];
                                     }
                                 }
-                                
+
                                 // Preserve index and timestamp info from before (or use weighted average index)
                                 interpolated.index = beforeData.index || afterData.index;
                                 if (beforeData.timestamp_info || afterData.timestamp_info) {
                                     interpolated.timestamp_info = beforeData.timestamp_info || afterData.timestamp_info;
                                 }
-                                
+
                                 return interpolated;
                             } else if (timeDiff > 0) {
                                 // Points too far apart, use the closer one
@@ -439,7 +439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         } else if (afterIdx >= 0) {
                             return cache[afterIdx].data;
                         }
-                        
+
                         // Fallback: use closest point
                         if (cache.length > 0) {
                             let closest = cache[0];
@@ -453,21 +453,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                             return closest.data;
                         }
-                        
+
                         return null;
                     }
-                    
+
                     // Helper function to get interpolated data from cache
                     function getInterpolatedGodotData(videoTime) {
                         const cache = window._godotDataCache;
                         if (!cache || cache.length === 0) {
                             return null;
                         }
-                        
+
                         // Find the two closest data points for interpolation
                         let beforeIdx = -1;
                         let afterIdx = -1;
-                        
+
                         // Binary search for efficiency (cache is sorted by videoTime)
                         let left = 0;
                         let right = cache.length - 1;
@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 right = mid - 1;
                             }
                         }
-                        
+
                         // If we have both before and after points, interpolate
                         if (beforeIdx >= 0 && afterIdx >= 0 && beforeIdx !== afterIdx) {
                             const before = cache[beforeIdx];
@@ -506,7 +506,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             // Use after point if we're after all cached data
                             return cache[afterIdx].data;
                         }
-                        
+
                         // Fallback: use closest point
                         if (cache.length > 0) {
                             let closest = cache[0];
@@ -520,13 +520,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                             return closest.data;
                         }
-                        
+
                         return null;
                     }
-                    
+
                     // Store takeoffIndex in a way that's accessible to the callback
                     const takeoffIndexForCallback = takeoffIndex;
-                    
+
                     youtubePlayer.enableBidirectionalSync(
                         // onPlaybackStateChange: not used in pure video-driven mode
                         (isPlaying) => {
@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             if (window._videoTimeUpdateCount <= 5 || window._videoTimeUpdateCount % 100 === 0) {
                                 console.log(`[MAIN] onVideoTimeUpdate #${window._videoTimeUpdateCount}: videoTime=${videoTime.toFixed(3)}s`);
                             }
-                            
+
                             // Skip if video time is invalid
                             if (isNaN(videoTime) || videoTime < 0) {
                                 if (window._videoTimeUpdateCount <= 5) {
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 }
                                 return;
                             }
-                            
+
                             // For video time 0 or very small, use takeoff data time converted to video time
                             // This ensures we get valid data even when video hasn't started
                             if (videoTime === 0 || videoTime < 0.1) {
@@ -565,7 +565,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         if (takeoffData) {
                                             takeoffData.index = takeoffIndexForCallback;
                                             updateDisplaysWithData(takeoffData);
-                                            
+
                                             // Also cache and send to Godot
                                             const godotData = {
                                                 "VQX": takeoffData.VQX || 0,
@@ -581,7 +581,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             };
                                             window.addToCache(videoTime, godotData);
                                             window._lastGodotDataSent = godotData;
-                                            
+
                                             // Send to Godot
                                             try {
                                                 const godotIframe = document.getElementById('godot-iframe');
@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                     godotIframe.contentWindow.godotLatestData = godotData;
                                                     godotIframe.contentWindow.godotLastDataTime = Date.now();
                                                 }
-                                            } catch (e) {}
+                                            } catch (e) { }
                                             if (playbackEngine.socket && playbackEngine.socket.connected) {
                                                 playbackEngine.socket.emit("godot_data", godotData);
                                             }
@@ -599,11 +599,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     }
                                     return; // Don't continue with normal fetch for video time 0
                                 }
-                                
+
                                 // Fallback: use small video time offset
                                 videoTime = 0.1;
                             }
-                            
+
                             // Debug: Log first few callbacks to verify they're firing
                             if (!window._videoTimeUpdateCount) window._videoTimeUpdateCount = 0;
                             window._videoTimeUpdateCount++;
@@ -611,7 +611,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             if (window._videoTimeUpdateCount <= 5 || window._videoTimeUpdateCount % 500 === 0) {
                                 console.log(`[MAIN] onVideoTimeUpdate #${window._videoTimeUpdateCount}: videoTime=${videoTime.toFixed(3)}s`);
                             }
-                            
+
                             // CRITICAL: Always send Godot data at 60 FPS for smooth 3D view
                             // Use interpolation from cache, with fallback to last known data
                             // Send EVERY frame update to ensure smooth motion
@@ -619,18 +619,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                             if (!window._lastGodotSendTime) window._lastGodotSendTime = 0;
                             const timeSinceLastSend = now - window._lastGodotSendTime;
                             const minSendInterval = 16; // 16ms = 60 FPS max
-                            
+
                             // Only throttle if we're sending too fast
                             if (timeSinceLastSend < minSendInterval) {
                                 return; // Skip this update to prevent excessive sends
                             }
-                            
+
                             let dataToSend = null;
-                            
+
                             // Check cache status first
                             const cache = window._godotDataCache;
                             const cacheSize = cache ? cache.length : 0;
-                            
+
                             // Only try interpolation if we have enough cache points
                             if (cacheSize >= 2) {
                                 const interpolatedData = getInterpolatedGodotData(videoTime);
@@ -638,7 +638,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     dataToSend = interpolatedData;
                                 }
                             }
-                            
+
                             // If interpolation failed or cache too small, use fallback
                             if (!dataToSend) {
                                 if (cache && cacheSize > 0) {
@@ -648,7 +648,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     // Ultimate fallback: use last sent data
                                     // Always send initial data even if cache is empty (needed for startup)
                                     dataToSend = window._lastGodotDataSent;
-                                    
+
                                     // Only skip if cache has been empty for a long time AND we've sent data many times
                                     // Allow initial 200 sends to go through even with empty cache (for startup)
                                     if (window._godotSendCount > 200) {
@@ -681,13 +681,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 // Cache has data - reset empty timer
                                 window._cacheEmptyStartTime = null;
                             }
-                            
+
                             // ALWAYS send data if we have it - don't skip based on change detection
                             // The interpolation ensures smooth motion even with small changes
                             // Change detection was causing lag by skipping updates
                             if (dataToSend) {
                                 window._lastGodotSendTime = now;
-                                
+
                                 // Try direct iframe access first (fastest)
                                 let sentDirectly = false;
                                 try {
@@ -696,12 +696,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         // Check if iframe is loaded
                                         if (!godotIframe.contentWindow) {
                                             // Iframe not ready yet - use WebSocket
-                            if (playbackEngine.socket && playbackEngine.socket.connected) {
+                                            if (playbackEngine.socket && playbackEngine.socket.connected) {
                                                 playbackEngine.socket.emit("godot_data", dataToSend);
                                             }
                                             return; // Skip direct access attempt
                                         }
-                                        
+
                                         // Check if bridge is ready before sending
                                         if (typeof godotIframe.contentWindow.getGodotData === 'function') {
                                             // Directly set the data in the iframe's window object
@@ -712,7 +712,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             godotIframe.contentWindow.godotDataReceivedCount++;
                                             godotIframe.contentWindow.godotLastDataTime = Date.now();
                                             sentDirectly = true;
-                                            
+
                                             // Debug: Log first few sends
                                             if (window._godotSendCount === undefined) window._godotSendCount = 0;
                                             window._godotSendCount++;
@@ -727,7 +727,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 console.warn(`[MAIN] Godot bridge not ready (getGodotData not found), using WebSocket only (attempt #${window._bridgeNotReadyCount})`);
                                             }
                                         }
-                                } else {
+                                    } else {
                                         // Iframe not found - use WebSocket
                                         if (playbackEngine.socket && playbackEngine.socket.connected) {
                                             playbackEngine.socket.emit("godot_data", dataToSend);
@@ -743,16 +743,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         playbackEngine.socket.emit("godot_data", dataToSend);
                                     }
                                 }
-                                
+
                                 // ALWAYS also send via WebSocket as backup (in case direct access doesn't work)
                                 // This ensures data gets through even if iframe access fails silently
                                 if (playbackEngine.socket && playbackEngine.socket.connected) {
                                     playbackEngine.socket.emit("godot_data", dataToSend);
                                 }
-                                
+
                                 window._lastGodotDataSent = dataToSend; // Remember for fallback
                             }
-                            
+
                             // HIGH-FREQUENCY FETCH: Fetch data frequently for smooth 60 FPS updates
                             // Fetch every 16ms (~60 FPS) to match video update rate exactly
                             // This ensures cache always has fresh data for interpolation
@@ -760,10 +760,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                             if (!window._lastFetchTime) window._lastFetchTime = 0;
                             const timeSinceLastFetch = now - window._lastFetchTime;
                             const fetchInterval = 16; // 16ms = ~60 FPS (match video update rate)
-                            
+
                             // Also check if video time changed significantly (for other displays)
                             const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.05;
-                            
+
                             // Fetch if:
                             // 1. First fetch (initialization), OR
                             // 2. Video time changed significantly (seeks/jumps), OR
@@ -771,34 +771,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                             // 4. Enough time has passed for updates (16ms)
                             const cacheEmpty = !window._godotDataCache || window._godotDataCache.length === 0;
                             const cacheTooSmall = window._godotDataCache && window._godotDataCache.length < 5; // Need at least 5 points for smooth interpolation
-                            
+
                             // If cache is empty or too small, fetch immediately (don't wait for interval)
                             if (cacheEmpty || cacheTooSmall) {
                                 // Force immediate fetch - don't check timeSinceLastFetch
                             } else if (lastRequestedVideoTime >= 0 && !videoTimeChangedForFetch && timeSinceLastFetch < fetchInterval) {
                                 return; // Skip fetch, but interpolated Godot data already sent above
                             }
-                            
+
                             // Update fetch time
                             window._lastFetchTime = now;
-                            
+
                             // Don't start a new request if one is already pending
                             if (pendingDataRequest) {
                                 return; // Wait for current request to complete
                             }
-                            
+
                             // Track this as the latest requested time
                             lastRequestedVideoTime = videoTime;
                             updateCount++;
-                            
+
                             // Track consecutive failures for backoff
                             if (!window._dataFetchFailures) window._dataFetchFailures = 0;
-                            
+
                             // Request data for current video time with pre-fetching
                             // Create abort controller for timeout and cancellation
                             const controller = new AbortController();
                             const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout for faster failure
-                            
+
                             const fetchPromise = fetch(`/api/data-for-video-time/${videoTime}`, {
                                 signal: controller.signal
                             })
@@ -818,11 +818,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     if (pendingDataRequest !== fetchPromise) {
                                         return; // This request was superseded by a newer one
                                     }
-                                    
+
                                     clearTimeout(timeoutId);
                                     pendingDataRequest = null;
                                     window._dataFetchFailures = 0; // Reset failure counter on success
-                                    
+
                                     if (result.success && result.data) {
                                         // Check if user sought before takeoff
                                         if (result.is_before_takeoff && result.takeoff_video_time !== null && window.youtubePlayer) {
@@ -830,34 +830,34 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             const now = Date.now();
                                             if (!window._lastTakeoffSeekTime || (now - window._lastTakeoffSeekTime) > 2000) {
                                                 window._lastTakeoffSeekTime = now;
-                                                
+
                                                 console.log(`[MAIN] Video time ${videoTime.toFixed(2)}s is before takeoff. Seeking to takeoff at ${result.takeoff_video_time.toFixed(2)}s`);
-                                                
+
                                                 // Seek video to takeoff
                                                 window.youtubePlayer.setUserControlling(true);
                                                 window.youtubePlayer.player.seekTo(result.takeoff_video_time, true);
-                                                
+
                                                 // Show notification to user
                                                 showNotification(
                                                     `Flight data begins at takeoff (${result.takeoff_video_time.toFixed(1)}s). Video has been moved to this point.`,
                                                     'info',
                                                     5000
                                                 );
-                                                
+
                                                 // Reset video time tracking to force immediate update after seek
                                                 if (window.resetVideoTimeTracking) {
                                                     window.resetVideoTimeTracking();
                                                 }
-                                                
+
                                                 // Don't process this data - wait for the seek to complete and fetch new data
                                                 return;
                                             }
                                         }
-                                        
+
                                         // Update displays with data corresponding to current video time
                                         const data = result.data;
                                         data.index = result.index;
-                                        
+
                                         // Attach timestamp info for display
                                         if (result.timestamp_info) {
                                             data.timestamp_info = result.timestamp_info;
@@ -870,10 +870,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 timestamp_display: `Video: ${(result.video_time || videoTime).toFixed(2)}s | Data: ${result.data_timestamp.toFixed(2)}s`
                                             };
                                         }
-                                        
+
                                         // Add full data to display cache for interpolation
                                         addDisplayDataToCache(videoTime, data);
-                                        
+
                                         // CRITICAL: Cache Godot data for interpolation
                                         if (playbackEngine.socket && playbackEngine.socket.connected) {
                                             const godotData = {
@@ -888,13 +888,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 "GSPEED": data.GSPEED || 0,
                                                 "VALT": data.VALT || 0,
                                             };
-                                            
+
                                             // Add to cache for interpolation
                                             window.addToCache(videoTime, godotData);
-                                            
+
                                             // Store as last sent data for fallback
                                             window._lastGodotDataSent = godotData;
-                                            
+
                                             // Send immediately when new data arrives - DIRECTLY to iframe first
                                             let sentDirectly = false;
                                             try {
@@ -911,17 +911,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             } catch (e) {
                                                 // Cross-origin - will use WebSocket fallback
                                             }
-                                            
+
                                             // Fallback to WebSocket if direct access failed
                                             if (!sentDirectly && playbackEngine.socket && playbackEngine.socket.connected) {
-                                            playbackEngine.socket.emit("godot_data", godotData);
+                                                playbackEngine.socket.emit("godot_data", godotData);
                                             }
-                                            
+
                                             // Debug: Log first few sends to verify
                                             if (updateCount <= 10) {
                                                 console.log(`[MAIN] Sent Godot data #${updateCount}: VQX=${godotData.VQX.toFixed(3)}, VQY=${godotData.VQY.toFixed(3)}, VALT=${godotData.VALT.toFixed(1)}, cache_size=${window._godotDataCache.length}`);
                                             }
-                                            
+
                                             // Pre-fetch next data point (0.1 seconds ahead) for smoother interpolation
                                             // Only prefetch if we don't already have data for this time and no prefetch is in progress
                                             const prefetchVideoTime = videoTime + 0.1;
@@ -968,7 +968,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 });
                                             }
                                         }
-                                        
+
                                         // Update all displays with interpolated data for smooth updates
                                         // Use interpolated data if cache has enough points, otherwise use raw data
                                         let displayData = data;
@@ -982,10 +982,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 }
                                             }
                                         }
-                                        
+
                                         console.log(`[MAIN] Updating displays with data at index ${displayData.index}, videoTime=${videoTime.toFixed(3)}s`);
                                         updateDisplaysWithData(displayData);
-                                        
+
                                         // Log periodically for debugging
                                         if (updateCount % 100 === 0) {
                                             console.log(`[MAIN] Video-driven update #${updateCount}: video=${videoTime.toFixed(3)}s, data_ts=${result.data_timestamp.toFixed(3)}s, index=${result.index}, cache=${window._godotDataCache.length}`);
@@ -1002,27 +1002,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     if (pendingDataRequest !== fetchPromise) {
                                         return; // This request was superseded by a newer one
                                     }
-                                    
+
                                     clearTimeout(timeoutId);
                                     pendingDataRequest = null;
-                                    
+
                                     // Don't count aborted requests as failures
                                     if (error.name !== 'AbortError') {
                                         window._dataFetchFailures++;
-                                        
+
                                         // Only log errors periodically to avoid console spam
                                         if (updateCount % 50 === 0 || window._dataFetchFailures === 1) {
                                             const errorMsg = error.message || error.toString();
                                             console.warn(`[MAIN] Error fetching data for video time ${videoTime.toFixed(3)}s (failures: ${window._dataFetchFailures}):`, errorMsg);
                                         }
-                                        
+
                                         // If too many failures, warn user
                                         if (window._dataFetchFailures > 5) {
                                             console.warn(`[MAIN] Multiple fetch failures detected. Consider checking server connection.`);
                                         }
                                     }
                                 });
-                            
+
                             // Store abort controller and promise for cancellation
                             fetchPromise._abortController = controller;
                             fetchPromise._timeoutId = timeoutId;
@@ -1077,9 +1077,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 pitchesLength: result.complete_attitudes?.pitches?.length || 0,
                 rollsLength: result.complete_attitudes?.rolls?.length || 0
             });
-            
-            if (result.complete_attitudes && 
-                result.complete_attitudes.yaws && 
+
+            if (result.complete_attitudes &&
+                result.complete_attitudes.yaws &&
                 result.complete_attitudes.yaws.length > 0) {
                 const downsampleFactor = result.downsample_factor || 1;
                 attitudeChartViewer.initialize(result.complete_attitudes, takeoffIndex, downsampleFactor);
@@ -1123,7 +1123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     attitudeChartViewer: !!attitudeChartViewer
                 });
             }
-            
+
             // Update map
             if (mapViewer && mapViewer.map) {
                 try {
@@ -1135,7 +1135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('[MAIN] Error updating map:', e);
                 }
             } else if (updateDisplaysWithData._callCount % 50 === 0) {
-                console.warn('[MAIN] Map viewer not available:', {mapViewer: !!mapViewer, hasMap: !!(mapViewer && mapViewer.map)});
+                console.warn('[MAIN] Map viewer not available:', { mapViewer: !!mapViewer, hasMap: !!(mapViewer && mapViewer.map) });
             }
 
             // Update chart
@@ -1149,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('[MAIN] Error updating altitude chart:', e);
                 }
             } else if (updateDisplaysWithData._callCount % 50 === 0) {
-                console.warn('[MAIN] Chart viewer not available:', {chartViewer: !!chartViewer, hasChart: !!(chartViewer && chartViewer.chart)});
+                console.warn('[MAIN] Chart viewer not available:', { chartViewer: !!chartViewer, hasChart: !!(chartViewer && chartViewer.chart) });
             }
 
             // Update attitude chart
@@ -1164,7 +1164,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.error('[MAIN] Error updating attitude chart:', e);
                 }
             } else if (updateDisplaysWithData._callCount % 50 === 0) {
-                console.warn('[MAIN] Attitude chart viewer not available:', {attitudeChartViewer: !!attitudeChartViewer, hasChart: !!(attitudeChartViewer && attitudeChartViewer.chart)});
+                console.warn('[MAIN] Attitude chart viewer not available:', { attitudeChartViewer: !!attitudeChartViewer, hasChart: !!(attitudeChartViewer && attitudeChartViewer.chart) });
             }
 
             // Update 3D viewer (Godot receives data via WebSocket)
@@ -1175,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     data.HQX, data.HQY, data.HQZ, data.HQW
                 );
             }
-            
+
             // NOTE: Godot data is now sent directly from video time updates for high frequency
             // This function is called less frequently (throttled) for other displays
             // Godot updates happen in the onVideoTimeUpdate callback above
@@ -1198,13 +1198,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Silently handle DOM errors
             }
         }
-        
+
         // Make updateDisplaysWithData globally accessible
         window.updateDisplaysWithData = updateDisplaysWithData;
 
         // Get takeoff timestamp for seeking YouTube video
         const takeoffTimestamp = result.timestamps && result.timestamps[0] ? result.timestamps[0] : 2643.0;
-        
+
         // Load initial frame from takeoff marker
         if (loadingStatus) {
             loadingStatus.textContent = 'Loading initial data...';
@@ -1219,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Update displays with initial data
             initialData.index = takeoffIndex;
             updateDisplaysWithData(initialData);
-            
+
             // CRITICAL: Initialize Godot data cache with initial data
             // This ensures 3D view has data immediately, even before video starts
             // Send initial data regardless of WebSocket connection status (it will connect later)
@@ -1243,18 +1243,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (window.addToCache) {
                         window.addToCache(initialVideoTime, initialGodotData);
                     } else {
-                        window._godotDataCache = [{videoTime: initialVideoTime, data: initialGodotData}];
+                        window._godotDataCache = [{ videoTime: initialVideoTime, data: initialGodotData }];
                     }
                 } else {
-                    window._godotDataCache = [{videoTime: 0, data: initialGodotData}];
+                    window._godotDataCache = [{ videoTime: 0, data: initialGodotData }];
                 }
                 // Store as last sent data for fallback
                 window._lastGodotDataSent = initialGodotData;
-                
+
                 // CRITICAL: Send initial data to Godot immediately
                 // This ensures Godot has data even before video time callbacks fire
                 console.log('[MAIN] Sending initial data to Godot:', initialGodotData);
-                
+
                 // Send directly to Godot iframe (with retry if not ready)
                 let sentDirectly = false;
                 const sendToGodotIframe = (data, retryCount = 0) => {
@@ -1314,18 +1314,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 };
                 sendToGodotIframe(initialGodotData);
-                
+
                 // ALWAYS also send via WebSocket as backup (even if direct access worked)
                 // If WebSocket isn't connected yet, it will be sent when it connects
                 if (playbackEngine.socket && playbackEngine.socket.connected) {
-                playbackEngine.socket.emit("godot_data", initialGodotData);
+                    playbackEngine.socket.emit("godot_data", initialGodotData);
                     console.log('[MAIN] ✓ Initial data sent via WebSocket');
                 } else {
                     // WebSocket not connected yet - store data to send when it connects
                     window._pendingInitialGodotData = initialGodotData;
                     console.log('[MAIN] WebSocket not connected yet, will send initial data when connected');
                 }
-                
+
                 console.log('[MAIN] Initialized Godot data cache with takeoff data');
             }
 
@@ -1343,25 +1343,25 @@ document.addEventListener('DOMContentLoaded', async () => {
                     setTimeout(seekToTakeoff, 500);
                     return;
                 }
-                
+
                 try {
                     // Get video time for takeoff timestamp
                     console.log(`[MAIN] Fetching video time for takeoff timestamp: ${takeoffTimestamp}`);
                     const videoTimeResponse = await fetch(`/api/video-time/${takeoffTimestamp}`);
                     console.log(`[MAIN] Video time response status: ${videoTimeResponse.status}`);
-                    
+
                     if (videoTimeResponse.ok) {
                         const videoTimeResult = await videoTimeResponse.json();
                         console.log('[MAIN] Video time result:', videoTimeResult);
-                        
+
                         if (videoTimeResult.success && videoTimeResult.video_time !== undefined) {
                             const takeoffVideoTime = videoTimeResult.video_time;
                             console.log(`[MAIN] Seeking YouTube video to takeoff: ${takeoffVideoTime.toFixed(2)}s (flight time: ${takeoffTimestamp.toFixed(2)}s)`);
-                            
+
                             // Wait a bit longer before seeking to avoid triggering YouTube's verification
                             // YouTube may flag immediate seeks as suspicious behavior
                             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-                            
+
                             // Check if player is still ready before seeking
                             if (window.youtubePlayer && window.youtubePlayer.isReady && window.youtubePlayer.player) {
                                 try {
@@ -1379,12 +1379,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                             } else {
                                 console.warn('[MAIN] YouTube player not ready, skipping seek');
                             }
-                            
+
                             // Wait a moment for seek to complete, then request data
                             setTimeout(() => {
                                 const currentVideoTime = window.youtubePlayer.getCurrentTime();
                                 console.log(`[MAIN] Video seeked to ${currentVideoTime.toFixed(2)}s, requesting data...`);
-                                
+
                                 // Request data for current video time
                                 fetch(`/api/data-for-video-time/${currentVideoTime}`)
                                     .then(response => {
@@ -1397,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         if (result.success && result.data) {
                                             const data = result.data;
                                             data.index = result.index;
-                                            
+
                                             // Attach timestamp info for display
                                             if (result.timestamp_info) {
                                                 data.timestamp_info = result.timestamp_info;
@@ -1409,7 +1409,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                     timestamp_display: `Video: ${(result.video_time || currentVideoTime).toFixed(2)}s | Data: ${result.data_timestamp.toFixed(2)}s`
                                                 };
                                             }
-                                            
+
                                             updateDisplaysWithData(data);
                                             console.log('[MAIN] Data updated to match video at takeoff position');
                                         } else {
@@ -1419,21 +1419,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     .catch(error => {
                                         console.warn('[MAIN] Failed to get data for video time:', error);
                                     });
-                                
+
                                 // Start video playback automatically
                                 console.log('[MAIN] Starting YouTube video playback...');
                                 window.youtubePlayer.setUserControlling(true);
-                                
+
                                 // Wait a moment for seek to settle, then play
                                 setTimeout(() => {
                                     try {
-                                window.youtubePlayer.play();
+                                        window.youtubePlayer.play();
                                         console.log('[MAIN] ✓ Video play() called');
                                     } catch (playError) {
                                         console.error('[MAIN] Error starting playback:', playError);
                                     }
                                 }, 500);
-                                
+
                                 // Reset video time tracking to ensure immediate updates
                                 if (window.resetVideoTimeTracking) {
                                     window.resetVideoTimeTracking();
@@ -1488,7 +1488,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             };
-            
+
             // Start seeking to takeoff after a short delay to ensure player is ready
             setTimeout(seekToTakeoff, 1000);
         }
@@ -1532,7 +1532,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         console.log('[MAIN] ✓ WebSocket connected, ready to start playback');
         console.log(`[MAIN] Takeoff index: ${takeoffIndex}, will start playback from this index`);
-        
+
         // Send any pending initial Godot data that was queued before WebSocket connected
         if (window._pendingInitialGodotData && playbackEngine.socket && playbackEngine.socket.connected) {
             playbackEngine.socket.emit("godot_data", window._pendingInitialGodotData);
@@ -1556,7 +1556,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Instead, we wait for YouTube video time updates to drive data requests
             // The video will automatically start requesting data once it's playing
             statusEl.textContent = 'Ready - Video-driven mode';
-            
+
             // Ensure video time monitoring is active and trigger initial data load
             if (youtubePlayer && youtubePlayer.isReady) {
                 console.log('[MAIN] YouTube player ready, video time monitoring should be active');
@@ -1593,7 +1593,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // No YouTube video - start automatic playback
             statusEl.textContent = 'Ready - Starting playback...';
             console.log('[MAIN] No YouTube video - starting automatic playback');
-            
+
             // Start playback from takeoff index after a short delay
             setTimeout(() => {
                 if (playbackEngine && playbackEngine.socket && playbackEngine.socket.connected) {
@@ -1609,7 +1609,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }, 1000);
         }
-        
+
         statusEl.classList.add('connected');
 
         // Hide loading overlay after initialization completes
@@ -1646,7 +1646,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             message: error.message,
             stack: error.stack
         });
-        
+
         statusEl.textContent = `Error: ${error.message}`;
         statusEl.classList.add('error');
 

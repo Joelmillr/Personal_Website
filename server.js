@@ -9,18 +9,24 @@ console.log('Node version:', process.version);
 console.log('Platform:', process.platform);
 
 const express = require('express');
-const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Enable compression for all responses
-app.use(compression({
-    level: 6,
-    threshold: 1024, // Only compress responses > 1KB
-}));
+// Enable compression for all responses (with error handling)
+try {
+    const compression = require('compression');
+    app.use(compression({
+        level: 6,
+        threshold: 1024, // Only compress responses > 1KB
+    }));
+    console.log('✓ Compression middleware enabled');
+} catch (error) {
+    console.warn('⚠ Compression middleware not available:', error.message);
+    console.warn('  Server will continue without compression');
+}
 
 console.log('Express loaded');
 console.log('Port configured:', port);
