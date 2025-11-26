@@ -56,6 +56,21 @@ function initWebdisplayBackend(httpServer) {
     const BASE_DIR = path.join(__dirname, '../..');
     const WEBDISPLAY_DIR = path.join(__dirname, '..');
     const FRONTEND_DIR = path.join(WEBDISPLAY_DIR, 'client');
+    
+    // Log paths for debugging
+    console.log(`[WEBDISPLAY] Paths initialized:`);
+    console.log(`  BASE_DIR: ${BASE_DIR}`);
+    console.log(`  WEBDISPLAY_DIR: ${WEBDISPLAY_DIR}`);
+    console.log(`  FRONTEND_DIR: ${FRONTEND_DIR}`);
+    console.log(`  FRONTEND_DIR exists: ${fs.existsSync(FRONTEND_DIR)}`);
+    if (fs.existsSync(FRONTEND_DIR)) {
+        const godotDir = path.join(FRONTEND_DIR, 'godot');
+        console.log(`  godot/ directory exists: ${fs.existsSync(godotDir)}`);
+        if (fs.existsSync(godotDir)) {
+            const pckFile = path.join(godotDir, 'Display.pck');
+            console.log(`  Display.pck exists: ${fs.existsSync(pckFile)}`);
+        }
+    }
     const DATA_FILE = path.join(WEBDISPLAY_DIR, 'merged_data.csv');
     const FRAMES_DIR = path.join(BASE_DIR, 'camera_frames_flipped');
 
@@ -228,12 +243,26 @@ function initWebdisplayBackend(httpServer) {
     app.use((req, res, next) => {
         // Only serve static files if mounted at /webdisplay (not /api)
         if (req.baseUrl !== '/api') {
-            try {
-                return express.static(FRONTEND_DIR, {
-                    setHeaders: (res, filePath) => {
+            // Log the request for debugging
+            console.log(`[WEBDISPLAY Static] Request: ${req.method} ${req.path}, baseUrl: ${req.baseUrl}, FRONTEND_DIR: ${FRONTEND_DIR}`);
+            
+            // Check if FRONTEND_DIR exists
+            if (!fs.existsSync(FRONTEND_DIR)) {
+                console.error(`[WEBDISPLAY Static] ERROR: FRONTEND_DIR does not exist: ${FRONTEND_DIR}`);
+                return res.status(500).send('Frontend directory not found');
+            }
+            
+            // Wrap express.static to catch errors in setHeaders
+            const staticMiddleware = express.static(FRONTEND_DIR, {
+                setHeaders: (res, filePath) => {
+                    try {
+                        // Log file being served for debugging (only in development)
+                        if (process.env.NODE_ENV !== 'production') {
+                            console.log(`[WEBDISPLAY Static] Serving file: ${filePath}`);
+                        }
+                        
                         // Determine cache strategy based on file type
                         const ext = path.extname(filePath).toLowerCase();
-                        const filename = path.basename(filePath);
                         
                         // Long-term caching for immutable assets (Godot WASM/PCK, images, fonts)
                         if (ext === '.wasm' || ext === '.pck' || ext === '.png' || ext === '.jpg' || 
@@ -260,15 +289,35 @@ function initWebdisplayBackend(httpServer) {
                             // Preload hint for critical Godot files
                             res.set('Link', `<${req.path}>; rel=preload; as=fetch; crossorigin=anonymous`);
                         }
-                    },
-                    maxAge: '1y' // Default max age for static files
-                })(req, res, next);
+                    } catch (error) {
+                        // Silently handle errors in setHeaders to prevent crashes
+                        console.warn(`[WEBDISPLAY Static] Error in setHeaders for ${filePath}:`, error.message);
+                    }
+                },
+                maxAge: '1y', // Default max age for static files
+                fallthrough: false // Don't fall through to next middleware if file not found
+            });
+            
+            // Wrap the static middleware to catch errors
+            try {
+                return staticMiddleware(req, res, (err) => {
+                    if (err) {
+                        console.error(`[WEBDISPLAY Static] Error serving ${req.path}:`, err.message);
+                        // If file not found, return 404 instead of falling through
+                        if (err.code === 'ENOENT') {
+                            return res.status(404).send(`File not found: ${req.path}`);
+                        }
+                        return res.status(500).send('Error serving file');
+                    }
+                    next();
+                });
             } catch (error) {
-                console.error(`[Static] Error serving static file ${req.path}:`, error);
+                console.error(`[WEBDISPLAY Static] Exception in static middleware for ${req.path}:`, error);
                 return res.status(500).send('Internal server error');
             }
+        } else {
+            next();
         }
-        next();
     });
 
     // Serve diagnostics page

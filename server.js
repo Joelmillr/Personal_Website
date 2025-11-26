@@ -191,7 +191,22 @@ app.get('/', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Error occurred:', err);
+    console.error('Error message:', err.message);
+    console.error('Request path:', req.path);
+    console.error('Request URL:', req.url);
+    console.error('Request baseUrl:', req.baseUrl);
     console.error('Stack trace:', err.stack);
+    
+    // If it's a file not found error, return 404 instead of 500
+    if (err.code === 'ENOENT') {
+        console.error('File not found error - returning 404');
+        return res.status(404).json({
+            error: 'File not found',
+            path: err.path || req.path,
+            message: err.message
+        });
+    }
+    
     res.status(500).send('Something broke!');
 });
 
