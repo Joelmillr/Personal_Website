@@ -155,24 +155,44 @@ app.use((req, res, next) => {
     if (req.path.startsWith('/webdisplay') || req.path.startsWith('/api')) {
         return next();
     }
-    express.static(publicDir, {
+    
+    // Wrap static middleware to catch errors
+    const staticMiddleware = express.static(publicDir, {
         setHeaders: (res, filePath) => {
-            console.log(`Attempting to serve static file: ${filePath}`);
-            // Set appropriate cache headers based on file type
-            const ext = path.extname(filePath).toLowerCase();
-            if (ext === '.wasm' || ext === '.pck' || ext === '.png' || ext === '.jpg' ||
-                ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
-                res.set('Cache-Control', 'public, max-age=31536000, immutable');
-            } else if (ext === '.js' || ext === '.css') {
-                res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
-            } else if (ext === '.html') {
-                res.set('Cache-Control', 'public, max-age=300, must-revalidate');
-            } else {
-                res.set('Cache-Control', 'no-cache');
+            try {
+                // Only log in development to avoid noise
+                if (process.env.NODE_ENV !== 'production') {
+                    console.log(`[Main Static] Serving file: ${filePath}`);
+                }
+                // Set appropriate cache headers based on file type
+                const ext = path.extname(filePath).toLowerCase();
+                if (ext === '.wasm' || ext === '.pck' || ext === '.png' || ext === '.jpg' ||
+                    ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
+                    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                } else if (ext === '.js' || ext === '.css') {
+                    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+                } else if (ext === '.html') {
+                    res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+                } else {
+                    res.set('Cache-Control', 'no-cache');
+                }
+            } catch (error) {
+                // Silently handle errors in setHeaders
+                console.warn(`[Main Static] Error in setHeaders for ${filePath}:`, error.message);
             }
         },
         fallthrough: false
-    })(req, res, next);
+    });
+    
+    // Call static middleware with error handling
+    staticMiddleware(req, res, (err) => {
+        if (err) {
+            // Log error but don't let it propagate - just continue to next middleware
+            console.warn(`[Main Static] File not found: ${req.path} (this is normal for non-existent files)`);
+            return next();
+        }
+        next();
+    });
 });
 
 // Serve index.html for the root route

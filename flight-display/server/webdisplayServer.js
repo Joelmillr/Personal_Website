@@ -302,18 +302,41 @@ function initWebdisplayBackend(httpServer) {
             try {
                 return staticMiddleware(req, res, (err) => {
                     if (err) {
+                        // Log the error with full context
                         console.error(`[WEBDISPLAY Static] Error serving ${req.path}:`, err.message);
+                        console.error(`[WEBDISPLAY Static] Error code: ${err.code}`);
+                        console.error(`[WEBDISPLAY Static] FRONTEND_DIR: ${FRONTEND_DIR}`);
+                        const expectedPath = req.path.startsWith('/webdisplay/') 
+                            ? path.join(FRONTEND_DIR, req.path.replace(/^\/webdisplay\//, ''))
+                            : path.join(FRONTEND_DIR, req.path);
+                        console.error(`[WEBDISPLAY Static] Expected file path: ${expectedPath}`);
+                        
                         // If file not found, return 404 instead of falling through
                         if (err.code === 'ENOENT') {
-                            return res.status(404).send(`File not found: ${req.path}`);
+                            console.error(`[WEBDISPLAY Static] File not found: ${req.path} - returning 404`);
+                            return res.status(404).json({
+                                error: 'File not found',
+                                path: req.path,
+                                expectedLocation: expectedPath,
+                                frontendDir: FRONTEND_DIR
+                            });
                         }
-                        return res.status(500).send('Error serving file');
+                        console.error(`[WEBDISPLAY Static] Other error serving file:`, err);
+                        return res.status(500).json({
+                            error: 'Error serving file',
+                            message: err.message
+                        });
                     }
-                    next();
+                    // File was served successfully - express.static already sent the response
+                    // No need to call next() - the response is complete
                 });
             } catch (error) {
                 console.error(`[WEBDISPLAY Static] Exception in static middleware for ${req.path}:`, error);
-                return res.status(500).send('Internal server error');
+                console.error(`[WEBDISPLAY Static] Stack:`, error.stack);
+                return res.status(500).json({
+                    error: 'Internal server error',
+                    message: error.message
+                });
             }
         } else {
             next();
