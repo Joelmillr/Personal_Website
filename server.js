@@ -19,8 +19,8 @@ console.log('Express loaded');
 console.log('Port configured:', port);
 
 // Load environment variables
-// Try loading from webdisplay/.env first, then root .env
-const webdisplayEnvPath = path.join(__dirname, 'webdisplay', '.env');
+// Try loading from flight-display/.env first, then root .env
+const webdisplayEnvPath = path.join(__dirname, 'flight-display', '.env');
 if (fs.existsSync(webdisplayEnvPath)) {
     require('dotenv').config({ path: webdisplayEnvPath });
 } else {
@@ -88,7 +88,7 @@ console.log('LOADING WEBDISPLAY BACKEND...');
 console.log('========================================');
 try {
     console.log('Attempting to load webdisplay backend...');
-    const { initWebdisplayBackend } = require('./webdisplay/backend/webdisplayServer');
+    const { initWebdisplayBackend } = require('./flight-display/server/webdisplayServer');
     console.log('Webdisplay backend module loaded, initializing...');
     webdisplayBackend = initWebdisplayBackend(server);
 

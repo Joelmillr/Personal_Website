@@ -15,12 +15,14 @@ A web-based interactive flight test data visualization system with 3D HMD displa
 ## Project Structure
 
 ```
-webdisplay/
-├── backend/              # Flask backend server
-│   ├── app.py           # Main server application
-│   ├── data_processor.py
-│   └── video_timestamp_mapper.py
-├── frontend/            # Web frontend
+flight-display/
+├── server/              # Node.js server
+│   ├── webdisplayServer.js    # Main Express server
+│   ├── dataProcessor.js       # CSV/JSON data processing
+│   ├── videoTimestampMapper.js
+│   ├── preprocessData.js      # CSV to JSON preprocessing
+│   └── diagnostics.js         # Diagnostic utilities
+├── client/              # Client-side files
 │   ├── index.html       # Main HTML page
 │   ├── css/             # Stylesheets
 │   ├── js/              # JavaScript modules
@@ -30,23 +32,19 @@ webdisplay/
 │   │   ├── chart.js     # Chart rendering
 │   │   ├── attitude-chart.js
 │   │   └── youtube-player.js
-│   └── godot/           # Godot HTML5 export (3D display)
-│       └── Display.html # Godot display with WebSocket bridge
-├── Display/             # Godot project scripts
+│   ├── godot/           # Godot HTML5 export (3D display)
+│   │   └── Display.html # Godot display with WebSocket bridge
+│   └── diagnostics.html # Diagnostic page
+├── godot-project/       # Godot project scripts
 │   └── Scripts/
-├── requirements.txt     # Python dependencies
-├── start_server.py      # Server startup script
-├── start_server.bat     # Windows startup script
-├── start_server.sh      # Linux/Mac startup script
-├── config.py.example   # Configuration template
-├── Procfile             # For deployment platforms
-├── render.yaml          # Render.com deployment config
-└── runtime.txt          # Python version specification
+├── merged_data.csv      # Flight data (74MB)
+├── merged_data.json     # Preprocessed data (generated, gitignored)
+└── env.example          # Environment variables template
 ```
 
 ## Environment Variables
 
-See `ENV_VARIABLES.md` for complete documentation.
+Create a `.env` file based on `env.example` (see below for details).
 
 **Required for production:**
 - `YOUTUBE_VIDEO_ID` - Your YouTube video ID
@@ -58,25 +56,20 @@ See `ENV_VARIABLES.md` for complete documentation.
 
 ## Quick Start
 
-### 0. Verify Setup (Optional)
-
-Run the verification script to check if all files are present:
-
-```bash
-python verify_setup.py
-```
-
 ### 1. Install Dependencies
 
+From the project root:
+
 ```bash
-pip install -r requirements.txt
+npm install
 ```
 
 ### 2. Configure YouTube Video
 
-The system uses YouTube video for playback. Set environment variables or create a `.env` file:
+Create a `.env` file in the `flight-display/` directory:
 
 ```bash
+cd flight-display
 cp env.example .env
 # Edit .env and set your YOUTUBE_VIDEO_ID
 ```
@@ -98,39 +91,51 @@ YOUTUBE_START_OFFSET=0.0
 - If flight data starts at timestamp 2643.0s but video starts at 0:00, set `YOUTUBE_START_OFFSET=2643.0`
 - If video starts 10 seconds before flight data, set `YOUTUBE_START_OFFSET=-10.0`
 
-### 3. Start the Server
+### 3. (Optional) Preprocess Data for Faster Loading
+
+For faster startup times, preprocess the CSV to JSON:
 
 ```bash
-python start_server.py
+npm run preprocess
 ```
 
-Or use the provided scripts:
-- **Windows**: `start_server.bat`
-- **Linux/Mac**: `start_server.sh`
+This generates `flight-display/merged_data.json` which loads 10-50x faster than CSV parsing.
 
-### 4. Open in Browser
+### 4. Start the Server
 
-Navigate to `http://localhost:5000`
+From the project root:
+
+```bash
+npm start
+```
+
+The server runs on port 3000 by default (or `PORT` environment variable).
+
+### 5. Open in Browser
+
+Navigate to `http://localhost:3000/webdisplay`
 
 ## Configuration
 
 ### Environment Variables
 
+Create a `.env` file based on `env.example` (see below for details).
+
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `YOUTUBE_VIDEO_ID` | YouTube video ID (required) | - |
 | `YOUTUBE_START_OFFSET` | Video sync offset in seconds | `0.0` |
-| `HOST` | Server host | `127.0.0.1` |
-| `PORT` | Server port | `5000` |
-| `DEBUG` | Debug mode | `True` |
+| `PORT` | Server port | `3000` |
 | `WS_URL` | WebSocket URL (for production) | Auto-detected |
+| `DOWNSAMPLE_FACTOR` | Memory optimization (higher = less memory) | `20` |
+| `NODE_ENV` | Node environment | `development` |
 
 ### Data Files
 
 The system expects:
-- `merged_data.csv` in the `webdisplay/` directory (flight data) ✅ **Already included**
-- `youtube_timestamps.json` in the `webdisplay/` directory (optional, improves video sync) ✅ **Already included**
-- `video_timestamps.json` in the `webdisplay/` directory (optional fallback) ✅ **Already included**
+- `merged_data.csv` in the `flight-display/` directory (flight data) ✅ **Already included**
+- `youtube_timestamps.json` in the `flight-display/` directory (optional, improves video sync) ✅ **Already included**
+- `video_timestamps.json` in the `flight-display/` directory (optional fallback) ✅ **Already included**
 - `camera_frames_flipped/` directory in project root (optional, for frame-based video)
 
 **Note:** This directory is now self-contained for hosting. All required files are included.
@@ -155,70 +160,34 @@ const socket = io('https://your-domain.com');
 
 ### Render.com (Recommended - Free Tier)
 
-1. **Push code to GitHub**
+The project is configured for Render.com deployment. See `../DEPLOYMENT.md` for complete instructions.
 
-2. **Create Render service:**
-   - Go to [render.com](https://render.com)
-   - Click "New +" → "Web Service"
-   - Connect your GitHub repository
+**Quick steps:**
+1. Push code to GitHub
+2. Connect repository to Render
+3. Render uses `render.yaml` for configuration
+4. Set environment variables in Render dashboard:
+   - `YOUTUBE_VIDEO_ID` (required)
+   - `WS_URL` (your Render URL, set after first deploy)
+   - `YOUTUBE_START_OFFSET` (optional, default: 0.0)
 
-3. **Configure service:**
-   - **Name**: `flight-test-display`
-   - **Root Directory**: `webdisplay`
-   - **Environment**: `Python 3`
-   - **Build Command**: `pip install -r requirements.txt`
-   - **Start Command**: `python start_server.py`
-   - **Environment Variables**:
-     - `HOST`: `0.0.0.0`
-     - `PORT`: `10000` (or check Render's assigned port)
-     - `YOUTUBE_VIDEO_ID`: Your video ID
-     - `YOUTUBE_START_OFFSET`: `0.0` (adjust as needed)
-     - `WS_URL`: Your Render URL (set after first deploy)
-
-4. **After deployment:**
-   - Copy your service URL
-   - Add `WS_URL` environment variable with your URL
-   - Update WebSocket URLs in frontend files if needed
+**Build process:**
+- Automatically runs `npm install && npm run preprocess` during build
+- Generates `merged_data.json` for faster loading (10-50x faster)
+- JSON file stays on Render filesystem (not committed to Git)
 
 **Free Tier Limitations:**
 - Service sleeps after 15 minutes of inactivity
 - First request after sleep takes ~30 seconds (wake-up)
+- 512MB memory limit (optimized to use ~160MB)
 - 500MB disk space, 100GB bandwidth/month
 
-### Railway.app
+## Integration
 
-1. Install Railway CLI: `npm i -g @railway/cli`
-2. Login: `railway login`
-3. Initialize: `railway init`
-4. Deploy: `railway up`
-5. Set environment variables in Railway dashboard
+This flight display is integrated into the main Personal Website project. The server (`server.js` in project root) serves both:
 
-### Production Server (Gunicorn)
-
-For production deployment on your own server:
-
-```bash
-pip install gunicorn gevent gevent-websocket
-gunicorn -w 4 -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
-    --bind 0.0.0.0:5000 \
-    --timeout 120 \
-    backend.app:app
-```
-
-## Integration into Your Website
-
-### Option 1: Standalone Page
-
-1. Copy the entire `frontend/` folder to your website
-2. Update WebSocket URLs to point to your backend server
-3. Link to `frontend/index.html` from your website
-
-### Option 2: Embed as Component
-
-1. Copy `frontend/css/`, `frontend/js/`, and `frontend/godot/` to your website
-2. Include the CSS and JS files in your page
-3. Copy the HTML structure from `frontend/index.html` into your page
-4. Update WebSocket URLs
+- Main site: `http://localhost:3000/`
+- Flight display: `http://localhost:3000/webdisplay`
 
 ### Required External Dependencies
 
@@ -241,23 +210,24 @@ The synchronization is configured via the `YOUTUBE_START_OFFSET` environment var
 
 ### Local Development
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Set environment variables (create `.env` file)
-3. Run: `python start_server.py`
-4. Open: `http://localhost:5000`
+1. Install dependencies: `npm install` (from project root)
+2. Set environment variables (create `flight-display/.env` file)
+3. Run: `npm start` (from project root)
+4. Open: `http://localhost:3000/webdisplay` (URL path remains `/webdisplay` for compatibility)
 
 ### Default Settings
 
 - **Playback Speed**: 2x (configurable in `js/playback.js`)
 - **Update Frequency**: Map/charts update every 100 frames (configurable in `js/main.js`)
 - **Data Preloading**: All flight data is preloaded for smooth playback
+- **Downsampling**: Charts use 20x downsampling (configurable via `DOWNSAMPLE_FACTOR`)
 
 ### Godot Integration
 
 The 3D display uses Godot HTML5 export. Important notes:
 - The WebSocket bridge script must be in `frontend/godot/Display.html`
 - After each Godot HTML5 export, you must re-add the WebSocket bridge script
-- The bridge script connects Godot to the Flask WebSocket server
+- The bridge script connects Godot to the Node.js WebSocket server
 
 ## Troubleshooting
 
@@ -283,10 +253,10 @@ The 3D display uses Godot HTML5 export. Important notes:
 - Ensure Godot display is properly loaded
 
 ### Service Won't Start
-- Check that `requirements.txt` is in `webdisplay/` directory
-- Verify `start_server.py` is in `webdisplay/` directory
+- Check that `package.json` has all dependencies
+- Verify Node.js version matches `engines.node` in `package.json`
 - Check build logs for dependency errors
-- Ensure Python version matches `runtime.txt`
+- Ensure `merged_data.csv` exists in `flight-display/` directory
 
 ### Performance Issues
 - Reduce update frequency in `js/main.js` (change `% 100` to `% 200`)
@@ -299,7 +269,8 @@ The 3D display uses Godot HTML5 export. Important notes:
 - **Video Sync**: YouTube video automatically syncs with flight data timestamps
 - **Godot Display**: Requires WebSocket bridge script in `Display.html` (see `frontend/godot/Display.html`)
 - **Data Preloading**: All flight data is preloaded for smooth playback
-- **CORS**: Backend has CORS enabled for cross-origin requests
+- **Performance**: JSON preprocessing runs automatically during Render build (10-50x faster than CSV)
+- **Memory**: Optimized to use ~160MB (well under 512MB Render limit)
 
 ## License
 

@@ -40,7 +40,7 @@ function initWebdisplayBackend(httpServer) {
     // Paths
     const BASE_DIR = path.join(__dirname, '../..');
     const WEBDISPLAY_DIR = path.join(__dirname, '..');
-    const FRONTEND_DIR = path.join(WEBDISPLAY_DIR, 'frontend');
+    const FRONTEND_DIR = path.join(WEBDISPLAY_DIR, 'client');
     const DATA_FILE = path.join(WEBDISPLAY_DIR, 'merged_data.csv');
     const FRAMES_DIR = path.join(BASE_DIR, 'camera_frames_flipped');
 

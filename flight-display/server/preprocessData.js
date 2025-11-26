@@ -1,6 +1,6 @@
 /**
  * Pre-process CSV data into a faster format (JSON) for faster loading
- * Run this once after CSV changes: node webdisplay/backend/preprocessData.js
+ * Run this once after CSV changes: node flight-display/server/preprocessData.js
  */
 
 const fs = require('fs');

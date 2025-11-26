@@ -11,5 +11,5 @@ package-lock.json
 .DS_Store
 
 # Preprocessed data files (too large for GitHub, generated during build on Render)
-webdisplay/merged_data.json
-webdisplay/merged_data.json.gz
+flight-display/merged_data.json
+flight-display/merged_data.json.gz

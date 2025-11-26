@@ -42,10 +42,10 @@ Personal_Website/
 │   ├── styles.css         # Retro CSS styling
 │   ├── script.js          # JavaScript functionality
 │   └── assets/            # Images and PDFs
-├── webdisplay/            # Flight test display application
-│   ├── frontend/          # Frontend files
-│   ├── backend/           # Node.js backend modules
-│   └── merged_data.csv    # Flight data
+├── flight-display/        # Flight test display application
+│   ├── client/           # Client-side files
+│   ├── server/           # Node.js server modules
+│   └── merged_data.csv   # Flight data
 ├── server.js              # Main Express server
 └── package.json           # Dependencies
 ```
@@ -111,11 +111,11 @@ cd Personal_Website
 npm install
 ```
 
-3. Set up environment variables (for webdisplay):
+3. Set up environment variables (for flight-display):
 ```bash
-# Create webdisplay/.env file
-cd webdisplay
-cp .env.example .env  # Edit with your YouTube video ID if needed
+# Create flight-display/.env file
+cd flight-display
+cp env.example .env  # Edit with your YouTube video ID if needed
 ```
 
 4. Start the development server:
@@ -130,9 +130,9 @@ http://localhost:3000
 
 ## 📝 Configuration
 
-### Webdisplay Configuration
+### Flight Display Configuration
 
-The flight test display requires configuration in `webdisplay/.env`:
+The flight test display requires configuration in `flight-display/.env`:
 
 ```env
 YOUTUBE_VIDEO_ID=your_video_id_here
@@ -160,11 +160,9 @@ The website has been tested for:
 
 ## 📚 Documentation
 
-For detailed design documentation, see:
+For deployment and configuration, see:
 
-- **DESIGN_OVERHAUL_PLAN.md**: Complete design plan and philosophy
-- **DESIGN_OVERHAUL_CHECKLIST.md**: Implementation checklist
-- **DESIGN_OVERHAUL_SUMMARY.md**: Quick reference guide
+- **flight-display/README.md**: Flight test display documentation
 
 ## 🎯 Key Features Explained
 
@@ -192,7 +190,7 @@ Comprehensive web-based flight test data visualization system featuring:
 
 ### Adding New Features
 
-1. Follow the retro design system (see `DESIGN_OVERHAUL_SUMMARY.md`)
+1. Follow the retro design system (see Design Philosophy section above)
 2. Maintain accessibility standards
 3. Test across browsers and devices
 4. Update documentation as needed
