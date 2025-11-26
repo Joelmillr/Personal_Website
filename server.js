@@ -113,6 +113,15 @@ try {
     app.use('/webdisplay', webdisplayBackend.app);
     console.log('✓ Webdisplay routes mounted at /webdisplay');
 
+    // Handle /godot/ requests - redirect to /webdisplay/godot/ (for backward compatibility)
+    // This handles cases where Godot HTML loads resources with relative paths that resolve incorrectly
+    app.use('/godot', (req, res, next) => {
+        // Redirect to /webdisplay/godot/ to ensure correct path resolution
+        const redirectPath = `/webdisplay/godot${req.path}`;
+        console.log(`[Redirect] /godot${req.path} -> ${redirectPath}`);
+        res.redirect(301, redirectPath);
+    });
+
     // Also mount API routes at root level for backward compatibility
     // This allows frontend to use /api/init instead of /webdisplay/api/init
     if (webdisplayBackend.apiRouter) {
@@ -149,13 +158,14 @@ app.use((req, res, next) => {
 });
 
 // Serve static files from the public directory with detailed logging
-// Skip /webdisplay and /api paths - they're handled by their own routers
+// Skip /webdisplay, /api, and /godot paths - they're handled by their own routers
 app.use((req, res, next) => {
-    // Don't serve static files for webdisplay or API routes
-    if (req.path.startsWith('/webdisplay') || req.path.startsWith('/api')) {
+    // Don't serve static files for webdisplay, API, or godot routes
+    // /godot routes should be handled by webdisplay backend (they're at /webdisplay/godot/)
+    if (req.path.startsWith('/webdisplay') || req.path.startsWith('/api') || req.path.startsWith('/godot')) {
         return next();
     }
-    
+
     // Wrap static middleware to catch errors
     const staticMiddleware = express.static(publicDir, {
         setHeaders: (res, filePath) => {
@@ -183,7 +193,7 @@ app.use((req, res, next) => {
         },
         fallthrough: false
     });
-    
+
     // Call static middleware with error handling
     staticMiddleware(req, res, (err) => {
         if (err) {
@@ -216,7 +226,7 @@ app.use((err, req, res, next) => {
     console.error('Request URL:', req.url);
     console.error('Request baseUrl:', req.baseUrl);
     console.error('Stack trace:', err.stack);
-    
+
     // If it's a file not found error, return 404 instead of 500
     if (err.code === 'ENOENT') {
         console.error('File not found error - returning 404');
@@ -226,7 +236,7 @@ app.use((err, req, res, next) => {
             message: err.message
         });
     }
-    
+
     res.status(500).send('Something broke!');
 });
 

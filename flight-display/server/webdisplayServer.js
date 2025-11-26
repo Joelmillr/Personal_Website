@@ -927,6 +927,13 @@ function initWebdisplayBackend(httpServer) {
                 let htmlContent = fs.readFileSync(htmlPath, 'utf-8');
                 const wsUrl = process.env.WS_URL || `${req.protocol}://${req.get('host')}`;
                 const injectScript = `<script>window.WS_URL = "${wsUrl}";</script>`;
+                // Add base tag to ensure relative paths resolve correctly to /webdisplay/godot/
+                // This ensures Display.wasm, Display.pck, etc. load from the correct location
+                const baseTag = `<base href="/webdisplay/godot/">`;
+                htmlContent = htmlContent.replace(
+                    '<head>',
+                    `<head>\n\t${baseTag}`
+                );
                 htmlContent = htmlContent.replace(
                     '<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>',
                     `${injectScript}\n\t\t<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>`
