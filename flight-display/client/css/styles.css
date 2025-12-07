@@ -44,6 +44,10 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
     font-size: 16px;
+    /* Prevent zoom on double tap for iOS */
+    touch-action: manipulation;
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior-y: contain;
 }
 
 .container {
@@ -77,6 +81,7 @@ body {
     color: var(--accent-green);
     word-wrap: break-word;
     overflow-wrap: break-word;
+    -webkit-hyphens: auto;
     hyphens: auto;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -167,6 +172,9 @@ body {
     min-height: 350px;
     display: block;
     border: none;
+    /* Prevent iframe from causing layout issues on mobile */
+    touch-action: none;
+    -webkit-touch-callout: none;
 }
 
 .viewer-info {
@@ -256,6 +264,7 @@ body {
     height: 100%;
     min-height: 400px;
     position: relative;
+    background: #000;
     overflow: visible; /* Allow video controls to be visible */
 }
 
@@ -348,6 +357,7 @@ body {
     flex: 0 0 auto;
     margin-top: 10px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 }
 
 .attitude-chart-container h2 {
@@ -364,6 +374,8 @@ body {
     min-height: 200px;
     width: 100%;
     height: 100%;
+    display: block;
+    max-width: 100%;
 }
 
 /* Controls Panel - Fixed Footer - Retro Style */
@@ -381,6 +393,75 @@ body {
     flex-wrap: wrap;
     z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    /* Ensure panel is above other content */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--accent-green);
+    color: var(--bg-primary);
+    border: 2px outset var(--accent-green-bright);
+    cursor: pointer;
+    font-family: 'Courier New', 'Courier', monospace;
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+    min-height: 44px;
+    box-sizing: border-box;
+}
+
+.mobile-menu-toggle:hover {
+    background: var(--accent-green-bright);
+    border: 2px inset var(--accent-green);
+}
+
+.mobile-menu-toggle:active {
+    border: 2px inset var(--accent-green);
+    background: var(--link-visited);
+}
+
+.mobile-menu-toggle[aria-expanded="true"] {
+    background: var(--accent-green-bright);
+    border: 2px inset var(--accent-green);
+}
+
+.hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 24px;
+    height: 20px;
+    margin-left: 12px;
+}
+
+.hamburger-icon span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: var(--bg-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.mobile-menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(3) {
+    transform: rotate(-45deg) translate(8px, -8px);
 }
 
 .btn {
@@ -535,12 +616,18 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
+    height: 100vh; /* Use viewport height for better mobile support */
     background: rgba(232, 232, 232, 0.95);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10000;
     transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+    /* Prevent scrolling when loading */
+    overflow: hidden;
+    /* Ensure it covers the entire viewport on mobile */
+    min-height: 100vh;
+    min-height: -webkit-fill-available; /* iOS Safari fix */
 }
 
 .loading-overlay.hidden {
@@ -554,6 +641,9 @@ body {
     text-align: center;
     color: var(--text-dark);
     font-family: 'Courier New', 'Courier', monospace;
+    max-width: 90%;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .loading-spinner {
@@ -564,6 +654,7 @@ body {
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 20px;
+    flex-shrink: 0;
 }
 
 @keyframes spin {
@@ -663,159 +754,283 @@ body {
 
 /* Mobile devices (phones, up to 768px) */
 @media screen and (max-width: 768px) {
+    /* Prevent horizontal scrolling */
+    html, body {
+        overflow-x: hidden;
+        width: 100%;
+        position: relative;
+    }
+    
     /* Header adjustments */
     .header {
-        padding: 10px 15px;
-        flex-wrap: wrap;
-        gap: 10px;
+        padding: 10px 12px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .header-content {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
     
     .header h1 {
-        font-size: 18px;
-        flex: 1 1 100%;
-        margin-bottom: 5px;
+        font-size: 16px;
+        width: 100%;
+        margin: 0;
         word-wrap: break-word;
         overflow-wrap: break-word;
         line-height: 1.3;
+        letter-spacing: 0.5px;
+    }
+    
+    .back-home-link {
+        font-size: 13px;
+        padding: 8px 12px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
     }
     
     .status {
-        font-size: 12px;
-        padding: 4px 12px;
+        font-size: 11px;
+        padding: 6px 10px;
+        align-self: flex-end;
+        margin-top: -8px;
     }
     
     /* Main content padding */
     .main-content {
-        padding: 8px;
-        gap: 8px;
+        padding: 6px;
+        gap: 6px;
     }
     
     /* 3D Viewer - smaller on mobile */
     .viewer-3d-container {
-        height: 35vh;
+        height: auto;
         min-height: 250px;
-        padding: 8px;
+        max-height: 40vh;
+        padding: 6px;
     }
     
     .viewer-3d-container h2 {
-        font-size: 16px;
-        margin-bottom: 8px;
+        font-size: 14px;
+        margin-bottom: 6px;
     }
     
     #godot-iframe {
         min-height: 200px;
+        max-height: calc(40vh - 80px);
     }
     
     .viewer-info {
         flex-direction: column;
-        gap: 5px;
-        font-size: 12px;
-        margin-top: 8px;
+        gap: 4px;
+        font-size: 11px;
+        margin-top: 6px;
+        padding: 4px 0;
     }
     
     .viewer-info > div {
-        white-space: normal; /* Allow wrapping on mobile */
+        white-space: normal;
         overflow: visible;
+        line-height: 1.4;
     }
     
     /* Bottom row - stack vertically on mobile */
     .bottom-row {
         flex-direction: column;
-        min-height: 0; /* Use 0 instead of auto for better browser support */
         max-height: none;
-        gap: 8px;
+        gap: 6px;
     }
     
     .video-container,
     .map-chart-column {
         flex: 1 1 100%;
         min-width: 100%;
+        width: 100%;
     }
     
     .video-container {
-        min-height: 250px;
+        min-height: 220px;
+        max-height: 50vh;
     }
     
     .video-wrapper,
     #youtube-player-container {
-        min-height: 250px;
+        min-height: 220px;
+        max-height: calc(50vh - 50px);
     }
     
     /* Map and chart containers */
-    .map-container,
+    .map-chart-column {
+        gap: 6px;
+    }
+    
+    .map-container {
+        min-height: 180px;
+        max-height: 30vh;
+        padding: 6px;
+    }
+    
     .chart-container {
-        min-height: 200px;
+        min-height: 140px;
+        max-height: 20vh;
+        padding: 6px;
     }
     
     .map-container h2,
     .chart-container h2 {
-        font-size: 16px;
+        font-size: 14px;
+        margin-bottom: 6px;
     }
     
-    #map,
+    #map {
+        min-height: 150px;
+        max-height: calc(30vh - 40px);
+    }
+    
     #altitude-chart {
-        min-height: 180px;
+        min-height: 120px;
+        max-height: calc(20vh - 40px);
     }
     
     /* Attitude chart */
     .attitude-chart-container {
-        height: 20vh;
-        min-height: 150px;
+        min-height: 200px;
+        max-height: none;
         padding: 8px;
+        margin-top: 6px;
+        display: flex;
+        flex-direction: column;
     }
     
     .attitude-chart-container h2 {
-        font-size: 16px;
+        font-size: 14px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
     }
     
     #attitude-chart {
-        min-height: 120px;
+        flex: 1;
+        min-height: 180px;
+        width: 100%;
+        height: auto;
+        max-height: none;
     }
     
     /* Controls panel - mobile friendly */
     .controls-panel {
-        padding: 10px 15px;
+        padding: 0;
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: 0;
+        max-height: none;
+        overflow: visible;
+    }
+    
+    .mobile-menu-toggle {
+        display: flex;
     }
     
     .jump-controls {
         width: 100%;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        padding: 12px 10px;
+        background: var(--bg-secondary);
+        border-top: 2px solid var(--accent-green);
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .jump-controls.active {
+        max-height: 60vh;
+        opacity: 1;
+        visibility: visible;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
     
     .jump-controls h3 {
         font-size: 13px;
         text-align: center;
+        margin: 0 0 8px 0;
+        padding: 0;
+        font-weight: bold;
+        color: var(--accent-green);
     }
     
     .jump-buttons {
-        justify-content: center;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 6px;
+        width: 100%;
     }
     
     .btn-jump {
-        font-size: 11px;
-        padding: 5px 10px;
-        flex: 1 1 auto;
-        min-width: 0;
-        max-width: calc(50% - 3px);
+        font-size: 10px;
+        padding: 10px 6px;
+        min-height: 44px;
+        width: 100%;
+        max-width: none;
+        text-align: center;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        line-height: 1.3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     /* Container padding adjustment */
     .container {
-        padding-bottom: 120px; /* More space for taller mobile controls */
+        padding-bottom: 60px; /* Reduced since menu is collapsible */
     }
     
-    /* Loading overlay text */
+    /* Loading overlay - mobile adjustments */
+    .loading-content {
+        max-width: 85%;
+        padding: 15px;
+    }
+    
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border-width: 3px;
+        margin: 0 auto 15px;
+    }
+    
     .loading-text {
-        font-size: 20px;
+        font-size: 16px;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+        line-height: 1.3;
     }
     
     .loading-status {
         font-size: 12px;
+        line-height: 1.4;
+    }
+    
+    /* Notification adjustments */
+    .notification-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+    }
+    
+    .notification {
+        min-width: auto;
+        max-width: 100%;
+        font-size: 13px;
+        padding: 12px 16px;
     }
 }
 
@@ -844,28 +1059,45 @@ body {
         min-height: 350px;
     }
     
-    .map-container,
-    .chart-container {
+    .map-container {
         min-height: 160px;
+        max-height: 28vh;
     }
     
-    #map,
-    #altitude-chart {
+    .chart-container {
+        min-height: 140px;
+        max-height: 20vh;
+    }
+    
+    #map {
         min-height: 150px;
+        max-height: calc(28vh - 40px);
+    }
+    
+    #altitude-chart {
+        min-height: 120px;
+        max-height: calc(20vh - 40px);
     }
     
     .attitude-chart-container {
-        height: 22vh;
+        height: auto;
+        min-height: 200px;
+        max-height: none;
+    }
+    
+    #attitude-chart {
         min-height: 180px;
+        max-height: none;
     }
     
     .jump-buttons {
         gap: 8px;
+        grid-template-columns: repeat(3, 1fr);
     }
     
     .btn-jump {
-        font-size: 12px;
-        padding: 6px 12px;
+        font-size: 11px;
+        padding: 8px 10px;
     }
 }
 
@@ -877,91 +1109,334 @@ body {
 
 /* Very small mobile devices (up to 480px) */
 @media screen and (max-width: 480px) {
+    .header {
+        padding: 8px 10px;
+    }
+    
     .header h1 {
-        font-size: 16px;
+        font-size: 14px;
+        letter-spacing: 0.3px;
+    }
+    
+    .back-home-link {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+    
+    .status {
+        font-size: 10px;
+        padding: 5px 8px;
+    }
+    
+    .main-content {
+        padding: 4px;
+        gap: 4px;
     }
     
     .viewer-3d-container {
-        height: 30vh;
         min-height: 200px;
+        max-height: 35vh;
+        padding: 4px;
+    }
+    
+    .viewer-3d-container h2 {
+        font-size: 12px;
     }
     
     #godot-iframe {
         min-height: 150px;
+        max-height: calc(35vh - 60px);
     }
     
     .viewer-info {
-        font-size: 11px;
+        font-size: 10px;
+        gap: 3px;
     }
     
     .viewer-info > div {
         white-space: normal;
+        line-height: 1.3;
     }
     
-    .video-container,
-    .map-container,
-    .chart-container {
+    .video-container {
         min-height: 200px;
+        max-height: 45vh;
+        padding: 4px;
+    }
+    
+    .video-container h2 {
+        font-size: 12px;
     }
     
     .video-wrapper,
     #youtube-player-container {
         min-height: 200px;
+        max-height: calc(45vh - 40px);
     }
     
-    #map,
+    .map-container {
+        min-height: 160px;
+        max-height: 28vh;
+        padding: 4px;
+    }
+    
+    .chart-container {
+        min-height: 120px;
+        max-height: 18vh;
+        padding: 4px;
+    }
+    
+    .map-container h2,
+    .chart-container h2 {
+        font-size: 12px;
+    }
+    
+    #map {
+        min-height: 130px;
+        max-height: calc(28vh - 35px);
+    }
+    
     #altitude-chart {
-        min-height: 150px;
+        min-height: 100px;
+        max-height: calc(18vh - 35px);
     }
     
     .attitude-chart-container {
-        height: 18vh;
-        min-height: 120px;
+        min-height: 180px;
+        max-height: none;
+        padding: 6px;
+    }
+    
+    .attitude-chart-container h2 {
+        font-size: 12px;
+        margin-bottom: 6px;
     }
     
     #attitude-chart {
-        min-height: 100px;
+        min-height: 160px;
+        max-height: none;
+    }
+    
+    .mobile-menu-toggle {
+        font-size: 12px;
+        padding: 10px 12px;
+    }
+    
+    .hamburger-icon {
+        width: 20px;
+        height: 18px;
+        margin-left: 8px;
+    }
+    
+    .jump-controls.active {
+        max-height: 65vh;
+        padding: 10px 8px;
+    }
+    
+    .jump-controls {
+        gap: 8px;
+    }
+    
+    .jump-controls h3 {
+        font-size: 11px;
+        margin-bottom: 6px;
+    }
+    
+    .jump-buttons {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 5px;
     }
     
     .btn-jump {
-        font-size: 10px;
-        padding: 4px 8px;
+        font-size: 9px;
+        padding: 10px 4px;
+        min-height: 44px;
+        line-height: 1.2;
     }
     
     .container {
-        padding-bottom: 140px;
+        padding-bottom: 60px; /* Reduced since menu is collapsible */
+    }
+    
+    /* Loading overlay - very small screens */
+    .loading-content {
+        max-width: 90%;
+        padding: 12px;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border-width: 3px;
+        margin: 0 auto 12px;
+    }
+    
+    .loading-text {
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        line-height: 1.2;
+    }
+    
+    .loading-status {
+        font-size: 11px;
+        line-height: 1.3;
     }
 }
 
 /* Landscape orientation on mobile */
 @media screen and (max-width: 768px) and (orientation: landscape) {
+    .header {
+        padding: 8px 12px;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+    
+    .header-content {
+        flex-direction: row;
+        align-items: center;
+        flex: 1;
+    }
+    
+    .header h1 {
+        font-size: 14px;
+        flex: 0 1 auto;
+        margin: 0;
+    }
+    
+    .back-home-link {
+        font-size: 12px;
+        padding: 6px 10px;
+    }
+    
+    .status {
+        margin-top: 0;
+    }
+    
+    .main-content {
+        padding: 6px;
+        gap: 6px;
+    }
+    
     .viewer-3d-container {
-        height: 50vh;
-        min-height: 300px;
+        height: auto;
+        min-height: 280px;
+        max-height: 50vh;
     }
     
     #godot-iframe {
         min-height: 250px;
+        max-height: calc(50vh - 70px);
+    }
+    
+    .viewer-info {
+        flex-direction: row;
+        font-size: 11px;
+        gap: 10px;
     }
     
     .bottom-row {
         flex-direction: row;
-        min-height: 40vh;
+        max-height: 45vh;
+        gap: 6px;
+    }
+    
+    .video-container {
+        flex: 0 0 50%;
+        min-height: auto;
         max-height: 45vh;
     }
     
-    .video-container,
+    .video-wrapper,
+    #youtube-player-container {
+        min-height: 200px;
+        max-height: calc(45vh - 50px);
+    }
+    
     .map-chart-column {
         flex: 0 0 50%;
+        gap: 6px;
+    }
+    
+    .map-container {
+        max-height: calc(28vh - 10px);
+    }
+    
+    .chart-container {
+        max-height: calc(20vh - 10px);
+    }
+    
+    #map {
+        min-height: 120px;
+        max-height: calc(28vh - 40px);
+    }
+    
+    #altitude-chart {
+        min-height: 100px;
+        max-height: calc(20vh - 40px);
     }
     
     .attitude-chart-container {
-        height: 25vh;
-        min-height: 180px;
+        min-height: 160px;
+        max-height: 25vh;
+    }
+    
+    #attitude-chart {
+        min-height: 120px;
+        max-height: calc(25vh - 40px);
+    }
+    
+    .controls-panel {
+        padding: 0;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .mobile-menu-toggle {
+        display: flex;
+    }
+    
+    .jump-controls {
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .jump-controls.active {
+        max-height: 50vh;
+        opacity: 1;
+        visibility: visible;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .jump-controls h3 {
+        font-size: 11px;
+        text-align: center;
+        margin-bottom: 6px;
+    }
+    
+    .jump-buttons {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
+    .btn-jump {
+        font-size: 10px;
+        padding: 8px 6px;
+        min-height: 40px;
+        white-space: normal;
+        max-width: none;
     }
     
     .container {
-        padding-bottom: 100px;
+        padding-bottom: 80px;
     }
 }
 
@@ -985,9 +1460,30 @@ body {
         padding: 10px 16px;
     }
     
+    .back-home-link {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
     .viewer-info {
         /* Larger text for easier reading on touch devices */
-        font-size: 14px;
+        font-size: 13px;
+    }
+    
+    /* Prevent text selection on buttons during touch */
+    .btn,
+    .btn-jump,
+    .back-home-link {
+        -webkit-tap-highlight-color: rgba(76, 175, 80, 0.3);
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    
+    /* Improve scrolling performance */
+    .controls-panel,
+    .jump-buttons {
+        -webkit-overflow-scrolling: touch;
     }
 }
 

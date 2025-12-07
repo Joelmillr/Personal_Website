@@ -8,6 +8,34 @@ window.addEventListener('scroll', () => {
     }
 });
 
+// Mobile menu toggle
+const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+const navLinks = document.querySelector('.nav-links');
+
+if (mobileMenuToggle && navLinks) {
+    mobileMenuToggle.addEventListener('click', () => {
+        const isExpanded = mobileMenuToggle.getAttribute('aria-expanded') === 'true';
+        mobileMenuToggle.setAttribute('aria-expanded', !isExpanded);
+        navLinks.classList.toggle('active');
+    });
+
+    // Close menu when clicking on a link
+    navLinks.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            navLinks.classList.remove('active');
+        });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!navbar.contains(e.target) && navLinks.classList.contains('active')) {
+            mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            navLinks.classList.remove('active');
+        }
+    });
+}
+
 // Drawing Canvas Setup
 const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
@@ -31,23 +59,31 @@ canvas.addEventListener('mousemove', draw);
 canvas.addEventListener('mouseup', stopDrawing);
 canvas.addEventListener('mouseout', stopDrawing);
 
-// Touch events for mobile
+// Touch events for mobile - improved
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault(); // Prevent scrolling while drawing
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    lastX = touch.clientX - rect.left;
-    lastY = touch.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    lastX = (touch.clientX - rect.left) * scaleX;
+    lastY = (touch.clientY - rect.top) * scaleY;
     isDrawing = true;
-});
+    // Draw a dot for touch start
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill();
+}, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault(); // Prevent scrolling while drawing
     if (!isDrawing) return;
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const currentX = touch.clientX - rect.left;
-    const currentY = touch.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const currentX = (touch.clientX - rect.left) * scaleX;
+    const currentY = (touch.clientY - rect.top) * scaleY;
 
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
@@ -56,9 +92,17 @@ canvas.addEventListener('touchmove', (e) => {
 
     lastX = currentX;
     lastY = currentY;
-});
+}, { passive: false });
 
-canvas.addEventListener('touchend', stopDrawing);
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    stopDrawing();
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    stopDrawing();
+}, { passive: false });
 
 function startDrawing(e) {
     isDrawing = true;
