@@ -129,60 +129,59 @@
 			window.godotPrevDataTime = null;
 
 			// Function called by Godot to get latest data
+			// OPTIMIZED: Cache JSON string to avoid expensive stringify on every poll
 			window.getGodotData = function () {
 				// Always return the latest data (don't clear it)
 				// This allows Godot to poll at its own rate
 				if (window.godotLatestData) {
-					// Log occasionally for debugging
-					if (window.godotDataReceivedCount <= 10 || window.godotDataReceivedCount % 50 === 0) {
+					// Reduced logging for performance
+					if (window.godotDataReceivedCount <= 3 || window.godotDataReceivedCount % 500 === 0) {
 						const now = Date.now();
 						const timeSinceLast = window.godotLastDataTime ? (now - window.godotLastDataTime) : 0;
 						const rate = timeSinceLast > 0 ? (1000 / timeSinceLast).toFixed(1) : 'N/A';
-						const dataAge = window.godotLastDataTime ? (now - window.godotLastDataTime) : 'N/A';
-						console.log('[Godot Bridge] getGodotData called #' + window.godotDataReceivedCount +
-							', has data=true, poll rate=' + rate + ' Hz, data age=' + dataAge + 'ms');
-						if (window.godotLatestData && window.godotLatestData.VQX !== undefined) {
-							console.log('[Godot Bridge] Data sample: VQX=' + window.godotLatestData.VQX.toFixed(3) +
-								', VQY=' + window.godotLatestData.VQY.toFixed(3));
-						}
+						console.log('[Godot Bridge] getGodotData #' + window.godotDataReceivedCount + ', rate=' + rate + ' Hz');
 					}
 					window.godotDataReceivedCount++;
-					// CRITICAL: Return as JSON string so Godot can parse it properly
-					// JavaScript objects don't directly convert to Godot Dictionaries via eval()
-					try {
-						const jsonStr = JSON.stringify(window.godotLatestData);
-						if (window.godotDataReceivedCount <= 5) {
-							console.log('[Godot Bridge] Returning JSON string (length=' + jsonStr.length + '):', jsonStr.substr(0, 200));
+					
+					// OPTIMIZED: Only stringify if data changed (check by reference)
+					// This avoids expensive JSON.stringify() on every poll
+					if (!window._cachedJsonStr || window._lastDataRef !== window.godotLatestData) {
+						try {
+							window._cachedJsonStr = JSON.stringify(window.godotLatestData);
+							window._lastDataRef = window.godotLatestData;
+						} catch (e) {
+							console.error('[Godot Bridge] Failed to stringify data:', e);
+							return null;
 						}
-						return jsonStr;
-					} catch (e) {
-						console.error('[Godot Bridge] Failed to stringify data:', e);
-						return null;
 					}
+					return window._cachedJsonStr;
 				} else {
-					// Log when no data is available (first few times)
+					// Reduced logging for performance
 					if (!window._noDataLogCount) window._noDataLogCount = 0;
 					window._noDataLogCount++;
-					if (window._noDataLogCount <= 10 || window._noDataLogCount % 100 === 0) {
-						console.log('[Godot Bridge] getGodotData called #' + window._noDataLogCount + ', NO DATA AVAILABLE');
+					if (window._noDataLogCount <= 3 || window._noDataLogCount % 500 === 0) {
+						console.log('[Godot Bridge] getGodotData #' + window._noDataLogCount + ', NO DATA');
 					}
 				}
 				return null;
 			};
 
 			// Monitor when data is set from parent window
+			// OPTIMIZED: Invalidate cached JSON when data changes
 			Object.defineProperty(window, 'godotLatestData', {
 				get: function () {
 					return this._godotLatestData || null;
 				},
 				set: function (value) {
 					this._godotLatestData = value;
+					// Invalidate cached JSON string so it gets regenerated on next poll
+					window._cachedJsonStr = null;
 					if (value) {
 						if (!window._setCount) window._setCount = 0;
 						window._setCount++;
-						if (window._setCount <= 10 || window._setCount % 50 === 0) {
-							console.log('[Godot Bridge] godotLatestData SET #' + window._setCount +
-								', VQX=' + (value.VQX?.toFixed(3) || 'N/A'));
+						// Reduced logging for performance
+						if (window._setCount <= 3 || window._setCount % 500 === 0) {
+							console.log('[Godot Bridge] Data SET #' + window._setCount + ', VQX=' + (value.VQX?.toFixed(3) || 'N/A'));
 						}
 						window.godotLastDataTime = Date.now();
 					}
