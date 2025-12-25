@@ -693,6 +693,13 @@ function initWebdisplayBackend(httpServer) {
     // API: Get data for video time
     apiRouter.get('/data-for-video-time/:videoTime', (req, res) => {
         const videoTime = parseFloat(req.params.videoTime);
+        if (isNaN(videoTime) || !isFinite(videoTime)) {
+            return res.status(400).json({ 
+                success: false, 
+                error: "Invalid video_time parameter. Must be a valid number.",
+                received: req.params.videoTime
+            });
+        }
         getDataForVideoTime(videoTime, res);
     });
 

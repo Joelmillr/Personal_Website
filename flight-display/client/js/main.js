@@ -546,7 +546,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
 
                             // Skip if video time is invalid
-                            if (isNaN(videoTime) || videoTime < 0) {
+                            if (isNaN(videoTime) || !isFinite(videoTime) || videoTime < 0) {
                                 if (window._videoTimeUpdateCount <= 5) {
                                     console.warn(`[MAIN] Skipping invalid video time: ${videoTime}`);
                                 }
@@ -798,6 +798,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             // Create abort controller for timeout and cancellation
                             const controller = new AbortController();
                             const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout for faster failure
+
+                            // Validate videoTime before making request
+                            if (isNaN(videoTime) || !isFinite(videoTime) || videoTime < 0) {
+                                console.warn(`[MAIN] Invalid videoTime for fetch: ${videoTime}`);
+                                pendingDataRequest = null;
+                                return;
+                            }
 
                             const fetchPromise = fetch(`/api/data-for-video-time/${videoTime}`, {
                                 signal: controller.signal
