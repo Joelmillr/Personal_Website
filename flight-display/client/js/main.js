@@ -538,15 +538,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                         },
                         // onVideoTimeUpdate: THE ONLY JOB - check video time and fetch corresponding data
                         async (videoTime) => {
-                            // Reduced logging for performance - only log first few and then every 500
+                            // Debug: Log first few callbacks to verify they're firing
                             if (!window._videoTimeUpdateCount) window._videoTimeUpdateCount = 0;
                             window._videoTimeUpdateCount++;
-                            if (window._videoTimeUpdateCount <= 3 || window._videoTimeUpdateCount % 500 === 0) {
+                            if (window._videoTimeUpdateCount <= 5 || window._videoTimeUpdateCount % 100 === 0) {
                                 console.log(`[MAIN] onVideoTimeUpdate #${window._videoTimeUpdateCount}: videoTime=${videoTime.toFixed(3)}s`);
                             }
 
                             // Skip if video time is invalid
-                            if (isNaN(videoTime) || !isFinite(videoTime) || videoTime < 0) {
+                            if (isNaN(videoTime) || videoTime < 0) {
                                 if (window._videoTimeUpdateCount <= 5) {
                                     console.warn(`[MAIN] Skipping invalid video time: ${videoTime}`);
                                 }
@@ -612,13 +612,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 console.log(`[MAIN] onVideoTimeUpdate #${window._videoTimeUpdateCount}: videoTime=${videoTime.toFixed(3)}s`);
                             }
 
-                            // OPTIMIZED: Send Godot data at 30 FPS (33ms) for smooth 3D view
-                            // Interpolation handles smooth motion between updates
-                            // 30 FPS prevents excessive iframe/WebSocket communication overhead
+                            // CRITICAL: Always send Godot data at 60 FPS for smooth 3D view
+                            // Use interpolation from cache, with fallback to last known data
+                            // Send EVERY frame update to ensure smooth motion
                             const now = Date.now();
                             if (!window._lastGodotSendTime) window._lastGodotSendTime = 0;
                             const timeSinceLastSend = now - window._lastGodotSendTime;
-                            const minSendInterval = 33; // 33ms = ~30 FPS (prevents lag from excessive sends)
+                            const minSendInterval = 16; // 16ms = 60 FPS max
 
                             // Only throttle if we're sending too fast
                             if (timeSinceLastSend < minSendInterval) {
@@ -713,10 +713,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             godotIframe.contentWindow.godotLastDataTime = Date.now();
                                             sentDirectly = true;
 
-                                            // Reduced logging for performance
+                                            // Debug: Log first few sends
                                             if (window._godotSendCount === undefined) window._godotSendCount = 0;
                                             window._godotSendCount++;
-                                            if (window._godotSendCount <= 3 || window._godotSendCount % 500 === 0) {
+                                            if (window._godotSendCount <= 10 || window._godotSendCount % 100 === 0) {
                                                 console.log(`[MAIN] Sent to Godot #${window._godotSendCount}: VQX=${dataToSend.VQX?.toFixed(3)}, cache_size=${window._godotDataCache?.length || 0}, videoTime=${videoTime.toFixed(3)}`);
                                             }
                                         } else {
@@ -744,22 +744,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     }
                                 }
 
-                                // Only send via WebSocket if direct iframe access failed
-                                // Sending both causes duplicate processing and lag
-                                if (!sentDirectly && playbackEngine.socket && playbackEngine.socket.connected) {
+                                // ALWAYS also send via WebSocket as backup (in case direct access doesn't work)
+                                // This ensures data gets through even if iframe access fails silently
+                                if (playbackEngine.socket && playbackEngine.socket.connected) {
                                     playbackEngine.socket.emit("godot_data", dataToSend);
                                 }
 
                                 window._lastGodotDataSent = dataToSend; // Remember for fallback
                             }
 
-                            // OPTIMIZED FETCH: Fetch data at 30 FPS (33ms) to prevent network backlog
-                            // 30 FPS is sufficient for smooth playback and prevents request queuing
-                            // Interpolation handles smooth motion between fetch points
+                            // HIGH-FREQUENCY FETCH: Fetch data frequently for smooth 60 FPS updates
+                            // Fetch every 16ms (~60 FPS) to match video update rate exactly
+                            // This ensures cache always has fresh data for interpolation
                             // Note: 'now' already defined above for throttling
                             if (!window._lastFetchTime) window._lastFetchTime = 0;
                             const timeSinceLastFetch = now - window._lastFetchTime;
-                            const fetchInterval = 33; // 33ms = ~30 FPS (prevents network backlog)
+                            const fetchInterval = 16; // 16ms = ~60 FPS (match video update rate)
 
                             // Also check if video time changed significantly (for other displays)
                             const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.05;
@@ -798,13 +798,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             // Create abort controller for timeout and cancellation
                             const controller = new AbortController();
                             const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout for faster failure
-
-                            // Validate videoTime before making request
-                            if (isNaN(videoTime) || !isFinite(videoTime) || videoTime < 0) {
-                                console.warn(`[MAIN] Invalid videoTime for fetch: ${videoTime}`);
-                                pendingDataRequest = null;
-                                return;
-                            }
 
                             const fetchPromise = fetch(`/api/data-for-video-time/${videoTime}`, {
                                 signal: controller.signal
@@ -924,9 +917,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 playbackEngine.socket.emit("godot_data", godotData);
                                             }
 
-                                            // Reduced logging for performance
-                                            if (updateCount <= 3 || updateCount % 500 === 0) {
-                                                console.log(`[MAIN] Sent Godot data #${updateCount}: VQX=${godotData.VQX.toFixed(3)}, cache_size=${window._godotDataCache.length}`);
+                                            // Debug: Log first few sends to verify
+                                            if (updateCount <= 10) {
+                                                console.log(`[MAIN] Sent Godot data #${updateCount}: VQX=${godotData.VQX.toFixed(3)}, VQY=${godotData.VQY.toFixed(3)}, VALT=${godotData.VALT.toFixed(1)}, cache_size=${window._godotDataCache.length}`);
                                             }
 
                                             // Pre-fetch next data point (0.1 seconds ahead) for smoother interpolation
@@ -993,13 +986,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         console.log(`[MAIN] Updating displays with data at index ${displayData.index}, videoTime=${videoTime.toFixed(3)}s`);
                                         updateDisplaysWithData(displayData);
 
-                                        // Reduced logging for performance
-                                        if (updateCount % 500 === 0) {
-                                            console.log(`[MAIN] Video update #${updateCount}: video=${videoTime.toFixed(3)}s, index=${result.index}, cache=${window._godotDataCache.length}`);
+                                        // Log periodically for debugging
+                                        if (updateCount % 100 === 0) {
+                                            console.log(`[MAIN] Video-driven update #${updateCount}: video=${videoTime.toFixed(3)}s, data_ts=${result.data_timestamp.toFixed(3)}s, index=${result.index}, cache=${window._godotDataCache.length}`);
                                         }
                                     } else {
-                                        // Reduced error logging for performance
-                                        if (updateCount % 200 === 0) {
+                                        // Log errors for debugging
+                                        if (updateCount % 50 === 0) {
                                             console.warn(`[MAIN] Failed to get data for video time ${videoTime.toFixed(3)}s:`, result.error || 'Unknown error');
                                         }
                                     }
@@ -1017,10 +1010,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     if (error.name !== 'AbortError') {
                                         window._dataFetchFailures++;
 
-                                        // Reduced error logging for performance
-                                        if (updateCount % 200 === 0 || window._dataFetchFailures === 1) {
+                                        // Only log errors periodically to avoid console spam
+                                        if (updateCount % 50 === 0 || window._dataFetchFailures === 1) {
                                             const errorMsg = error.message || error.toString();
-                                            console.warn(`[MAIN] Error fetching data (failures: ${window._dataFetchFailures}):`, errorMsg);
+                                            console.warn(`[MAIN] Error fetching data for video time ${videoTime.toFixed(3)}s (failures: ${window._dataFetchFailures}):`, errorMsg);
                                         }
 
                                         // If too many failures, warn user
