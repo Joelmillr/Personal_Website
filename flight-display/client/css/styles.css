@@ -219,7 +219,8 @@ body {
     flex: 1 1 auto; /* Allow to grow and shrink */
     min-height: 450px; /* Increased to ensure video controls are visible */
     max-height: 50vh; /* Maximum 50% of viewport */
-    overflow: visible; /* Changed to visible to show video controls */
+    overflow: hidden; /* Changed to hidden to prevent content overflow */
+    align-items: stretch; /* Ensure children stretch to same height */
 }
 
 /* Video Container - Left Side (50% width) - Retro Style */
@@ -231,8 +232,9 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0;
-    overflow: visible;
+    overflow: hidden; /* Changed to hidden to contain content */
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative; /* For proper containment */
 }
 
 .video-container h2 {
@@ -242,6 +244,9 @@ body {
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 1px;
+    flex-shrink: 0; /* Prevent heading from being cut off */
+    padding: 0;
+    line-height: 1.2;
 }
 
 .video-wrapper {
@@ -251,11 +256,12 @@ body {
     justify-content: center;
     background: #000;
     border-radius: 4px;
-    overflow: visible; /* Changed to visible to show video controls */
+    overflow: hidden; /* Changed to hidden to contain video */
     position: relative;
     min-height: 400px;
     width: 100%;
     margin-bottom: 0; /* Ensure no margin cutting off controls */
+    min-width: 0; /* Allow flex item to shrink */
 }
 
 /* YouTube player container */
@@ -265,7 +271,10 @@ body {
     min-height: 400px;
     position: relative;
     background: #000;
-    overflow: visible; /* Allow video controls to be visible */
+    overflow: hidden; /* Changed to hidden to contain video */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #youtube-player-container iframe {
@@ -274,6 +283,8 @@ body {
     border: none;
     display: block;
     min-height: 400px; /* Ensure minimum height for controls */
+    max-width: 100%; /* Ensure it doesn't overflow container */
+    max-height: 100%; /* Ensure it doesn't overflow container */
 }
 
 
@@ -285,6 +296,7 @@ body {
     flex: 0 0 50%;
     min-width: 0;
     overflow: hidden; /* Keep hidden for proper flex behavior */
+    align-items: stretch; /* Ensure children stretch to full width */
 }
 
 .map-container {
@@ -297,6 +309,7 @@ body {
     min-height: 0;
     overflow: hidden;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative; /* For proper containment of map controls */
 }
 
 .map-container h2 {
@@ -306,6 +319,9 @@ body {
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 1px;
+    flex-shrink: 0; /* Prevent heading from being cut off */
+    padding: 0;
+    line-height: 1.2;
 }
 
 #map {
@@ -314,6 +330,8 @@ body {
     min-height: 200px;
     width: 100%;
     height: 100%;
+    position: relative; /* For proper positioning of Leaflet controls */
+    overflow: hidden; /* Ensure map doesn't overflow */
 }
 
 .chart-container {
@@ -335,6 +353,9 @@ body {
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 1px;
+    flex-shrink: 0; /* Prevent heading from being cut off */
+    padding: 0;
+    line-height: 1.2;
 }
 
 #altitude-chart {
@@ -588,6 +609,18 @@ body {
 /* Leaflet Map Retro Theme Override */
 .leaflet-container {
     background: var(--bg-primary);
+}
+
+/* Ensure Leaflet attribution is visible */
+.leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.8) !important;
+    padding: 2px 5px !important;
+    font-size: 11px !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    z-index: 1000 !important;
 }
 
 /* Scrollbar Styling - Retro Theme */
