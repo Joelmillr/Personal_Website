@@ -935,6 +935,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                         if (response.ok) {
                                                             return response.json();
                                                         }
+                                                        // Log non-OK responses for debugging (but don't spam console)
+                                                        if (response.status >= 400 && (!window._prefetchErrorCount || window._prefetchErrorCount < 5)) {
+                                                            if (!window._prefetchErrorCount) window._prefetchErrorCount = 0;
+                                                            window._prefetchErrorCount++;
+                                                            response.json().then(err => {
+                                                                console.warn(`[MAIN] Prefetch failed for video_time=${prefetchVideoTime.toFixed(3)}s: HTTP ${response.status} - ${err.error || response.statusText}`);
+                                                            }).catch(() => {
+                                                                console.warn(`[MAIN] Prefetch failed for video_time=${prefetchVideoTime.toFixed(3)}s: HTTP ${response.status}`);
+                                                            });
+                                                        }
                                                         return null;
                                                     })
                                                     .then(prefetchResult => {
@@ -955,8 +965,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                             window.addToCache(prefetchVideoTime, prefetchGodotData);
                                                         }
                                                     })
-                                                    .catch(() => {
+                                                    .catch(error => {
                                                         window._prefetchInProgress = false;
+                                                        // Only log first few prefetch errors to avoid console spam
+                                                        if (!window._prefetchErrorCount || window._prefetchErrorCount < 5) {
+                                                            if (!window._prefetchErrorCount) window._prefetchErrorCount = 0;
+                                                            window._prefetchErrorCount++;
+                                                            if (error.name !== 'AbortError') {
+                                                                console.warn(`[MAIN] Prefetch error for video_time=${prefetchVideoTime.toFixed(3)}s:`, error.message || error.toString());
+                                                            }
+                                                        }
                                                     });
                                             }
                                         } else {

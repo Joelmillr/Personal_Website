@@ -694,6 +694,7 @@ function initWebdisplayBackend(httpServer) {
     apiRouter.get('/data-for-video-time/:videoTime', (req, res) => {
         const videoTime = parseFloat(req.params.videoTime);
         if (isNaN(videoTime) || !isFinite(videoTime)) {
+            console.error(`[API] Invalid video_time parameter: ${req.params.videoTime}`);
             return res.status(400).json({ 
                 success: false, 
                 error: "Invalid video_time parameter. Must be a valid number.",
@@ -706,6 +707,7 @@ function initWebdisplayBackend(httpServer) {
     apiRouter.get('/data-for-video-time', (req, res) => {
         const videoTime = parseFloat(req.query.video_time);
         if (isNaN(videoTime)) {
+            console.error(`[API] Missing or invalid video_time query parameter`);
             return res.status(400).json({ success: false, error: "video_time parameter required" });
         }
         getDataForVideoTime(videoTime, res);
@@ -714,8 +716,13 @@ function initWebdisplayBackend(httpServer) {
     function getDataForVideoTime(videoTime, res) {
         try {
             if (!processor) {
-                console.log(`[ERROR] Processor not initialized for video_time=${videoTime}`);
-                return res.status(400).json({ success: false, error: "Data not initialized" });
+                console.error(`[API] Processor not initialized for video_time=${videoTime}`);
+                console.error(`[API] Processor state: ${typeof processor}, initialized: ${!!processor}`);
+                return res.status(503).json({ 
+                    success: false, 
+                    error: "Data not initialized. Please call /api/init first.",
+                    video_time: videoTime
+                });
             }
 
             // Convert video time to flight data timestamp
@@ -723,15 +730,32 @@ function initWebdisplayBackend(httpServer) {
             if (videoTimestampMapper && videoTimestampMapper.isAvailable()) {
                 dataTimestamp = videoTimestampMapper.videoToDataTime(videoTime);
                 if (dataTimestamp === null) {
+                    console.warn(`[API] Video timestamp mapper returned null for video_time=${videoTime}, using offset calculation`);
                     dataTimestamp = videoTime + YOUTUBE_START_OFFSET;
                 }
             } else {
                 dataTimestamp = videoTime + YOUTUBE_START_OFFSET;
             }
 
+            // Validate dataTimestamp is a valid number
+            if (isNaN(dataTimestamp) || !isFinite(dataTimestamp)) {
+                console.error(`[API] Invalid dataTimestamp calculated: ${dataTimestamp} for video_time=${videoTime}`);
+                return res.status(400).json({
+                    success: false,
+                    error: `Invalid data timestamp calculated from video time ${videoTime}`,
+                    video_time: videoTime,
+                    data_timestamp: dataTimestamp
+                });
+            }
+
             // Get minimum available data timestamp (first data point)
             const minDataTimestamp = processor.getDataCount() > 0 
                 ? processor.getDataAtIndex(0).timestamp_seconds 
+                : null;
+            
+            // Get maximum available data timestamp (last data point)
+            const maxDataTimestamp = processor.getDataCount() > 0 
+                ? processor.getDataAtIndex(processor.getDataCount() - 1).timestamp_seconds 
                 : null;
             
             // Get takeoff timestamp
@@ -755,12 +779,29 @@ function initWebdisplayBackend(httpServer) {
             // Use takeoff data if before takeoff
             const dataTimestampToUse = isBeforeTakeoff ? takeoffTimestamp : dataTimestamp;
 
+            // Check if dataTimestamp is within valid range
+            if (maxDataTimestamp !== null && dataTimestampToUse > maxDataTimestamp) {
+                console.warn(`[API] Requested timestamp ${dataTimestampToUse.toFixed(2)}s exceeds maximum ${maxDataTimestamp.toFixed(2)}s`);
+                return res.status(400).json({
+                    success: false,
+                    error: `Requested timestamp ${dataTimestampToUse.toFixed(2)}s exceeds maximum available timestamp ${maxDataTimestamp.toFixed(2)}s`,
+                    video_time: videoTime,
+                    data_timestamp: dataTimestampToUse,
+                    max_available: maxDataTimestamp
+                });
+            }
+
             // Find the index for this timestamp
             const index = processor.findIndexForTimestamp(dataTimestampToUse);
             if (index === null) {
-                return res.json({
+                console.warn(`[API] No data found for timestamp ${dataTimestampToUse.toFixed(2)}s (video_time=${videoTime.toFixed(2)}s)`);
+                return res.status(404).json({
                     success: false,
-                    error: `No data found for timestamp ${dataTimestampToUse.toFixed(2)}s`
+                    error: `No data found for timestamp ${dataTimestampToUse.toFixed(2)}s`,
+                    video_time: videoTime,
+                    data_timestamp: dataTimestampToUse,
+                    min_available: minDataTimestamp,
+                    max_available: maxDataTimestamp
                 });
             }
 
