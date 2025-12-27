@@ -31,5 +31,5 @@ services:
       - key: WS_URL
         sync: false  # REQUIRED: Your Render app URL (e.g., https://personal-website.onrender.com)
       - key: DOWNSAMPLE_FACTOR
-        value: 40  # Memory optimization: increased from 20 to 30 for better performance (higher = less memory, faster processing
+        value: 60  # Memory optimization: increased from 20 to 30 for better performance (higher = less memory, faster processing
 

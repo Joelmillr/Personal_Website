@@ -17,14 +17,37 @@ class PlaybackEngine {
             try {
                 // Use configurable WebSocket URL (set by backend) or connect to same origin
                 // Socket.IO will connect to the same server if no URL is provided
+                // Configure Socket.IO to prefer WebSocket and handle errors gracefully
+                const socketOptions = {
+                    transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
+                    upgrade: true, // Allow upgrade from polling to WebSocket
+                    rememberUpgrade: true, // Remember successful WebSocket upgrade
+                    timeout: 20000, // 20 second connection timeout
+                    reconnection: true,
+                    reconnectionDelay: 1000,
+                    reconnectionDelayMax: 5000,
+                    reconnectionAttempts: 5
+                };
+                
                 if (window.WS_URL) {
-                    this.socket = io(window.WS_URL);
+                    this.socket = io(window.WS_URL, socketOptions);
                 } else {
                     // Connect to same origin (current server)
-                    this.socket = io();
+                    this.socket = io(socketOptions);
                 }
                 
+                // Add timeout for initial connection
+                const connectionTimeout = setTimeout(() => {
+                    if (!this.socket || !this.socket.connected) {
+                        const timeoutError = new Error('Connection timeout: Could not establish WebSocket connection within 20 seconds');
+                        console.error('[FRONTEND] Connection timeout after 20 seconds');
+                        this.notifyStatus('Error: Connection timeout');
+                        reject(timeoutError);
+                    }
+                }, 20000);
+                
                 this.socket.on('connect', () => {
+                    clearTimeout(connectionTimeout);
                     console.log('[FRONTEND] WebSocket connected to server');
                     this.notifyStatus('Connected');
                     resolve();
@@ -96,7 +119,29 @@ class PlaybackEngine {
                 
                 this.socket.on('error', (data) => {
                     console.error('Server error:', data);
-                    this.notifyStatus(`Error: ${data.message}`);
+                    this.notifyStatus(`Error: ${data.message || 'Connection error'}`);
+                });
+                
+                this.socket.on('connect_error', (error) => {
+                    console.error('[FRONTEND] Socket.IO connection error:', error);
+                    console.error('[FRONTEND] Error type:', error.type);
+                    console.error('[FRONTEND] Error message:', error.message);
+                    
+                    // Provide helpful error messages
+                    let errorMsg = 'Connection failed';
+                    if (error.message && error.message.includes('xhr post error')) {
+                        errorMsg = 'Network error: Unable to connect to server. This may be due to CORS restrictions or network issues.';
+                        console.error('[FRONTEND] XHR POST error detected - this usually indicates CORS or network connectivity issues');
+                        console.error('[FRONTEND] Check browser console for CORS errors and verify WS_URL is set correctly');
+                    } else if (error.message && error.message.includes('timeout')) {
+                        errorMsg = 'Connection timeout: Server is not responding. Please check your connection and try again.';
+                    } else if (error.message) {
+                        errorMsg = `Connection error: ${error.message}`;
+                    }
+                    
+                    this.notifyStatus(`Error: ${errorMsg}`);
+                    // Don't reject immediately - allow reconnection attempts
+                    // The timeout handler will reject if connection never succeeds
                 });
                 
                 this.socket.on('connect_error', (error) => {

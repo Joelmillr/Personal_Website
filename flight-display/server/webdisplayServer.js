@@ -269,6 +269,12 @@ function initWebdisplayBackend(httpServer) {
                             ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
                             // Cache for 1 year - these files are versioned/hashed
                             res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                            // Add CORS headers for Godot binary files (required for cross-origin requests)
+                            if (ext === '.wasm' || ext === '.pck') {
+                                res.set('Access-Control-Allow-Origin', '*');
+                                res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+                                res.set('Access-Control-Allow-Headers', 'Content-Type');
+                            }
                         } 
                         // Medium-term caching for JS/CSS (with revalidation)
                         else if (ext === '.js' || ext === '.css') {
@@ -1028,10 +1034,35 @@ function initWebdisplayBackend(httpServer) {
                     '<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>',
                     `${injectScript}\n\t\t<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>`
                 );
+                // Set CORS and cache headers for HTML
+                res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+                res.set('Content-Type', 'text/html; charset=utf-8');
                 res.send(htmlContent);
             } else {
                 const filePath = path.join(godotDir, filename);
                 if (fs.existsSync(filePath)) {
+                    // Set appropriate headers for Godot binary files
+                    const ext = path.extname(filename).toLowerCase();
+                    
+                    // Set CORS headers for all Godot files (required for cross-origin requests)
+                    res.set('Access-Control-Allow-Origin', '*');
+                    res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+                    res.set('Access-Control-Allow-Headers', 'Content-Type');
+                    
+                    // Set content type based on file extension
+                    if (ext === '.wasm') {
+                        res.set('Content-Type', 'application/wasm');
+                        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                    } else if (ext === '.pck') {
+                        res.set('Content-Type', 'application/octet-stream');
+                        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                    } else if (ext === '.js') {
+                        res.set('Content-Type', 'application/javascript; charset=utf-8');
+                        res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+                    } else if (ext === '.png' || ext === '.jpg' || ext === '.jpeg' || ext === '.ico') {
+                        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                    }
+                    
                     res.sendFile(filePath);
                 } else {
                     res.status(404).send('File not found');
@@ -1040,6 +1071,15 @@ function initWebdisplayBackend(httpServer) {
         } else {
             res.status(404).send('Godot directory not found');
         }
+    });
+    
+    // Handle OPTIONS requests for Godot files (CORS preflight)
+    app.options('/godot/:filename', (req, res) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.set('Access-Control-Allow-Headers', 'Content-Type');
+        res.set('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+        res.status(204).end();
     });
 
     // Catch-all for index.html (fallback for SPA routing if needed)
