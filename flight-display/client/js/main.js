@@ -612,13 +612,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 console.log(`[MAIN] onVideoTimeUpdate #${window._videoTimeUpdateCount}: videoTime=${videoTime.toFixed(3)}s`);
                             }
 
-                            // CRITICAL: Always send Godot data at 60 FPS for smooth 3D view
+                            // CRITICAL: Send Godot data at 30 FPS for smooth 3D view (reduced from 60 FPS for better performance)
                             // Use interpolation from cache, with fallback to last known data
-                            // Send EVERY frame update to ensure smooth motion
+                            // Send updates frequently but not excessively to reduce network load
                             const now = Date.now();
                             if (!window._lastGodotSendTime) window._lastGodotSendTime = 0;
                             const timeSinceLastSend = now - window._lastGodotSendTime;
-                            const minSendInterval = 16; // 16ms = 60 FPS max
+                            const minSendInterval = 33; // 33ms = ~30 FPS (reduced from 60 FPS for better network performance)
 
                             // Only throttle if we're sending too fast
                             if (timeSinceLastSend < minSendInterval) {
@@ -631,8 +631,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                             const cache = window._godotDataCache;
                             const cacheSize = cache ? cache.length : 0;
 
-                            // Only try interpolation if we have enough cache points
-                            if (cacheSize >= 2) {
+                            // Only try interpolation if we have enough cache points (reduced requirement for faster startup)
+                            if (cacheSize >= 1) {
                                 const interpolatedData = getInterpolatedGodotData(videoTime);
                                 if (interpolatedData) {
                                     dataToSend = interpolatedData;
@@ -753,16 +753,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 window._lastGodotDataSent = dataToSend; // Remember for fallback
                             }
 
-                            // HIGH-FREQUENCY FETCH: Fetch data frequently for smooth 60 FPS updates
-                            // Fetch every 16ms (~60 FPS) to match video update rate exactly
-                            // This ensures cache always has fresh data for interpolation
+                            // OPTIMIZED FETCH: Fetch data at 30 FPS (reduced from 60 FPS for better performance)
+                            // Fetch every 33ms (~30 FPS) to balance smooth updates with network efficiency
+                            // This ensures cache has fresh data for interpolation without overwhelming the server
                             // Note: 'now' already defined above for throttling
                             if (!window._lastFetchTime) window._lastFetchTime = 0;
                             const timeSinceLastFetch = now - window._lastFetchTime;
-                            const fetchInterval = 16; // 16ms = ~60 FPS (match video update rate)
+                            const fetchInterval = 33; // 33ms = ~30 FPS (reduced from 60 FPS for better network performance)
 
                             // Also check if video time changed significantly (for other displays)
-                            const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.05;
+                            // Increased threshold from 0.05s to 0.1s to reduce unnecessary fetches
+                            const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.1;
 
                             // Fetch if:
                             // 1. First fetch (initialization), OR
@@ -770,7 +771,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             // 3. Cache is empty or too small (need data immediately), OR
                             // 4. Enough time has passed for updates (16ms)
                             const cacheEmpty = !window._godotDataCache || window._godotDataCache.length === 0;
-                            const cacheTooSmall = window._godotDataCache && window._godotDataCache.length < 5; // Need at least 5 points for smooth interpolation
+                            const cacheTooSmall = window._godotDataCache && window._godotDataCache.length < 3; // Need at least 3 points for smooth interpolation (reduced from 5)
 
                             // If cache is empty or too small, fetch immediately (don't wait for interval)
                             if (cacheEmpty || cacheTooSmall) {
@@ -796,8 +797,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                             // Request data for current video time with pre-fetching
                             // Create abort controller for timeout and cancellation
+                            // Increased timeout to 2 seconds for better reliability on slower connections
                             const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 1000); // 1 second timeout for faster failure
+                            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout for better reliability
 
                             const fetchPromise = fetch(`/api/data-for-video-time/${videoTime}`, {
                                 signal: controller.signal
@@ -922,9 +924,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                                 console.log(`[MAIN] Sent Godot data #${updateCount}: VQX=${godotData.VQX.toFixed(3)}, VQY=${godotData.VQY.toFixed(3)}, VALT=${godotData.VALT.toFixed(1)}, cache_size=${window._godotDataCache.length}`);
                                             }
 
-                                            // Pre-fetch next data point (0.1 seconds ahead) for smoother interpolation
+                                            // Pre-fetch next data point (0.2 seconds ahead) for smoother interpolation
+                                            // Increased from 0.1s to 0.2s to reduce prefetch frequency
                                             // Only prefetch if we don't already have data for this time and no prefetch is in progress
-                                            const prefetchVideoTime = videoTime + 0.1;
+                                            const prefetchVideoTime = videoTime + 0.2;
                                             const hasData = window._godotDataCache && window._godotDataCache.some(
                                                 entry => Math.abs(entry.videoTime - prefetchVideoTime) < 0.05
                                             );

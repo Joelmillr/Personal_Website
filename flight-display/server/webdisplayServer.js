@@ -587,6 +587,10 @@ function initWebdisplayBackend(httpServer) {
             clearTimeout(requestTimeout);
             const duration = Date.now() - startTime;
             console.log(`[INIT] Initialization completed successfully in ${duration}ms`);
+            
+            // Add caching headers for initialization data (cache for 1 hour since data doesn't change)
+            res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+            res.set('ETag', `"${summary.data_count}-${takeoffIndex}"`);
             res.json(responseData);
         } catch (error) {
             const duration = Date.now() - startTime;
@@ -665,12 +669,15 @@ function initWebdisplayBackend(httpServer) {
         if (videoTimestampMapper && videoTimestampMapper.isAvailable()) {
             const videoTime = videoTimestampMapper.dataToVideoTime(dataTimestamp);
             if (videoTime !== null) {
+                // Cache for 1 hour (mapping doesn't change)
+                res.set('Cache-Control', 'public, max-age=3600');
                 return res.json({ success: true, video_time: videoTime });
             }
         }
 
         // Fallback to offset calculation
         const videoTime = Math.max(0, dataTimestamp - YOUTUBE_START_OFFSET);
+        res.set('Cache-Control', 'public, max-age=3600');
         res.json({ success: true, video_time: videoTime, using_offset: true });
     });
 
@@ -681,12 +688,15 @@ function initWebdisplayBackend(httpServer) {
         if (videoTimestampMapper && videoTimestampMapper.isAvailable()) {
             const dataTimestamp = videoTimestampMapper.videoToDataTime(videoTime);
             if (dataTimestamp !== null) {
+                // Cache for 1 hour (mapping doesn't change)
+                res.set('Cache-Control', 'public, max-age=3600');
                 return res.json({ success: true, data_timestamp: dataTimestamp });
             }
         }
 
         // Fallback to offset calculation
         const dataTimestamp = videoTime + YOUTUBE_START_OFFSET;
+        res.set('Cache-Control', 'public, max-age=3600');
         res.json({ success: true, data_timestamp: dataTimestamp, using_offset: true });
     });
 
@@ -713,6 +723,12 @@ function initWebdisplayBackend(httpServer) {
         getDataForVideoTime(videoTime, res);
     });
 
+    // Cache for data-for-video-time responses (short cache since video time changes frequently)
+    // Cache key: rounded video time to nearest 0.1s
+    const dataCache = new Map();
+    const DATA_CACHE_TTL = 5000; // 5 seconds cache
+    const DATA_CACHE_MAX_SIZE = 1000; // Max 1000 entries
+    
     function getDataForVideoTime(videoTime, res) {
         try {
             if (!processor) {
@@ -723,6 +739,16 @@ function initWebdisplayBackend(httpServer) {
                     error: "Data not initialized. Please call /api/init first.",
                     video_time: videoTime
                 });
+            }
+            
+            // Check cache first (round to nearest 0.1s for cache key)
+            const cacheKey = Math.round(videoTime * 10) / 10;
+            const cached = dataCache.get(cacheKey);
+            if (cached && (Date.now() - cached.timestamp) < DATA_CACHE_TTL) {
+                // Add cache headers
+                res.set('Cache-Control', 'public, max-age=5, must-revalidate');
+                res.set('X-Cache', 'HIT');
+                return res.json(cached.data);
             }
 
             // Convert video time to flight data timestamp
@@ -811,7 +837,7 @@ function initWebdisplayBackend(httpServer) {
                 return res.status(404).json({ success: false, error: "Data not found" });
             }
 
-            res.json({
+            const responseData = {
                 success: true,
                 data,
                 index,
@@ -826,7 +852,23 @@ function initWebdisplayBackend(httpServer) {
                     data_index: index,
                     timestamp_display: `Video: ${videoTime.toFixed(2)}s | Data: ${dataTimestampToUse.toFixed(2)}s`
                 }
+            };
+            
+            // Store in cache
+            if (dataCache.size >= DATA_CACHE_MAX_SIZE) {
+                // Remove oldest entry (simple FIFO)
+                const firstKey = dataCache.keys().next().value;
+                dataCache.delete(firstKey);
+            }
+            dataCache.set(cacheKey, {
+                data: responseData,
+                timestamp: Date.now()
             });
+            
+            // Add cache headers
+            res.set('Cache-Control', 'public, max-age=5, must-revalidate');
+            res.set('X-Cache', 'MISS');
+            res.json(responseData);
         } catch (error) {
             console.error(`[ERROR] Exception in get_data_for_video_time for video_time=${videoTime}:`, error);
             res.status(500).json({ success: false, error: error.message });
