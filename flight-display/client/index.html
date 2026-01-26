@@ -5,11 +5,11 @@
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PEGHJHV0P5"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-      gtag('config', 'G-PEGHJHV0P5');
+        gtag('config', 'G-PEGHJHV0P5');
     </script>
     <meta charset="UTF-8">
     <meta name="viewport"
@@ -43,16 +43,54 @@
         <header class="header">
             <div class="header-content">
                 <h1>Flight Test Playback - HMD Display</h1>
-                <a href="/" class="back-home-link">← Back to Home</a>
+                <div class="header-actions">
+                    <button class="show-intro-btn" id="show-intro" aria-label="Show introduction">ℹ️ About</button>
+                    <a href="/" class="back-home-link">← Back to Home</a>
+                </div>
             </div>
             <div class="status" id="status">Initializing...</div>
         </header>
+
+        <!-- Introduction Panel -->
+        <div class="intro-panel" id="intro-panel">
+            <div class="intro-content">
+                <div class="intro-header">
+                    <h2>About This Display</h2>
+                    <button class="close-intro" aria-label="Close introduction" id="close-intro">×</button>
+                </div>
+                <div class="intro-body">
+                    <p><strong>What is this?</strong> This is a real-time flight test data visualization system I
+                        developed for testing a Helmet-Mounted Display (HMD) system for pilots. The display shows
+                        synchronized flight data from an actual test flight.</p>
+                    <p><strong>What you're seeing:</strong></p>
+                    <ul>
+                        <li><strong>3D View (Top):</strong> The pilot's view through the HMD - a virtual reality display
+                            showing flight information overlaid on the real world</li>
+                        <li><strong>Video Feed (Left):</strong> The actual flight test video recorded during testing
+                        </li>
+                        <li><strong>Flight Path (Right Top):</strong> A map showing the aircraft's route during the test
+                            flight</li>
+                        <li><strong>Altitude Profile (Right Bottom):</strong> A graph showing how the aircraft's
+                            altitude changed over time</li>
+                        <li><strong>Attitude Profile (Bottom):</strong> Charts showing the aircraft's orientation
+                            (pitch, roll, heading)</li>
+                    </ul>
+                    <p><strong>How to use:</strong> Use the controls at the bottom to jump to specific flight maneuvers,
+                        or let the playback run automatically. All displays are synchronized in real-time.</p>
+                </div>
+            </div>
+        </div>
 
         <!-- Main Content Area -->
         <div class="main-content">
             <!-- Top Row: 3D Viewer (Full Width) -->
             <div class="viewer-3d-container">
-                <h2>3D View (HMD Display)</h2>
+                <div class="panel-header">
+                    <h2>3D View (HMD Display)</h2>
+                    <button class="info-button"
+                        data-tooltip="This is the pilot's view through the Helmet-Mounted Display. It shows flight information (altitude, speed, heading) overlaid on a 3D virtual environment, simulating what a pilot would see while wearing the HMD system."
+                        aria-label="Information about 3D HMD Display">ℹ️</button>
+                </div>
                 <iframe id="godot-iframe" src="godot/Display.html" title="3D HMD Display"></iframe>
                 <div class="viewer-info" id="viewer-info">
                     <div>Altitude: <span id="alt-display">0</span> m</div>
@@ -65,31 +103,63 @@
             <div class="bottom-row">
                 <!-- Left: YouTube Video Player (50% width) -->
                 <div class="video-container">
-                    <h2>Video Feed</h2>
+                    <div class="panel-header">
+                        <h2>Video Feed</h2>
+                        <button class="info-button"
+                            data-tooltip="The actual flight test video recorded during testing. This video is synchronized with all the flight data displays below, so you can see what was happening in real-time during the test flight."
+                            aria-label="Information about Video Feed">ℹ️</button>
+                    </div>
                     <div class="video-wrapper" id="youtube-player-container">
                         <!-- YouTube player will be embedded here -->
                     </div>
                 </div>
 
-                <!-- Right: Map and Chart (50% width, stacked vertically) -->
-                <div class="map-chart-column">
-                    <!-- Map -->
-                    <div class="map-container">
-                        <h2>Flight Path</h2>
-                        <div id="map"></div>
+                <!-- Right: Flight Path, Altitude, and Ground Speed Container (50% width) -->
+                <div class="flight-data-container">
+                    <div class="panel-header">
+                        <h2>Flight Path, Altitude & Speed</h2>
+                        <button class="info-button"
+                            data-tooltip="An interactive map showing the aircraft's 3D flight path. The colored trail represents altitude - warmer colors (red/orange) indicate higher altitudes, cooler colors (blue) indicate lower altitudes. The marker shows the current position. You can zoom and pan to explore the route."
+                            aria-label="Information about Flight Path, Altitude and Speed">ℹ️</button>
                     </div>
-
-                    <!-- Altitude Chart -->
-                    <div class="chart-container">
-                        <h2>Altitude Profile</h2>
-                        <canvas id="altitude-chart"></canvas>
+                    
+                    <!-- Row 1: Map and Altitude Gauge -->
+                    <div class="flight-data-row-1">
+                        <div class="map-wrapper">
+                            <div id="map"></div>
+                        </div>
+                        <div class="altitude-gauge-container">
+                            <div class="gauge-label">Altitude</div>
+                            <div class="gauge-track">
+                                <div class="gauge-fill" id="altitude-gauge-fill"></div>
+                                <div class="gauge-marker" id="altitude-gauge-marker"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 2: Ground Speed Gauge (horizontal, full width) -->
+                    <div class="ground-speed-gauge-container">
+                        <div class="gauge-label">Ground Speed</div>
+                        <div class="gauge-scale-labels-horizontal">
+                            <span class="scale-min">0</span>
+                            <span class="scale-max" id="gauge-max-speed">100</span>
+                        </div>
+                        <div class="gauge-track-horizontal">
+                            <div class="gauge-fill-horizontal" id="speed-gauge-fill"></div>
+                            <div class="gauge-marker-horizontal" id="speed-gauge-marker"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Attitude Chart Row (Full Width) -->
             <div class="attitude-chart-container">
-                <h2>Attitude Profile</h2>
+                <div class="panel-header">
+                    <h2>Attitude Profile</h2>
+                    <button class="info-button"
+                        data-tooltip="Chart showing the aircraft's orientation: pitch (nose up/down), roll (banking left/right), and heading (direction). These values show how the aircraft is oriented in 3D space."
+                        aria-label="Information about Attitude Profile">ℹ️</button>
+                </div>
                 <canvas id="attitude-chart"></canvas>
             </div>
         </div>
@@ -105,7 +175,12 @@
                 </span>
             </button>
             <div class="jump-controls">
-                <h3>Jump to Timestamp:</h3>
+                <div class="jump-controls-header">
+                    <h3>Jump to Timestamp</h3>
+                    <button class="info-button small"
+                        data-tooltip="Click any button below to jump to a specific flight maneuver. All displays will synchronize to that moment in the flight."
+                        aria-label="Information about Jump to Timestamp">ℹ️</button>
+                </div>
                 <div class="jump-buttons">
                     <button class="btn btn-jump" data-id="0">0: Takeoff</button>
                     <button class="btn btn-jump" data-id="1">1: Head Move</button>
@@ -141,6 +216,84 @@
     <script src="js/viewer3d.js"></script>
     <script src="js/controls.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        // Introduction panel functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const introPanel = document.getElementById('intro-panel');
+            const closeIntro = document.getElementById('close-intro');
+            const introShown = sessionStorage.getItem('introShown');
+
+            // Show intro on first visit
+            if (!introShown) {
+                introPanel.classList.add('visible');
+            }
+
+            // Close button
+            if (closeIntro) {
+                closeIntro.addEventListener('click', () => {
+                    introPanel.classList.remove('visible');
+                    sessionStorage.setItem('introShown', 'true');
+                });
+            }
+
+            // Show intro button
+            const showIntroBtn = document.getElementById('show-intro');
+            if (showIntroBtn) {
+                showIntroBtn.addEventListener('click', () => {
+                    introPanel.classList.add('visible');
+                });
+            }
+
+            // Tooltip functionality
+            const infoButtons = document.querySelectorAll('.info-button');
+            infoButtons.forEach(button => {
+                const tooltip = button.getAttribute('data-tooltip');
+                if (tooltip) {
+                    button.addEventListener('mouseenter', (e) => {
+                        showTooltip(e.target, tooltip);
+                    });
+                    button.addEventListener('mouseleave', () => {
+                        hideTooltip();
+                    });
+                    button.addEventListener('focus', (e) => {
+                        showTooltip(e.target, tooltip);
+                    });
+                    button.addEventListener('blur', () => {
+                        hideTooltip();
+                    });
+                }
+            });
+        });
+
+        function showTooltip(button, text) {
+            // Remove existing tooltip
+            hideTooltip();
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = text;
+            document.body.appendChild(tooltip);
+
+            const rect = button.getBoundingClientRect();
+            tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
+            tooltip.style.top = rect.top - tooltip.offsetHeight - 8 + 'px';
+
+            // Adjust if tooltip goes off screen
+            if (tooltip.offsetLeft < 10) {
+                tooltip.style.left = '10px';
+            }
+            if (tooltip.offsetLeft + tooltip.offsetWidth > window.innerWidth - 10) {
+                tooltip.style.left = (window.innerWidth - tooltip.offsetWidth - 10) + 'px';
+            }
+        }
+
+        function hideTooltip() {
+            const existing = document.querySelector('.tooltip');
+            if (existing) {
+                existing.remove();
+            }
+        }
+    </script>
 </body>
 
 </html>

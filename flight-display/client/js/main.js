@@ -3,6 +3,99 @@
  */
 let playbackEngine, mapViewer, chartViewer, attitudeChartViewer, viewer3d, controls;
 
+// Store max altitude for gauge scaling
+let gaugeMaxAltitude = 1000; // Default, will be updated from data
+
+// Store max ground speed for gauge scaling
+let gaugeMaxSpeed = 100; // Default in m/s, will be updated from data
+
+/**
+ * Initialize gauge with altitude data range
+ * @param {Array} altitudes - Array of altitude values
+ */
+function initializeAltitudeGauge(altitudes) {
+    if (altitudes && altitudes.length > 0) {
+        const max = Math.max(...altitudes);
+        // Round up to nearest 100m for cleaner display
+        gaugeMaxAltitude = Math.ceil(max / 100) * 100;
+        // Ensure minimum of 500m for visibility
+        if (gaugeMaxAltitude < 500) gaugeMaxAltitude = 500;
+        
+        // Note: Scale labels removed from UI, but max altitude is still stored for gauge scaling
+    }
+}
+
+/**
+ * Update the altitude gauge display
+ * @param {number} altitude - Current altitude in meters
+ */
+function updateAltitudeGauge(altitude) {
+    const gaugeFill = document.getElementById('altitude-gauge-fill');
+    const gaugeMarker = document.getElementById('altitude-gauge-marker');
+    
+    if (!gaugeFill || !gaugeMarker) return;
+    
+    const minAltitude = 0;
+    const maxAltitude = gaugeMaxAltitude;
+    
+    // Clamp altitude to valid range
+    const clampedAlt = Math.max(minAltitude, Math.min(altitude, maxAltitude));
+    
+    // Calculate percentage (0-100%)
+    const percentage = ((clampedAlt - minAltitude) / (maxAltitude - minAltitude)) * 100;
+    
+    // Update gauge fill height
+    gaugeFill.style.height = `${percentage}%`;
+    
+    // Update marker position (positioned from bottom)
+    gaugeMarker.style.bottom = `${percentage}%`;
+}
+
+/**
+ * Initialize ground speed gauge with data range
+ * @param {Array} speeds - Array of ground speed values in m/s
+ */
+function initializeGroundSpeedGauge(speeds) {
+    if (speeds && speeds.length > 0) {
+        const max = Math.max(...speeds);
+        // Round up to nearest 10 m/s for cleaner display
+        gaugeMaxSpeed = Math.ceil(max / 10) * 10;
+        // Ensure minimum of 50 m/s for visibility
+        if (gaugeMaxSpeed < 50) gaugeMaxSpeed = 50;
+
+        const gaugeMax = document.getElementById('gauge-max-speed');
+        if (gaugeMax) {
+            gaugeMax.textContent = gaugeMaxSpeed.toString();
+        }
+    }
+}
+
+/**
+ * Update the ground speed gauge display
+ * @param {number} speed - Current ground speed in m/s
+ */
+function updateGroundSpeedGauge(speed) {
+    const gaugeFill = document.getElementById('speed-gauge-fill');
+    const gaugeMarker = document.getElementById('speed-gauge-marker');
+    
+    if (!gaugeFill || !gaugeMarker) return;
+    
+    const minSpeed = 0;
+    const maxSpeed = gaugeMaxSpeed;
+    
+    // Clamp speed to valid range
+    const clampedSpeed = Math.max(minSpeed, Math.min(speed, maxSpeed));
+    
+    // Calculate percentage (0-100%)
+    const percentage = ((clampedSpeed - minSpeed) / (maxSpeed - minSpeed)) * 100;
+    
+    // Update gauge fill width
+    gaugeFill.style.width = `${percentage}%`;
+    
+    // Update marker position (positioned from left)
+    gaugeMarker.style.left = `${percentage}%`;
+}
+
 /**
  * Show a notification message to the user
  * @param {string} message - The message to display
@@ -1086,6 +1179,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const downsampleFactor = result.downsample_factor || 1;
             chartViewer.initialize(result.complete_altitudes, takeoffIndex, downsampleFactor);
             console.log(`Chart initialized with ${result.complete_altitudes?.length || 0} altitude points, downsample factor: ${downsampleFactor}`);
+
+            // Initialize altitude gauge with data range
+            if (result.complete_altitudes && result.complete_altitudes.length > 0) {
+                initializeAltitudeGauge(result.complete_altitudes);
+            }
+
+            // Initialize ground speed gauge (will update max as data comes in)
+            // Start with a reasonable default, will be updated dynamically
+            initializeGroundSpeedGauge([]);
         } catch (error) {
             console.error('Chart initialization error:', error);
         }
@@ -1215,6 +1317,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Fallback: show data timestamp only
                     timestampEl.textContent = `Data: ${data.timestamp_seconds.toFixed(2)}s`;
                 }
+
+                // Update altitude gauge
+                if (data.VALT !== undefined) {
+                    updateAltitudeGauge(data.VALT);
+                }
+
+                // Update ground speed gauge
+                if (data.GSPEED !== undefined) {
+                    // Dynamically update max speed if current speed exceeds it
+                    if (data.GSPEED > gaugeMaxSpeed) {
+                        gaugeMaxSpeed = Math.ceil(data.GSPEED / 10) * 10;
+                        const gaugeMax = document.getElementById('gauge-max-speed');
+                        if (gaugeMax) {
+                            gaugeMax.textContent = gaugeMaxSpeed.toString();
+                        }
+                    }
+                    updateGroundSpeedGauge(data.GSPEED);
+                }
             } catch (error) {
                 // Silently handle DOM errors
             }
@@ -1232,6 +1352,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         console.log(`Loading initial data at takeoff index ${takeoffIndex} (timestamp ${takeoffTimestamp.toFixed(2)}s)...`);
         const initialData = await playbackEngine.fetchDataAtIndex(takeoffIndex);
+
+        // Initialize ground speed gauge with initial data if available
+        if (initialData && initialData.GSPEED !== undefined) {
+            // Set initial max speed based on initial data
+            if (initialData.GSPEED > gaugeMaxSpeed) {
+                gaugeMaxSpeed = Math.ceil(initialData.GSPEED / 10) * 10;
+                const gaugeMax = document.getElementById('gauge-max-speed');
+                if (gaugeMax) {
+                    gaugeMax.textContent = gaugeMaxSpeed.toString();
+                }
+            }
+            updateGroundSpeedGauge(initialData.GSPEED);
+        }
         console.log('Initial data received:', initialData);
 
         if (initialData) {

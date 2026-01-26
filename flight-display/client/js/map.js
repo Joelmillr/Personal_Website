@@ -12,6 +12,8 @@ class MapViewer {
         this.traveledLatLngs = [];
         this.completePathData = [];  // Store complete path like playback.py
         this.currentIndex = 0;
+        this._lastCenterUpdate = 0;
+        this._centerUpdateInterval = 100; // Update center every 100ms max
     }
     
     initialize(bounds = null, completePath = null, startIndex = 0) {
@@ -122,6 +124,15 @@ class MapViewer {
                 if (this.currentMarker) {
                     this.currentMarker.setLatLng([lat, lon]);
                 }
+                // Still center map on current position even when paused (throttled)
+                const now = Date.now();
+                if (now - this._lastCenterUpdate >= this._centerUpdateInterval) {
+                    this.map.panTo([lat, lon], {
+                        animate: true,
+                        duration: 0.3
+                    });
+                    this._lastCenterUpdate = now;
+                }
                 return; // Same index, no path update needed
             }
             // Slice from startIndex to current index
@@ -140,6 +151,16 @@ class MapViewer {
             // Always update current marker position (smooth movement)
             if (this.currentMarker) {
                 this.currentMarker.setLatLng([lat, lon]);
+            }
+            
+            // Center map on current position (throttled for smooth updates)
+            const now = Date.now();
+            if (now - this._lastCenterUpdate >= this._centerUpdateInterval) {
+                this.map.panTo([lat, lon], {
+                    animate: true,
+                    duration: 0.3
+                });
+                this._lastCenterUpdate = now;
             }
             
             // Update traveled path line (throttled to every 5 calls to reduce load)
@@ -174,6 +195,22 @@ class MapViewer {
             } else {
                 this.traveledLatLngs[index] = [lat, lon];
             }
+            
+            // Update marker position
+            if (this.currentMarker) {
+                this.currentMarker.setLatLng([lat, lon]);
+            }
+            
+            // Center map on current position (throttled for smooth updates)
+            const now = Date.now();
+            if (now - this._lastCenterUpdate >= this._centerUpdateInterval) {
+                this.map.panTo([lat, lon], {
+                    animate: true,
+                    duration: 0.3
+                });
+                this._lastCenterUpdate = now;
+            }
+            
             if (index % 50 === 0 && this.traveledPathLayer && this.traveledLatLngs.length > 1) {
                 this.traveledPathLayer.clearLayers();
                 const traveledPath = L.polyline(this.traveledLatLngs, {
