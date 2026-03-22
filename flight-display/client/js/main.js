@@ -425,48 +425,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     console.log('✓ YouTube player initialized');
                     console.log('  Debug tools: youtubeSyncDebug.status() in console');
 
-                    // ── LOCAL HMD BINARY STORE ──────────────────────────────────────────
-                    // The timestamp_map from /api/init is sorted by video_time and covers
-                    // the full video range (fixed from previous slice(0,2000) bug).
-                    const HMD_FIELDS = 13;
-                    const HMD_TAKEOFF_TS = (result.timestamps && result.timestamps[0]) || 2643.0;
-                    // _ytTsMap: array of [data_ts, video_time] sorted by video_time
-                    const _ytTsMap = result.youtube?.timestamp_map || null;
-                    const _ytOffset = result.youtube?.start_offset || 0;
-                    let hmdFloats = null;
-                    let hmdRowCount = 0;
-                    try {
-                        const hmdBuf = await _hmdFetchPromise;
-                        if (hmdBuf && hmdBuf.byteLength > 4) {
-                            hmdRowCount = new DataView(hmdBuf).getUint32(0, true);
-                            hmdFloats = new Float32Array(hmdBuf, 4);
-                            console.log(`[MAIN] ✓ HMD binary loaded: ${hmdRowCount} rows (${(hmdBuf.byteLength / 1048576).toFixed(1)} MB) — local lookups active`);
-                        }
-                    } catch (e) {
-                        console.warn('[MAIN] HMD binary load error:', e.message);
-                    }
-
-                    // Convert video time → data timestamp using the full timestamp_map.
-                    // Falls back to offset formula when map is unavailable or out of range.
-                    function videoTimeToDataTs(vt) {
-                        if (_ytTsMap && _ytTsMap.length >= 2) {
-                            // Binary search by video_time (index [1]) — map is sorted by video_time
-                            let lo = 0, hi = _ytTsMap.length - 1;
-                            while (lo < hi) {
-                                const mid = (lo + hi) >> 1;
-                                if (_ytTsMap[mid][1] < vt) lo = mid + 1; else hi = mid;
-                            }
-                            if (lo === 0) return _ytTsMap[0][0];
-                            if (lo >= _ytTsMap.length) return _ytTsMap[_ytTsMap.length - 1][0];
-                            const bef = _ytTsMap[lo - 1], aft = _ytTsMap[lo];
-                            const span = aft[1] - bef[1]; // video_time span
-                            return span <= 0 ? bef[0] : bef[0] + ((vt - bef[1]) / span) * (aft[0] - bef[0]);
-                        }
-                        return vt + _ytOffset;
-                    }
-
-                    // ────────────────────────────────────────────────────────────────────
-
                     // Enable video-driven sync: YouTube video is the master timeline
                     // Data updates are driven by YouTube video time, not by automatic playback loop
                     let lastRequestedVideoTime = -1;
