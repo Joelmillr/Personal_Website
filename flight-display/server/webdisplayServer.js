@@ -594,9 +594,9 @@ function initWebdisplayBackend(httpServer) {
             const duration = Date.now() - startTime;
             console.log(`[INIT] Initialization completed successfully in ${duration}ms`);
             
-            // Add caching headers for initialization data (cache for 1 hour since data doesn't change)
-            res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
-            res.set('ETag', `"${summary.data_count}-${takeoffIndex}"`);
+            // Use no-cache so browser always validates via ETag (fast 304 if unchanged)
+            res.set('Cache-Control', 'no-cache');
+            res.set('ETag', `"${summary.data_count}-${takeoffIndex}-${YOUTUBE_VIDEO_ID || 'noyt'}"`);
             res.json(responseData);
         } catch (error) {
             const duration = Date.now() - startTime;
@@ -880,6 +880,60 @@ function initWebdisplayBackend(httpServer) {
             res.status(500).json({ success: false, error: error.message });
         }
     }
+
+    // API: Export compact HMD binary data for client-side playback.
+    // Returns a flat Float32 buffer: [uint32 rowCount][float32 × FIELDS × rowCount]
+    // Fields per row: timestamp, VQX, VQY, VQZ, VQW, HQX, HQY, HQZ, HQW, GSPEED, VALT, VLAT, VLON
+    // Downsampled 3x (~33 Hz from 100 Hz source) — smooth for 30 fps rendering.
+    // This eliminates per-frame HTTP round-trips on Vercel; all lookups become local O(log n) on the client.
+    apiRouter.get('/hmd-data', (req, res) => {
+        if (!processor) {
+            return res.status(503).json({ success: false, error: 'Data not initialized. Call /api/init first.' });
+        }
+        try {
+            const FIELDS = 13; // ts, vqx, vqy, vqz, vqw, hqx, hqy, hqz, hqw, gspeed, valt, vlat, vlon
+            const DOWNSAMPLE = 3; // 100 Hz → ~33 Hz
+            const startTs = TIMESTAMPS[0] || 2643.0;
+            const startIdx = processor.findIndexForTimestamp(startTs) || 0;
+            const count = processor.getDataCount();
+            const maxRows = Math.ceil((count - startIdx) / DOWNSAMPLE);
+
+            // 4-byte header (row count as little-endian uint32) + data
+            const buf = Buffer.allocUnsafe(4 + maxRows * FIELDS * 4);
+            let rowIdx = 0;
+            for (let i = startIdx; i < count; i += DOWNSAMPLE) {
+                const d = processor.getDataAtIndex(i);
+                if (!d) continue;
+                const off = 4 + rowIdx * FIELDS * 4;
+                buf.writeFloatLE(d.timestamp_seconds, off);
+                buf.writeFloatLE(d.VQX,    off + 4);
+                buf.writeFloatLE(d.VQY,    off + 8);
+                buf.writeFloatLE(d.VQZ,    off + 12);
+                buf.writeFloatLE(d.VQW,    off + 16);
+                buf.writeFloatLE(d.HQX,    off + 20);
+                buf.writeFloatLE(d.HQY,    off + 24);
+                buf.writeFloatLE(d.HQZ,    off + 28);
+                buf.writeFloatLE(d.HQW,    off + 32);
+                buf.writeFloatLE(d.GSPEED, off + 36);
+                buf.writeFloatLE(d.VALT,   off + 40);
+                buf.writeFloatLE(d.VLAT,   off + 44);
+                buf.writeFloatLE(d.VLON,   off + 48);
+                rowIdx++;
+            }
+            const out = rowIdx < maxRows ? buf.slice(0, 4 + rowIdx * FIELDS * 4) : buf;
+            out.writeUInt32LE(rowIdx, 0);
+
+            res.set('Cache-Control', 'public, max-age=3600');
+            res.set('Content-Type', 'application/octet-stream');
+            res.set('X-HMD-Rows', String(rowIdx));
+            res.set('X-HMD-Fields', String(FIELDS));
+            res.send(out);
+            console.log(`[HMD-DATA] Exported ${rowIdx} rows (DOWNSAMPLE=${DOWNSAMPLE}, ${(out.length / 1048576).toFixed(1)} MB)`);
+        } catch (error) {
+            console.error('[HMD-DATA] Error:', error);
+            if (!res.headersSent) res.status(500).json({ success: false, error: error.message });
+        }
+    });
 
     // API: Find index for timestamp
     apiRouter.get('/find-index/:timestamp', (req, res) => {

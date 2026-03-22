@@ -1,10 +1,9 @@
 /* ============================================
-   PROFESSIONAL DATA CONSOLE DESIGN
-   Clean, Informative, Professional Dashboard
+   FLIGHT TEST DISPLAY — Clean, Minimal
+   Matching researcher portfolio aesthetic
    ============================================ */
 
-/* Import modern fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 * {
     margin: 0;
@@ -12,50 +11,41 @@
     box-sizing: border-box;
 }
 
-/* Professional Console Color Palette */
+/* Color Palette — matches landing page */
 :root {
-    /* Dark Console Background */
-    --console-bg: #0A0E27;
-    --console-surface: #131829;
-    --console-panel: #1A1F35;
-    --console-border: #2A3147;
-    
-    /* Light Backgrounds for Content */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F8FAFC;
-    
-    /* Accent Colors */
-    --accent-primary: #10B981;
-    --accent-primary-dark: #059669;
-    --accent-secondary: #3B82F6;
+    --bg: #ffffff;
+    --bg-subtle: #f8f8f8;
+    --border: #e8e8e8;
+    --border-strong: #d0d0d0;
+
+    /* Green accent — same as landing page */
+    --accent: #1a6b38;
+    --accent-dark: #155c2f;
+    --accent-blue: #3B82F6;
     --accent-warning: #F59E0B;
     --accent-danger: #EF4444;
-    
-    /* Text Colors */
-    --text-primary: #FFFFFF;
-    --text-secondary: #94A3B8;
-    --text-muted: #64748B;
-    --text-dark: #1E293B;
-    
-    /* Status Colors */
-    --status-online: #10B981;
-    --status-offline: #64748B;
+
+    /* Text */
+    --text: #1a1a1a;
+    --text-muted: #555;
+    --text-faint: #888;
+
+    /* Status */
+    --status-online: #1a6b38;
+    --status-offline: #ccc;
     --status-error: #EF4444;
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
-    
-    /* Transitions */
-    --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Shadows — very subtle */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.07);
+
+    --transition: 150ms ease;
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--console-bg);
-    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
     overflow-y: auto;
     overflow-x: hidden;
     font-size: 14px;
@@ -80,24 +70,27 @@ body {
     box-sizing: border-box;
 }
 
-/* Professional Header */
+/* ============================================
+   HEADER — matches landing page navbar
+   ============================================ */
 .header {
-    background: var(--console-surface);
-    border-bottom: 1px solid var(--console-border);
-    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-bottom: 1px solid var(--border);
+    padding: 0.875rem 1.5rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: var(--shadow-md);
 }
 
 .header-content {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1.5rem;
     flex: 1;
     min-width: 0;
 }
@@ -110,74 +103,58 @@ body {
 }
 
 .header h1 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: var(--text-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text);
     margin: 0;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .show-intro-btn {
-    color: var(--accent-primary);
+    color: var(--text-muted);
     text-decoration: none;
     font-weight: 500;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
     font-size: 0.875rem;
-    transition: all var(--transition);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: var(--console-panel);
-    white-space: nowrap;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 0.35rem 0.75rem;
+    transition: border-color var(--transition), color var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
 }
 
 .show-intro-btn:hover {
-    background: var(--accent-primary);
-    color: var(--text-primary);
-    border-color: var(--accent-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .back-home-link {
-    color: var(--accent-primary);
+    color: var(--accent);
     text-decoration: none;
     font-weight: 500;
-    padding: 0.5rem 1rem;
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
     font-size: 0.875rem;
-    transition: all var(--transition);
+    transition: opacity var(--transition);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    background: var(--console-panel);
-    white-space: nowrap;
+    gap: 0.375rem;
 }
 
 .back-home-link:hover {
-    background: var(--accent-primary);
-    color: var(--text-primary);
-    border-color: var(--accent-primary);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-sm);
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 .status {
-    padding: 0.5rem 1rem;
-    background: var(--console-panel);
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
     font-size: 0.8125rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-weight: 500;
+    color: var(--text-faint);
     font-family: 'JetBrains Mono', monospace;
     display: inline-flex;
     align-items: center;
@@ -187,34 +164,33 @@ body {
 
 .status::before {
     content: '';
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--status-offline);
     display: inline-block;
+    flex-shrink: 0;
 }
 
 .status.connected {
-    color: var(--status-online);
-    border-color: var(--status-online);
+    color: var(--accent);
 }
 
 .status.connected::before {
-    background: var(--status-online);
-    box-shadow: 0 0 8px var(--status-online);
+    background: var(--accent);
 }
 
 .status.error {
     color: var(--status-error);
-    border-color: var(--status-error);
 }
 
 .status.error::before {
     background: var(--status-error);
-    box-shadow: 0 0 8px var(--status-error);
 }
 
-/* Main Content Area */
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
 .main-content {
     display: flex;
     flex-direction: column;
@@ -229,16 +205,18 @@ body {
     box-sizing: border-box;
 }
 
-/* Introduction Panel */
+/* ============================================
+   INTRO PANEL (MODAL)
+   ============================================ */
 .intro-panel {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(10, 14, 39, 0.95);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     z-index: 10000;
     display: flex;
     align-items: center;
@@ -256,15 +234,15 @@ body {
 }
 
 .intro-content {
-    background: var(--console-surface);
-    border: 1px solid var(--console-border);
-    border-radius: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
     padding: 2rem;
-    max-width: 700px;
+    max-width: 680px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--shadow-md);
     position: relative;
 }
 
@@ -272,122 +250,117 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid var(--console-border);
+    border-bottom: 1px solid var(--border);
 }
 
 .intro-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.125rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--text);
     margin: 0;
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 .close-intro {
     background: transparent;
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
-    color: var(--text-secondary);
-    font-size: 1.5rem;
-    width: 32px;
-    height: 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    width: 30px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all var(--transition);
+    transition: border-color var(--transition), color var(--transition);
     padding: 0;
     line-height: 1;
 }
 
 .close-intro:hover {
-    background: var(--console-panel);
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .intro-body {
-    color: var(--text-secondary);
-    line-height: 1.7;
+    color: var(--text-muted);
+    line-height: 1.75;
+    font-size: 0.9rem;
 }
 
 .intro-body p {
-    margin-bottom: 1rem;
+    margin-bottom: 0.875rem;
 }
 
 .intro-body strong {
-    color: var(--text-primary);
+    color: var(--text);
     font-weight: 600;
 }
 
 .intro-body ul {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
-    list-style: none;
+    margin: 0.75rem 0;
+    padding-left: 1.25rem;
+    list-style: disc;
 }
 
 .intro-body ul li {
-    margin-bottom: 0.75rem;
-    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0;
     position: relative;
 }
 
 .intro-body ul li::before {
-    content: '▸';
-    position: absolute;
-    left: 0;
-    color: var(--accent-primary);
-    font-weight: bold;
+    display: none;
 }
 
-/* Panel Headers with Info Buttons */
+/* ============================================
+   PANEL HEADERS
+   ============================================ */
 .panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.625rem;
     gap: 0.5rem;
     flex-shrink: 0;
-    min-height: 28px;
+    min-height: 24px;
 }
 
 .panel-header h2 {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-faint);
     margin: 0;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     font-family: 'Inter', sans-serif;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0;
     flex: 1;
 }
 
 .panel-header h2::before {
-    content: '';
-    width: 3px;
-    height: 14px;
-    background: var(--accent-primary);
-    border-radius: 2px;
-    display: inline-block;
+    display: none;
 }
 
 .info-button {
-    background: var(--console-panel);
-    border: 1px solid var(--console-border);
+    background: transparent;
+    border: 1px solid var(--border-strong);
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: help;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    transition: all var(--transition);
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    transition: border-color var(--transition), color var(--transition);
     flex-shrink: 0;
     padding: 0;
     line-height: 1;
@@ -395,31 +368,32 @@ body {
 
 .info-button:hover,
 .info-button:focus {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: var(--text-primary);
+    border-color: var(--accent);
+    color: var(--accent);
     outline: none;
 }
 
 .info-button.small {
-    width: 20px;
-    height: 20px;
-    font-size: 0.75rem;
+    width: 18px;
+    height: 18px;
+    font-size: 0.6875rem;
 }
 
-/* Tooltip */
+/* ============================================
+   TOOLTIP
+   ============================================ */
 .tooltip {
     position: fixed;
-    background: var(--console-surface);
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
-    padding: 0.75rem 1rem;
-    color: var(--text-primary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.625rem 0.875rem;
+    color: var(--text-muted);
     font-size: 0.8125rem;
-    line-height: 1.5;
+    line-height: 1.55;
     max-width: min(300px, calc(100vw - 2rem));
     z-index: 10001;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
     pointer-events: none;
     font-family: 'Inter', sans-serif;
     word-wrap: break-word;
@@ -435,27 +409,27 @@ body {
     height: 0;
     border-left: 6px solid transparent;
     border-right: 6px solid transparent;
-    border-top: 6px solid var(--console-border);
+    border-top: 6px solid var(--border);
 }
 
-/* Professional Panel Styling */
+/* ============================================
+   PANEL CONTAINERS
+   ============================================ */
 .viewer-3d-container,
 .video-container,
 .map-container,
 .chart-container,
 .attitude-chart-container {
-    background: var(--console-surface);
-    border: 1px solid var(--console-border);
-    border-radius: 8px;
-    padding: 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.875rem;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow-lg);
     position: relative;
     overflow: hidden;
 }
 
-/* Ensure content areas can shrink and fill available space */
 .viewer-3d-container > iframe,
 .viewer-3d-container > .viewer-info,
 .video-container > .video-wrapper,
@@ -464,14 +438,15 @@ body {
     min-height: 0;
 }
 
-/* Map needs explicit height for Leaflet to render */
 .flight-data-container > .flight-data-row-1 > .map-wrapper > #map {
     flex: 1;
     min-height: 300px;
     height: 100%;
 }
 
-/* 3D Viewer */
+/* ============================================
+   3D VIEWER
+   ============================================ */
 .viewer-3d-container {
     min-height: 45vh;
     flex: 0 0 auto;
@@ -482,45 +457,47 @@ body {
     width: 100%;
     min-height: 350px;
     background: #000;
-    border-radius: 6px;
+    border-radius: 4px;
     display: block;
-    border: 1px solid var(--console-border);
+    border: 1px solid var(--border);
     touch-action: none;
     -webkit-touch-callout: none;
 }
 
 .viewer-info {
-    margin-top: 0.75rem;
+    margin-top: 0.625rem;
     display: flex;
     gap: 1.5rem;
     font-size: 0.8125rem;
     flex-wrap: wrap;
-    padding: 0.75rem;
-    background: var(--console-panel);
-    border-radius: 6px;
-    border: 1px solid var(--console-border);
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-subtle);
+    border-radius: 4px;
+    border: 1px solid var(--border);
     font-family: 'JetBrains Mono', monospace;
 }
 
 .viewer-info > div {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
 }
 
 .timestamp-display {
-    color: var(--accent-primary);
-    font-weight: 600;
+    color: var(--accent);
+    font-weight: 500;
     margin-left: auto;
 }
 
 .viewer-info span {
-    color: var(--text-primary);
+    color: var(--text);
     font-weight: 600;
 }
 
-/* Bottom Row Layout */
+/* ============================================
+   BOTTOM ROW LAYOUT
+   ============================================ */
 .bottom-row {
     display: flex;
     flex-direction: row;
@@ -533,7 +510,9 @@ body {
     align-items: stretch;
 }
 
-/* Video Container */
+/* ============================================
+   VIDEO CONTAINER
+   ============================================ */
 .video-container {
     flex: 1 1 50%;
     min-width: 0;
@@ -547,13 +526,13 @@ body {
     align-items: center;
     justify-content: center;
     background: #000;
-    border-radius: 6px;
+    border-radius: 4px;
     overflow: hidden;
     position: relative;
     min-height: 0;
     width: 100%;
     min-width: 0;
-    border: 1px solid var(--console-border);
+    border: 1px solid var(--border);
 }
 
 #youtube-player-container {
@@ -578,28 +557,28 @@ body {
     max-height: 100%;
 }
 
-/* Flight Data Container: Map, Altitude, and Ground Speed */
+/* ============================================
+   FLIGHT DATA CONTAINER (Map, Gauges)
+   ============================================ */
 .flight-data-container {
-    background: var(--console-surface);
-    border: 1px solid var(--console-border);
-    border-radius: 8px;
-    padding: 1rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.875rem;
     display: flex;
     flex-direction: column;
-    box-shadow: var(--shadow-lg);
     position: relative;
     overflow: hidden;
     flex: 1 1 50%;
     min-width: 0;
     max-width: 100%;
-    gap: 1rem;
+    gap: 0.75rem;
 }
 
-/* Row 1: Map and Altitude Gauge side by side */
 .flight-data-row-1 {
     display: flex;
     flex-direction: row;
-    gap: 1rem;
+    gap: 0.75rem;
     flex: 1;
     min-height: 0;
     min-width: 0;
@@ -619,22 +598,22 @@ body {
 
 #map {
     flex: 1;
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
     min-height: 300px;
     width: 100%;
     height: 100%;
     position: relative;
     overflow: hidden;
-    background: var(--console-panel);
+    background: var(--bg-subtle);
 }
 
 .altitude-legend {
-    margin-top: 0.75rem;
-    padding: 0.75rem;
-    background: var(--console-panel);
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
+    margin-top: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 4px;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -644,7 +623,7 @@ body {
 }
 
 .legend-label {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -658,19 +637,22 @@ body {
 
 .legend-low,
 .legend-high {
-    color: var(--text-secondary);
+    color: var(--text-faint);
     font-size: 0.6875rem;
     white-space: nowrap;
 }
 
 .gradient-bar {
     flex: 1;
-    height: 12px;
+    height: 10px;
     background: linear-gradient(to right, #3B82F6, #10B981, #F59E0B, #EF4444);
     border-radius: 4px;
-    border: 1px solid var(--console-border);
+    border: 1px solid var(--border);
 }
 
+/* ============================================
+   GAUGES
+   ============================================ */
 .altitude-gauge-container {
     flex: 0 0 100px;
     min-width: 0;
@@ -680,8 +662,8 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 0.375rem;
-    background: var(--console-panel);
-    border: 1px solid var(--console-border);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
     border-radius: 6px;
     position: relative;
     align-self: stretch;
@@ -698,55 +680,46 @@ body {
 }
 
 .gauge-label {
-    font-size: 0.75rem;
-    color: var(--text-primary);
-    font-weight: 600;
+    font-size: 0.6875rem;
+    color: var(--text-faint);
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     font-family: 'Inter', sans-serif;
     flex-shrink: 0;
     margin-bottom: 0.125rem;
 }
 
-/* Altitude gauge scale labels - removed */
 .gauge-scale-labels {
     display: none;
 }
 
-/* Ensure flight data container handles overflow properly */
 .flight-data-container {
     position: relative;
+    isolation: isolate;
 }
 
-/* Adjust label position to prevent overflow when zooming */
 .flight-data-row-1 {
     position: relative;
 }
 
-/* Prevent overflow when zooming - use container-relative positioning */
-.flight-data-container {
-    isolation: isolate;
-}
-
-/* On smaller viewports or when zoomed, adjust layout */
 @media (max-width: 1200px) {
     .altitude-gauge-container {
         flex: 0 0 100px;
         max-width: 120px;
     }
-    
+
     .flight-data-row-1 {
         gap: 0.75rem;
     }
 }
 
-/* Handle high zoom levels (150%+) */
 @media (min-resolution: 1.5dppx) {
     .altitude-gauge-container {
         flex-shrink: 1;
         min-width: 80px;
     }
-    
+
     .flight-data-container {
         flex: 1 1 auto;
         min-width: 0;
@@ -759,18 +732,17 @@ body {
     height: 100%;
     min-height: 200px;
     max-height: 100%;
-    background: var(--console-bg);
-    border: 2px solid var(--console-border);
+    background: #1a1a1a;
+    border: 1px solid var(--border-strong);
     border-radius: 16px;
     overflow: visible;
     display: flex;
     flex-direction: column-reverse;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
     flex: 1;
     margin: 0 auto;
 }
 
-/* Vertical gauge scale marks - removed */
 .gauge-scale-marks-vertical {
     display: none;
 }
@@ -782,7 +754,7 @@ body {
     height: 0%;
     min-height: 0;
     position: relative;
-    border-radius: 0 0 17px 17px;
+    border-radius: 0 0 16px 16px;
     overflow: hidden;
     z-index: 1;
 }
@@ -791,31 +763,30 @@ body {
     position: absolute;
     left: -6px;
     width: 44px;
-    height: 4px;
-    background: var(--text-primary);
-    border: 2px solid var(--accent-primary);
+    height: 3px;
+    background: #fff;
+    border: 1px solid var(--accent);
     border-radius: 2px;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.8), 0 0 4px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 6px rgba(26, 107, 56, 0.5);
     transition: bottom 0.3s ease;
     z-index: 10;
     transform: translateY(-50%);
 }
 
-/* Gauge value readouts removed - not needed */
 .gauge-value,
 .gauge-value-horizontal {
     display: none;
 }
 
-/* Ground Speed Gauge Container - Full width below map */
+/* Ground Speed Gauge */
 .ground-speed-gauge-container {
     flex: 0 0 auto;
-    padding: 0.5rem;
+    padding: 0.5rem 0.625rem;
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
-    background: var(--console-panel);
-    border: 1px solid var(--console-border);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
     border-radius: 6px;
     width: 100%;
 }
@@ -826,7 +797,7 @@ body {
     justify-content: space-between;
     width: 100%;
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: var(--text-faint);
     font-family: 'JetBrains Mono', monospace;
     padding: 0 0.25rem;
     align-items: center;
@@ -842,19 +813,18 @@ body {
 .gauge-track-horizontal {
     position: relative;
     width: 100%;
-    height: 32px;
-    min-height: 32px;
-    background: var(--console-bg);
-    border: 2px solid var(--console-border);
-    border-radius: 16px;
+    height: 28px;
+    min-height: 28px;
+    background: #1a1a1a;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
     overflow: visible;
     display: flex;
     flex-direction: row;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
 }
 
-/* Horizontal gauge scale marks - removed */
 .gauge-scale-marks-horizontal {
     display: none;
 }
@@ -866,7 +836,7 @@ body {
     width: 0%;
     min-width: 0;
     position: relative;
-    border-radius: 17px 0 0 17px;
+    border-radius: 14px 0 0 14px;
     overflow: hidden;
     z-index: 1;
 }
@@ -874,35 +844,20 @@ body {
 .gauge-marker-horizontal {
     position: absolute;
     top: -6px;
-    width: 4px;
-    height: 44px;
-    background: var(--text-primary);
-    border: 2px solid var(--accent-primary);
+    width: 3px;
+    height: 40px;
+    background: #fff;
+    border: 1px solid var(--accent);
     border-radius: 2px;
-    box-shadow: 0 0 8px rgba(16, 185, 129, 0.8), 0 0 4px rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 6px rgba(26, 107, 56, 0.5);
     transition: left 0.3s ease;
     z-index: 10;
     transform: translateX(-50%);
 }
 
-.gauge-value-horizontal {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--accent-primary);
-    font-family: 'JetBrains Mono', monospace;
-    text-align: center;
-    padding: 0.5rem;
-    background: var(--console-panel);
-    border: 1px solid var(--accent-primary);
-    border-radius: 6px;
-    box-shadow: 0 0 6px rgba(16, 185, 129, 0.2);
-    flex-shrink: 0;
-    width: 100%;
-}
-
-/* Removed old .gauge-scale - now using .gauge-scale-labels */
-
-/* Attitude Chart */
+/* ============================================
+   ATTITUDE CHART
+   ============================================ */
 .attitude-chart-container {
     min-height: 25vh;
     max-height: 30vh;
@@ -916,24 +871,27 @@ body {
     max-height: 100%;
     width: 100%;
     display: block;
-    border-radius: 6px;
+    border-radius: 4px;
 }
 
-/* Controls Panel */
+/* ============================================
+   CONTROLS PANEL (fixed bottom bar)
+   ============================================ */
 .controls-panel {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--console-surface);
-    border-top: 1px solid var(--console-border);
-    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1.5rem;
     display: flex;
-    gap: 1.5rem;
+    gap: 1.25rem;
     align-items: center;
     flex-wrap: wrap;
     z-index: 1000;
-    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.4);
 }
 
 .mobile-menu-toggle {
@@ -941,35 +899,35 @@ body {
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 0.75rem 1rem;
-    background: var(--console-panel);
-    color: var(--text-primary);
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
+    padding: 0.625rem 0.875rem;
+    background: var(--bg-subtle);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
     cursor: pointer;
     font-family: 'Inter', sans-serif;
     font-size: 0.875rem;
-    font-weight: 600;
-    transition: all var(--transition);
+    font-weight: 500;
+    transition: border-color var(--transition);
     min-height: 44px;
 }
 
 .mobile-menu-toggle:hover {
-    background: var(--console-bg);
-    border-color: var(--accent-primary);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .mobile-menu-toggle[aria-expanded="true"] {
-    background: var(--console-bg);
-    border-color: var(--accent-primary);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .hamburger-icon {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-    width: 20px;
-    height: 16px;
+    width: 18px;
+    height: 14px;
     margin-left: 12px;
 }
 
@@ -977,13 +935,13 @@ body {
     display: block;
     width: 100%;
     height: 2px;
-    background-color: var(--text-primary);
+    background-color: currentColor;
     border-radius: 2px;
     transition: all var(--transition);
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(1) {
-    transform: rotate(45deg) translate(6px, 6px);
+    transform: rotate(45deg) translate(5px, 5px);
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(2) {
@@ -991,12 +949,12 @@ body {
 }
 
 .mobile-menu-toggle[aria-expanded="true"] .hamburger-icon span:nth-child(3) {
-    transform: rotate(-45deg) translate(6px, -6px);
+    transform: rotate(-45deg) translate(5px, -5px);
 }
 
 .jump-controls {
     display: flex;
-    gap: 1rem;
+    gap: 0.875rem;
     align-items: center;
     flex-wrap: wrap;
     flex: 1;
@@ -1005,105 +963,111 @@ body {
 .jump-controls-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
     white-space: nowrap;
 }
 
 .jump-controls h3 {
-    font-size: 0.8125rem;
-    color: var(--text-secondary);
+    font-size: 0.75rem;
+    color: var(--text-faint);
     white-space: nowrap;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
     margin: 0;
 }
 
 .jump-buttons {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.375rem;
     flex-wrap: wrap;
     flex: 1;
 }
 
+/* ============================================
+   BUTTONS
+   ============================================ */
 .btn {
-    padding: 0.5rem 1rem;
-    background: var(--console-panel);
-    color: var(--text-primary);
-    border: 1px solid var(--console-border);
-    border-radius: 6px;
+    padding: 0.375rem 0.75rem;
+    background: var(--bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
     cursor: pointer;
     font-size: 0.8125rem;
     font-family: 'Inter', sans-serif;
     font-weight: 500;
-    transition: all var(--transition);
+    transition: border-color var(--transition), color var(--transition);
     box-sizing: border-box;
 }
 
 .btn:hover {
-    background: var(--console-bg);
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-    transform: translateY(-1px);
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .btn:active {
-    transform: translateY(0);
+    opacity: 0.8;
 }
 
 .btn-jump {
-    background: var(--console-panel);
-    color: var(--text-secondary);
+    background: var(--bg);
+    color: var(--text-muted);
     font-size: 0.75rem;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--console-border);
+    padding: 0.3rem 0.625rem;
+    border: 1px solid var(--border-strong);
     font-family: 'JetBrains Mono', monospace;
 }
 
 .btn-jump:hover {
-    background: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: var(--text-primary);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
 }
 
-/* Leaflet Map Styling */
+/* ============================================
+   LEAFLET MAP
+   ============================================ */
 .leaflet-container {
-    background: var(--console-panel);
+    background: var(--bg-subtle);
     font-family: 'Inter', sans-serif;
     height: 100% !important;
     width: 100% !important;
 }
 
 .leaflet-control-attribution {
-    background: rgba(26, 31, 53, 0.9) !important;
-    color: var(--text-secondary) !important;
-    padding: 4px 8px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: var(--text-faint) !important;
+    padding: 2px 6px !important;
     font-size: 10px !important;
-    border-radius: 4px !important;
+    border-radius: 3px !important;
     font-family: 'Inter', sans-serif !important;
 }
 
-/* Scrollbar Styling */
+/* ============================================
+   SCROLLBAR
+   ============================================ */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--console-surface);
-    border-radius: 4px;
+    background: var(--bg-subtle);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--console-border);
-    border-radius: 4px;
+    background: var(--border-strong);
+    border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--accent-primary);
+    background: var(--text-faint);
 }
 
-/* Loading Overlay */
+/* ============================================
+   LOADING OVERLAY
+   ============================================ */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -1111,9 +1075,9 @@ body {
     width: 100%;
     height: 100%;
     height: 100vh;
-    background: rgba(10, 14, 39, 0.95);
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1133,7 +1097,7 @@ body {
 
 .loading-content {
     text-align: center;
-    color: var(--text-primary);
+    color: var(--text);
     font-family: 'Inter', sans-serif;
     max-width: 90%;
     padding: 2rem;
@@ -1141,13 +1105,13 @@ body {
 }
 
 .loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid var(--console-border);
-    border-top: 3px solid var(--accent-primary);
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--border);
+    border-top: 2px solid var(--accent);
     border-radius: 50%;
     animation: spin 1s linear infinite;
-    margin: 0 auto 1.25rem;
+    margin: 0 auto 1rem;
 }
 
 @keyframes spin {
@@ -1156,20 +1120,22 @@ body {
 }
 
 .loading-text {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.5rem;
+    color: var(--text);
+    margin-bottom: 0.375rem;
 }
 
 .loading-status {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    margin-top: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--text-faint);
+    margin-top: 0.375rem;
     font-family: 'JetBrains Mono', monospace;
 }
 
-/* Notification Container */
+/* ============================================
+   NOTIFICATIONS
+   ============================================ */
 .notification-container {
     position: fixed;
     top: 20px;
@@ -1177,28 +1143,28 @@ body {
     z-index: 10001;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 0.625rem;
     pointer-events: none;
 }
 
 .notification {
-    background: var(--console-surface);
-    border: 1px solid var(--console-border);
-    border-left: 3px solid var(--accent-primary);
-    border-radius: 6px;
-    padding: 1rem 1.25rem;
-    min-width: 300px;
-    max-width: 500px;
-    box-shadow: var(--shadow-lg);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 0.875rem 1rem;
+    min-width: 260px;
+    max-width: 440px;
+    box-shadow: var(--shadow-md);
     font-family: 'Inter', sans-serif;
     font-size: 0.875rem;
-    color: var(--text-primary);
+    color: var(--text-muted);
     pointer-events: auto;
-    animation: slideInRight var(--transition) ease-out;
+    animation: slideInRight 150ms ease-out;
 }
 
 .notification.info {
-    border-left-color: var(--accent-secondary);
+    border-left-color: var(--accent-blue);
 }
 
 .notification.warning {
@@ -1210,753 +1176,191 @@ body {
 }
 
 .notification.success {
-    border-left-color: var(--accent-primary);
+    border-left-color: var(--accent);
 }
 
 .notification.fade-out {
-    animation: fadeOut var(--transition) ease-out forwards;
+    animation: fadeOut 150ms ease-out forwards;
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes fadeOut {
-    from {
-        opacity: 1;
-        transform: translateX(0);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(100%);
-    }
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100%); }
 }
 
 /* ============================================
-   RESPONSIVE DESIGN
+   RESPONSIVE
    ============================================ */
-
-/* Mobile devices (up to 768px) */
 @media screen and (max-width: 768px) {
     html, body {
         overflow-x: hidden;
         width: 100%;
     }
-    
+
     .header {
         padding: 0.75rem 1rem;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
-    
+
     .header-content {
         width: 100%;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
-    
+
     .header-actions {
         width: 100%;
         justify-content: flex-start;
     }
-    
+
     .show-intro-btn {
         font-size: 0.8125rem;
-        padding: 0.5rem 0.875rem;
     }
-    
+
     .intro-panel {
         padding: 1rem;
     }
-    
+
     .intro-content {
-        padding: 1.5rem;
+        padding: 1.25rem;
         max-height: 95vh;
     }
-    
+
     .intro-header h2 {
-        font-size: 1.25rem;
-    }
-    
-    .intro-body {
-        font-size: 0.875rem;
-    }
-    
-    .header h1 {
         font-size: 1rem;
+    }
+
+    .header h1 {
+        font-size: 0.875rem;
         width: 100%;
     }
-    
+
     .back-home-link {
         font-size: 0.8125rem;
-        padding: 0.5rem 0.875rem;
-        min-height: 44px;
     }
-    
+
     .status {
         font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
-        align-self: flex-end;
-        margin-top: -0.75rem;
     }
-    
+
     .main-content {
         padding: 0.75rem;
         gap: 0.75rem;
     }
-    
-    .viewer-3d-container {
-        height: auto;
-        min-height: 250px;
-        max-height: 40vh;
-        padding: 0.75rem;
-    }
-    
-    .viewer-3d-container h2 {
-        font-size: 0.75rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    #godot-iframe {
-        min-height: 200px;
-        max-height: calc(40vh - 80px);
-    }
-    
-    .viewer-info {
-        flex-direction: column;
-        gap: 0.5rem;
-        font-size: 0.75rem;
-        margin-top: 0.5rem;
-        padding: 0.5rem;
-    }
-    
-    .timestamp-display {
-        margin-left: 0;
-    }
-    
+
     .bottom-row {
         flex-direction: column;
         max-height: none;
-        gap: 0.75rem;
+        min-height: 0;
+        height: auto;
     }
-    
+
     .video-container,
     .flight-data-container {
-        flex: 1 1 100%;
-        min-width: 100%;
-        width: 100%;
+        flex: none;
+        min-height: 280px;
     }
-    
-    .video-container {
-        min-height: 220px;
-        max-height: 50vh;
+
+    .viewer-3d-container {
+        min-height: 40vh;
     }
-    
-    .video-wrapper,
-    #youtube-player-container {
-        min-height: 220px;
-        max-height: calc(50vh - 50px);
+
+    #godot-iframe {
+        min-height: 280px;
     }
-    
-    .flight-data-container {
-        padding: 0.75rem;
-    }
-    
-    .flight-data-row-1 {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .map-wrapper {
-        min-height: 250px;
-    }
-    
-    #map {
-        min-height: 250px;
-    }
-    
-    .altitude-gauge-container {
-        flex: 0 0 auto;
-        min-width: 100%;
-        padding: 0.5rem;
-    }
-    
-    .gauge-track {
-        height: 180px;
-        width: 28px;
-    }
-    
-    .gauge-scale {
-        height: 180px;
-        font-size: 0.6875rem;
-    }
-    
-    .gauge-value {
-        font-size: 1.125rem;
-        min-width: 70px;
-        padding: 0.375rem;
-    }
-    
-    .gauge-marker {
-        width: 38px;
-        left: -5px;
-    }
-    
+
     .attitude-chart-container {
         min-height: 200px;
-        max-height: 35vh;
-        padding: 0.75rem;
+        max-height: none;
     }
-    
-    .attitude-chart-container h2 {
-        font-size: 0.75rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    #attitude-chart {
-        min-height: 180px;
-        max-height: 100%;
-    }
-    
+
     .controls-panel {
-        padding: 0;
+        padding: 0.75rem 1rem;
         flex-direction: column;
         align-items: stretch;
         gap: 0;
     }
-    
+
     .mobile-menu-toggle {
         display: flex;
     }
-    
+
     .jump-controls {
+        display: none;
         width: 100%;
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 0.75rem;
-        background: var(--console-panel);
-        border-top: 1px solid var(--console-border);
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height var(--transition), padding var(--transition);
-        opacity: 0;
-        visibility: hidden;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+        margin-top: 0.75rem;
     }
-    
-    .jump-controls.active {
-        max-height: 60vh;
-        opacity: 1;
-        visibility: visible;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
-    .jump-controls-header {
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    .jump-controls h3 {
-        font-size: 0.75rem;
-        text-align: center;
-        margin: 0;
-    }
-    
-    .jump-buttons {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
-        width: 100%;
-    }
-    
-    .btn-jump {
-        font-size: 0.6875rem;
-        padding: 0.625rem 0.5rem;
-        min-height: 44px;
-        width: 100%;
-        text-align: center;
-    }
-    
-    .container {
-        padding-bottom: 60px;
-    }
-    
-    .notification-container {
-        top: 10px;
-        right: 10px;
-        left: 10px;
-    }
-    
-    .notification {
-        min-width: auto;
-        max-width: 100%;
-        font-size: 0.8125rem;
-        padding: 0.875rem 1rem;
-    }
-}
 
-/* Tablet devices (768px to 1024px) */
-@media screen and (min-width: 769px) and (max-width: 1024px) {
-    .header h1 {
-        font-size: 1.125rem;
-    }
-    
-    .viewer-3d-container {
-        height: 40vh;
-        min-height: 350px;
-    }
-    
-    #godot-iframe {
-        min-height: 300px;
-    }
-    
-    .bottom-row {
-        min-height: 350px;
-        max-height: 45vh;
-    }
-    
-    .video-wrapper,
-    #youtube-player-container {
-        min-height: 350px;
-    }
-    
-    .flight-data-container {
-        min-height: 400px;
-    }
-    
-    .flight-data-row-1 {
-        flex-direction: column;
-        gap: 0.75rem;
-    }
-    
-    .map-wrapper {
-        min-height: 280px;
-    }
-    
-    #map {
-        min-height: 280px;
-    }
-    
-    .altitude-gauge-container {
-        flex: 0 0 auto;
-        min-width: 100%;
-        padding: 0.5rem;
-    }
-    
-    .gauge-track {
-        height: 180px;
-        width: 28px;
-    }
-    
-    .gauge-scale {
-        height: 180px;
-        font-size: 0.6875rem;
-    }
-    
-    .gauge-value {
-        font-size: 1.125rem;
-        min-width: 70px;
-        padding: 0.375rem;
-    }
-    
-    .gauge-marker {
-        width: 38px;
-        left: -5px;
-    }
-    
-    .attitude-chart-container {
-        min-height: 200px;
-        max-height: 30vh;
-    }
-    
-    #attitude-chart {
-        min-height: 180px;
-        max-height: 100%;
-    }
-    
-    .jump-buttons {
-        gap: 0.5rem;
-    }
-    
-    .btn-jump {
-        font-size: 0.6875rem;
-        padding: 0.5rem 0.625rem;
-    }
-}
-
-/* Very small mobile devices (up to 480px) */
-@media screen and (max-width: 480px) {
-    .header {
-        padding: 0.5rem 0.75rem;
-    }
-    
-    .header h1 {
-        font-size: 0.875rem;
-    }
-    
-    .back-home-link {
-        font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
-    }
-    
-    .status {
-        font-size: 0.6875rem;
-        padding: 0.375rem 0.625rem;
-    }
-    
-    .main-content {
-        padding: 0.5rem;
-        gap: 0.5rem;
-    }
-    
-    .viewer-3d-container {
-        min-height: 200px;
-        max-height: 35vh;
-        padding: 0.5rem;
-    }
-    
-    .viewer-3d-container h2 {
-        font-size: 0.6875rem;
-    }
-    
-    #godot-iframe {
-        min-height: 150px;
-        max-height: calc(35vh - 60px);
-    }
-    
-    .viewer-info {
-        font-size: 0.6875rem;
-        gap: 0.375rem;
-    }
-    
-    .video-container {
-        min-height: 200px;
-        max-height: 45vh;
-        padding: 0.5rem;
-    }
-    
-    .video-container h2 {
-        font-size: 0.6875rem;
-    }
-    
-    .video-wrapper,
-    #youtube-player-container {
-        min-height: 200px;
-        max-height: calc(45vh - 40px);
-    }
-    
-    .flight-data-container {
-        padding: 0.5rem;
-        min-height: 350px;
-    }
-    
-    .flight-data-row-1 {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .map-wrapper {
-        min-height: 220px;
-    }
-    
-    #map {
-        min-height: 220px;
-    }
-    
-    .altitude-gauge-container {
-        flex: 0 0 auto;
-        min-width: 100%;
-        padding: 0.5rem;
-    }
-    
-    .ground-speed-gauge-container {
-        padding: 0.5rem;
-    }
-    
-    .gauge-track-horizontal {
-        height: 30px;
-        min-height: 30px;
-    }
-    
-    .gauge-marker-horizontal {
-        height: 40px;
-    }
-    
-    .gauge-value-horizontal {
-        font-size: 0.9375rem;
-        padding: 0.3rem 0.5rem;
-    }
-    
-    .gauge-track {
-        height: 150px;
-        width: 24px;
-    }
-    
-    .gauge-scale {
-        height: 150px;
-        font-size: 0.625rem;
-    }
-    
-    .gauge-value {
-        font-size: 1rem;
-        min-width: 60px;
-        padding: 0.375rem;
-    }
-    
-    .gauge-label {
-        font-size: 0.6875rem;
-    }
-    
-    .gauge-marker {
-        width: 34px;
-        left: -5px;
-    }
-    
-    .altitude-legend {
-        font-size: 0.6875rem;
-        padding: 0.375rem;
-    }
-    
-    .legend-low,
-    .legend-high {
-        font-size: 0.625rem;
-    }
-    
-    .attitude-chart-container {
-        min-height: 180px;
-        max-height: 40vh;
-        padding: 0.5rem;
-    }
-    
-    .attitude-chart-container h2 {
-        font-size: 0.6875rem;
-        margin-bottom: 0.5rem;
-    }
-    
-    #attitude-chart {
-        min-height: 160px;
-        max-height: 100%;
-    }
-    
-    .mobile-menu-toggle {
-        font-size: 0.75rem;
-        padding: 0.625rem 0.75rem;
-    }
-    
-    .jump-controls.active {
-        max-height: 65vh;
-        padding: 0.625rem 0.5rem;
-    }
-    
-    .jump-controls-header {
-        justify-content: center;
-        width: 100%;
-        margin-bottom: 0.375rem;
-    }
-    
-    .jump-controls h3 {
-        font-size: 0.6875rem;
-        margin: 0;
-    }
-    
-    .jump-buttons {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.375rem;
-    }
-    
-    .btn-jump {
-        font-size: 0.625rem;
-        padding: 0.625rem 0.375rem;
-        min-height: 44px;
-    }
-    
-    .container {
-        padding-bottom: 60px;
-    }
-}
-
-/* Landscape orientation on mobile */
-@media screen and (max-width: 768px) and (orientation: landscape) {
-    .header {
-        padding: 0.5rem 1rem;
-        flex-direction: row;
-        justify-content: space-between;
-    }
-    
-    .header-content {
-        flex-direction: row;
-        align-items: center;
-        flex: 1;
-    }
-    
-    .header h1 {
-        font-size: 0.875rem;
-        flex: 0 1 auto;
-    }
-    
-    .status {
-        margin-top: 0;
-    }
-    
-    .viewer-3d-container {
-        height: auto;
-        min-height: 280px;
-        max-height: 50vh;
-    }
-    
-    #godot-iframe {
-        min-height: 250px;
-        max-height: calc(50vh - 70px);
-    }
-    
-    .viewer-info {
-        flex-direction: row;
-        font-size: 0.75rem;
-        gap: 0.75rem;
-    }
-    
-    .bottom-row {
-        flex-direction: row;
-        max-height: 45vh;
-        gap: 0.5rem;
-    }
-    
-    .video-container {
-        flex: 0 0 50%;
-        min-height: auto;
-        max-height: 45vh;
-    }
-    
-    .video-wrapper,
-    #youtube-player-container {
-        min-height: 200px;
-        max-height: calc(45vh - 50px);
-    }
-    
-    .flight-data-container {
-        flex: 0 0 50%;
-    }
-    
-    .flight-data-row-1 {
-        flex-direction: row;
-        gap: 1rem;
-    }
-    
-    .map-wrapper {
-        min-height: 300px;
-    }
-    
-    #map {
-        min-height: 300px;
-    }
-    
-    .altitude-gauge-container {
-        flex: 0 0 100px;
-        min-width: 100px;
-    }
-    
-    .ground-speed-gauge-container {
-        padding: 0.5rem;
-    }
-    
-    .gauge-track {
-        height: 220px;
-    }
-    
-    .gauge-scale {
-        height: 220px;
-    }
-    
-    .attitude-chart-container {
-        min-height: 160px;
-        max-height: 25vh;
-    }
-    
-    #attitude-chart {
-        min-height: 120px;
-        max-height: calc(25vh - 40px);
-    }
-    
-    .controls-panel {
-        padding: 0;
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .mobile-menu-toggle {
+    .jump-controls.mobile-open {
         display: flex;
     }
-    
-    .jump-controls {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.625rem;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height var(--transition), padding var(--transition);
-        opacity: 0;
-        visibility: hidden;
+
+    .jump-controls-header {
+        display: none;
     }
-    
-    .jump-controls.active {
-        max-height: 50vh;
-        opacity: 1;
-        visibility: visible;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-    
+
     .jump-buttons {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.5rem;
+        width: 100%;
     }
-    
+
     .btn-jump {
-        font-size: 0.625rem;
+        flex: 1 1 calc(33% - 0.25rem);
+        min-width: 80px;
+        text-align: center;
+        font-size: 0.6875rem;
         padding: 0.5rem 0.375rem;
         min-height: 40px;
     }
-    
-    .container {
-        padding-bottom: 80px;
+
+    .flight-data-row-1 {
+        gap: 0.625rem;
+    }
+
+    .altitude-gauge-container {
+        flex: 0 0 80px;
+        max-width: 100px;
     }
 }
 
-/* Touch device optimizations */
-@media (hover: none) and (pointer: coarse) {
-    .btn,
+@media screen and (max-width: 480px) {
+    .viewer-3d-container {
+        min-height: 35vh;
+    }
+
+    #godot-iframe {
+        min-height: 220px;
+    }
+
+    .flight-data-container {
+        min-height: 250px;
+    }
+
+    .video-container {
+        min-height: 220px;
+    }
+
     .btn-jump {
-        min-height: 44px;
-        padding: 0.625rem 1rem;
+        flex: 1 1 calc(50% - 0.25rem);
+        font-size: 0.6875rem;
+        padding: 0.5rem 0.25rem;
     }
-    
-    .back-home-link {
-        min-height: 44px;
-        min-width: 44px;
-    }
-    
-    .btn,
-    .btn-jump,
-    .back-home-link {
-        -webkit-tap-highlight-color: rgba(16, 185, 129, 0.3);
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-    }
-    
-    .controls-panel,
-    .jump-buttons {
-        -webkit-overflow-scrolling: touch;
-    }
+}
+
+/* Prevent horizontal overflow globally */
+*, *::before, *::after {
+    max-width: 100%;
+}
+
+img, iframe, canvas {
+    max-width: 100%;
 }
