@@ -103,9 +103,14 @@ Open `http://localhost:3000/webdisplay`.
 
 ## Deployment
 
-The app is deployed on [Vercel](https://vercel.com) as part of the main personal website. Because Vercel uses a serverless architecture, WebSocket connections are not persistent — the HMD data pipeline is designed to work without a persistent socket connection by fetching data locally from the binary blob downloaded at init.
+The app is deployed on [Render](https://render.com) as part of the main personal website. Render runs a persistent Node.js process, so WebSocket connections work normally via Socket.IO.
 
-**Note:** The `WS_URL` environment variable is not required on Vercel. Socket.IO falls back to polling if WebSocket upgrade is unavailable.
+Set the following environment variables in the Render dashboard:
+- `YOUTUBE_VIDEO_ID` (required)
+- `WS_URL` — your Render service URL (e.g. `https://your-app.onrender.com`), set after first deploy
+- `YOUTUBE_START_OFFSET` (optional)
+
+**Free tier note:** The service sleeps after 15 minutes of inactivity. The first request after sleep takes ~30 seconds to wake up.
 
 ## Godot HMD Display
 
