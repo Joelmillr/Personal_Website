@@ -770,7 +770,7 @@ body {
     box-shadow: 0 0 6px rgba(26, 107, 56, 0.5);
     transition: bottom 0.3s ease;
     z-index: 10;
-    transform: translateY(-50%);
+    transform: translateY(50%);
 }
 
 .gauge-value,
