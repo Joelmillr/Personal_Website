@@ -351,7 +351,7 @@ class YouTubePlayer {
 
                             container.innerHTML = `
                                 <div style="padding: 20px; text-align: center; color: #ff6b6b; background: #fff5f5; border: 2px solid #ff6b6b; border-radius: 8px;">
-                                    <h3 style="margin-top: 0;">⚠️ YouTube Video Error (Code: ${event.data})</h3>
+                                    <h3 style="margin-top: 0;">YouTube Video Error (Code: ${event.data})</h3>
                                     <p><strong>${errorMsg}</strong></p>
                                     <p style="font-size: 0.85em; color: #666; margin-top: 10px;">
                                         Video ID: <code>${cleanVideoId}</code><br>
@@ -359,7 +359,7 @@ class YouTubePlayer {
                                     </p>
                                     ${isAgeRestrictedError ? `
                                     <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 10px; margin: 10px 0;">
-                                        <strong>⚠️ Error 150/101 - Common Causes:</strong>
+                                        <strong>Error 150/101 - Common Causes:</strong>
                                         <ul style="text-align: left; margin: 10px 0;">
                                             <li>Age restrictions (even if you think it's disabled, check again)</li>
                                             <li>Video is <strong>Private</strong> (must be Public or Unlisted)</li>
@@ -388,7 +388,7 @@ class YouTubePlayer {
                                         <a href="${embedTestUrl}" target="_blank" style="color: #0066cc; margin: 0 10px;">Test Embed Directly</a>
                                     </div>
                                     <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 4px;">
-                                        <strong>⚠️ ERR_BLOCKED_BY_CLIENT Error - Something is blocking YouTube requests:</strong>
+                                        <strong>ERR_BLOCKED_BY_CLIENT — Something is blocking YouTube requests:</strong>
                                         <ul style="text-align: left; margin: 10px 0; font-size: 0.9em;">
                                             <li><strong>Browser Privacy Settings:</strong>
                                                 <ul style="margin-left: 20px; margin-top: 5px;">
@@ -405,7 +405,7 @@ class YouTubePlayer {
                                         </ul>
                                     </div>
                                     <div style="margin-top: 10px; padding: 10px; background: #ffebee; border: 1px solid #f44336; border-radius: 4px;">
-                                        <strong>🔴 Error 150 - Final Checklist:</strong>
+                                        <strong>Error 150 — Final Checklist:</strong>
                                         <p style="font-size: 0.9em; margin: 10px 0;"><strong>Since video is unlisted, embedding enabled, and no age restriction, error 150 is almost certainly one of these:</strong></p>
                                         <ol style="text-align: left; margin: 10px 0; font-size: 0.9em;">
                                             <li><strong>Content ID Claim (MOST LIKELY):</strong> 
@@ -429,7 +429,7 @@ class YouTubePlayer {
                                         </ol>
                                     </div>
                                     <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px;">
-                                        <strong>⚠️ If none of the above work:</strong>
+                                        <strong>If none of the above work:</strong>
                                         <p style="font-size: 0.9em; margin: 10px 0;">
                                             Error 150 with these settings typically means YouTube has applied a restriction you can't see in the normal settings. 
                                             You may need to contact YouTube Support or try uploading a new video.

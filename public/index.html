@@ -8,546 +8,220 @@
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
-
         gtag('config', 'G-PEGHJHV0P5');
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joel Andrew Miller - Aerospace Software Engineer</title>
+    <title>Joel Andrew Miller</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
 </head>
 
 <body>
-    <!-- Skip to main content link for accessibility -->
-    <a href="#hero" class="skip-link">Skip to main content</a>
+    <a href="#about" class="skip-link">Skip to main content</a>
 
     <!-- Navigation -->
     <nav class="navbar" role="navigation" aria-label="Main navigation">
         <div class="nav-content">
-            <a href="#hero" class="logo">JAM</a>
-            <button class="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+            <a href="#about" class="logo">Joel Miller</a>
             <ul class="nav-links">
-                <li><a href="#expertise">Expertise</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#experience">Experience</a></li>
+                <li><a href="#publications">Publications</a></li>
                 <li><a href="#projects">Projects</a></li>
-                <li><a href="#drawing">Draw a Number</a></li>
+                <li><a href="#experience">Experience</a></li>
+                <li><a href="#demo">Demo</a></li>
                 <li><a href="#contact">Contact</a></li>
-                <li><a href="assets/Resume.pdf" target="_blank">Resume</a></li>
+                <li><a href="assets/Resume.pdf" target="_blank">Resume ↗</a></li>
             </ul>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header id="hero" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <div class="hero-text">
-                    <h1>Joel Andrew Miller</h1>
-                    <p class="tagline">Machine Learning Engineer | Computer Vision Researcher | Signal Processing Specialist</p>
-                    <p class="hero-description">Specializing in <strong class="ml-badge">Machine Learning</strong>, <strong class="cv-badge">Computer Vision</strong>, and <strong class="sp-badge">Signal Processing</strong> to develop cutting-edge solutions for aerospace and autonomous systems. Building ML models, implementing real-time computer vision algorithms, and processing multi-modal sensor data for innovative applications.</p>
-                    <div class="cta-buttons">
-                        <a href="#featured-project" class="btn primary">View Featured Project</a>
-                        <a href="#projects" class="btn secondary">Explore Research</a>
-                        <a href="assets/Resume.pdf" class="btn primary" target="_blank">Download Resume</a>
-                    </div>
-                </div>
-                <div class="hero-image-wrapper">
-                    <img src="assets/me.jpg" alt="Joel Miller" class="hero-illustration">
-                </div>
-            </div>
+    <!-- Header / About -->
+    <header id="about" class="site-header">
+        <img src="assets/me.jpg" alt="Joel Miller" class="profile-photo">
+        <div class="header-info">
+            <h1>Joel Andrew Miller</h1>
+            <p class="header-affiliation">
+                Aerospace Software Engineer at <a href="https://www.itps.net" target="_blank" rel="noopener">ITPS Canada</a> &middot;
+                M.E.Sc. <a href="https://www.uwo.ca" target="_blank" rel="noopener">Western University</a>
+            </p>
+            <p class="header-bio">
+                I develop ML-powered systems for aerospace and autonomous vehicle applications — including computer vision
+                algorithms for helmet-mounted displays and signal processing pipelines for real-time sensor fusion.
+                My research applies machine learning and statistical signal processing to physiological data and
+                autonomous systems.
+            </p>
+            <p class="header-links">
+                <a href="mailto:joelmiller0430@gmail.com">Email</a><span class="sep">/</span>
+                <a href="https://www.linkedin.com/in/joelmillr/" target="_blank" rel="noopener">LinkedIn</a><span class="sep">/</span>
+                <a href="https://github.com/Joelmillr" target="_blank" rel="noopener">GitHub</a><span class="sep">/</span>
+                <a href="https://orcid.org/0009-0004-5678-6601" target="_blank" rel="noopener">ORCID</a><span class="sep">/</span>
+                <a href="assets/Resume.pdf" target="_blank">Resume</a>
+            </p>
         </div>
     </header>
 
-    <!-- Core Expertise Section -->
-    <section id="expertise" class="section expertise-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Core Expertise</h2>
-                <hr>
-            </div>
-            <div class="expertise-grid">
-                <div class="expertise-card retro-box">
-                    <div class="expertise-icon ml-icon">ML</div>
-                    <h3>Machine Learning</h3>
-                    <p class="expertise-description">Deep learning architectures, neural network optimization, and ML model deployment for real-world applications.</p>
-                    <ul class="expertise-skills">
-                        <li>Deep Learning (CNNs, RNNs, Transformers)</li>
-                        <li>Reinforcement Learning</li>
-                        <li>Model Training & Optimization</li>
-                        <li>TensorFlow / PyTorch</li>
-                        <li>Time-Series Analysis</li>
-                        <li>Statistical Learning</li>
-                    </ul>
-                </div>
-                <div class="expertise-card retro-box">
-                    <div class="expertise-icon cv-icon">CV</div>
-                    <h3>Computer Vision</h3>
-                    <p class="expertise-description">Image processing, object detection, and real-time visual analysis for autonomous systems and VR applications.</p>
-                    <ul class="expertise-skills">
-                        <li>Image Classification & Recognition</li>
-                        <li>Object Detection & Tracking</li>
-                        <li>Feature Extraction & Matching</li>
-                        <li>Real-Time Video Processing</li>
-                        <li>3D Vision & Reconstruction</li>
-                        <li>Augmented Reality Overlays</li>
-                    </ul>
-                </div>
-                <div class="expertise-card retro-box">
-                    <div class="expertise-icon sp-icon">SP</div>
-                    <h3>Signal Processing</h3>
-                    <p class="expertise-description">Multi-modal sensor fusion, signal analysis, and real-time data processing for aerospace and transportation systems.</p>
-                    <ul class="expertise-skills">
-                        <li>Sensor Fusion & Integration</li>
-                        <li>Filtering & Noise Reduction</li>
-                        <li>Frequency Domain Analysis</li>
-                        <li>Physiological Signal Analysis</li>
-                        <li>Real-Time Data Processing</li>
-                        <li>Quaternion-Based Tracking</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Featured Research Project: Flight Test Display -->
-    <section id="featured-project" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Featured Research Project</h2>
-                <hr>
-            </div>
-            <div class="featured-project retro-box">
-                <h3>Helmet-Mounted Display (HMD) VR System for Pilots</h3>
-                <p><strong>VR Development & Computer Vision</strong> | 2024-2025</p>
-                <p><strong>Tags:</strong> Virtual Reality | Computer Vision | Signal Processing | Real-Time Systems |
-                    3D Graphics | Sensor Fusion</p>
-                <hr class="dotted">
-                <p class="featured-description">
-                    A virtual reality helmet-mounted display system for pilots featuring real-time information overlay
-                    using <strong>computer vision algorithms</strong> and <strong>signal processing techniques</strong> for sensor data fusion. The system
-                    processes multi-modal flight sensor data (IMU, GPS, attitude sensors) to provide pilots with
-                    real-time flight information, navigation cues, and situational awareness through an immersive VR
-                    interface. Built with Godot engine for 3D rendering and VR display, with <strong>computer vision algorithms</strong>
-                    for real-time information overlay and <strong>signal processing pipelines</strong> for sensor fusion.
+    <!-- Publications -->
+    <section id="publications">
+        <h2>Publications</h2>
+        <ul class="pub-list">
+            <li class="pub-item">
+                <p class="pub-title">Modeling Driver State and Takeover Behavior in Conditional Automation Using Physiological Signals</p>
+                <p class="pub-authors"><strong>Joel Andrew Miller</strong>, Soodeh Nikan, Mohamed H. Zaki</p>
+                <p class="pub-venue">IEEE Open Journal of Intelligent Transportation Systems, Vol. 7 &middot; 2026</p>
+                <p class="pub-links">
+                    <a href="https://ieeexplore.ieee.org/document/11373589" target="_blank" rel="noopener">[Paper]</a>
                 </p>
-                <div class="tech-highlights">
-                    <div class="tech-highlight ml-highlight">
-                        <strong>Machine Learning:</strong> Real-time state estimation and adaptive display systems
-                    </div>
-                    <div class="tech-highlight cv-highlight">
-                        <strong>Computer Vision:</strong> Real-time information overlay and visual tracking algorithms
-                    </div>
-                    <div class="tech-highlight sp-highlight">
-                        <strong>Signal Processing:</strong> Multi-modal sensor fusion and quaternion-based orientation tracking
-                    </div>
-                </div>
-                <ul class="featured-highlights">
-                    <li>Developed VR helmet-mounted display system using <strong>computer vision algorithms</strong> for real-time
-                        information overlay</li>
-                    <li>Implemented <strong>signal processing pipelines</strong> for multi-modal sensor data fusion (IMU, GPS, attitude
-                        sensors)</li>
-                    <li>Created real-time 3D visualization and HUD elements using Godot engine for immersive pilot
-                        experience</li>
-                    <li>Built <strong>sensor fusion algorithms</strong> for accurate vehicle and helmet orientation tracking in VR space
-                    </li>
-                    <li>Designed first-person VR interface with pitch ladder, heading tape, and altitude/speed displays
-                    </li>
-                    <li>Developed real-time data processing backend for sensor synchronization and quaternion-based
-                        orientation tracking</li>
-                </ul>
-                <div class="featured-actions">
-                    <a href="/webdisplay" class="btn primary" target="_blank" rel="noopener">
-                        View Live Demo
-                    </a>
-                </div>
-            </div>
-        </div>
+            </li>
+            <li class="pub-item">
+                <p class="pub-title">At the Heart of Intersections: Analyzing Their Influence on Driver Heart Behaviour</p>
+                <p class="pub-authors"><strong>Joel Andrew Miller</strong>, et al.</p>
+                <p class="pub-venue">Data Science for Transportation, Springer Nature &middot; 2025</p>
+                <p class="pub-links">
+                    <a href="https://doi.org/10.1007/s42421-025-00125-5" target="_blank" rel="noopener">[Paper]</a>
+                    <a href="https://github.com/Joelmillr/Heart-and-Intersections" target="_blank" rel="noopener">[Code]</a>
+                </p>
+            </li>
+            <li class="pub-item">
+                <p class="pub-title">Navigating the Handover: A Review of Takeover Requests in Level 3 Autonomous Vehicles</p>
+                <p class="pub-authors"><strong>Joel Andrew Miller</strong>, et al.</p>
+                <p class="pub-venue">IEEE Open Journal of Vehicular Technology &middot; August 2024</p>
+                <p class="pub-links">
+                    <a href="https://doi.org/10.1109/ojvt.2024.3443630" target="_blank" rel="noopener">[Paper]</a>
+                </p>
+            </li>
+        </ul>
     </section>
 
-    <!-- About Me -->
-    <section id="about" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>About Me</h2>
-                <hr>
-            </div>
-            <div class="about-content">
-                <div class="about-text">
-                    <p class="lead">I am a Machine Learning Engineer and Computer Vision Researcher specializing in signal processing and data-driven solutions.</p>
-                    <p>Currently working as an Aerospace Software Engineer at the International Test Pilots School (ITPS) Canada, I develop ML-powered systems for aviation applications, including computer vision algorithms for helmet-mounted displays and signal processing pipelines for real-time sensor data analysis.</p>
-                    <p>My research focuses on applying machine learning techniques to physiological signal analysis, computer vision for autonomous systems, and statistical signal processing. I have published work on driver behavior analysis using heart rate signals and have extensive experience building ML pipelines for sensor fusion, image processing, and time-series analysis.</p>
-                </div>
-                <div class="skills-container retro-box">
-                    <h3>Technical Stack</h3>
-                    <div class="skills-by-category">
-                        <div class="skill-category">
-                            <h4 class="skill-category-title">Machine Learning</h4>
-                            <ul class="skill-tags">
-                                <li>TensorFlow</li>
-                                <li>PyTorch</li>
-                                <li>Keras</li>
-                                <li>Scikit-learn</li>
-                                <li>Deep Learning</li>
-                                <li>Reinforcement Learning</li>
-                            </ul>
-                        </div>
-                        <div class="skill-category">
-                            <h4 class="skill-category-title">Computer Vision</h4>
-                            <ul class="skill-tags">
-                                <li>OpenCV</li>
-                                <li>Image Processing</li>
-                                <li>Object Detection</li>
-                                <li>Feature Extraction</li>
-                                <li>3D Graphics</li>
-                                <li>VR/AR Systems</li>
-                            </ul>
-                        </div>
-                        <div class="skill-category">
-                            <h4 class="skill-category-title">Signal Processing</h4>
-                            <ul class="skill-tags">
-                                <li>Sensor Fusion</li>
-                                <li>Filtering</li>
-                                <li>Time-Series</li>
-                                <li>MATLAB</li>
-                                <li>Signal Analysis</li>
-                                <li>Real-Time Processing</li>
-                            </ul>
-                        </div>
-                        <div class="skill-category">
-                            <h4 class="skill-category-title">Programming</h4>
-                            <ul class="skill-tags">
-                                <li>Python</li>
-                                <li>JavaScript</li>
-                                <li>C++</li>
-                                <li>MATLAB</li>
-                                <li>Data Science</li>
-                                <li>Statistical Analysis</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Projects -->
+    <section id="projects">
+        <h2>Projects</h2>
+        <ul class="project-list">
+            <li class="project-item">
+                <p class="project-title">Helmet-Mounted Display (HMD) VR System for Pilots</p>
+                <p class="project-meta">VR &middot; Computer Vision &middot; Signal Processing &middot; 2024–2025</p>
+                <p class="project-desc">
+                    A VR helmet-mounted display system for pilots with real-time information overlay using computer vision
+                    and sensor fusion. Processes multi-modal flight data (IMU, GPS, attitude sensors) through a Godot-based
+                    3D rendering pipeline with quaternion-based orientation tracking.
+                </p>
+                <p class="project-links">
+                    <a href="/webdisplay" target="_blank" rel="noopener">[Live Demo]</a>
+                </p>
+            </li>
+            <li class="project-item">
+                <p class="project-title">AiX Lab Autonomous Driving Simulation Environment</p>
+                <p class="project-meta">Computer Vision &middot; Signal Processing &middot; Data Collection &middot; 2024</p>
+                <p class="project-desc">
+                    Multi-modal simulation environment for autonomous driving research with synchronized data collection
+                    (video, physiological signals, vehicle dynamics) and integrated CV and signal processing pipelines
+                    for ML model training and validation.
+                </p>
+            </li>
+            <li class="project-item">
+                <p class="project-title">Reinforcement Learning for Autonomous Driving</p>
+                <p class="project-meta">Deep RL &middot; Computer Vision &middot; CARLA Simulator &middot; 2023</p>
+                <p class="project-desc">
+                    Deep RL agents (DQN, PPO) for autonomous navigation using CNN-based visual perception, trained on
+                    complex multi-agent driving scenarios in CARLA with varying weather and traffic conditions.
+                </p>
+            </li>
+        </ul>
     </section>
 
     <!-- Experience -->
-    <section id="experience" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Experience</h2>
-                <hr>
-            </div>
-            <div class="timeline">
-                <div class="timeline-item retro-box">
-                    <div class="timeline-date text-green">February 2025 - Present</div>
-                    <div class="timeline-content">
-                        <h3>Aerospace Software Engineer</h3>
-                        <p><strong>International Test Pilots School</strong> - London, Ontario</p>
-                        <ul>
-                            <li>Leading R&D efforts to develop a helmet-mounted display system using computer vision
-                                algorithms for real-time information overlay and signal processing techniques for sensor
-                                data fusion</li>
-                            <li>Implementing machine learning models for pilot state detection and adaptive display
-                                systems</li>
-                            <li>Developing signal processing pipelines for multi-modal sensor data (IMU, GPS, video)
-                                integration</li>
-                        </ul>
-                    </div>
+    <section id="experience">
+        <h2>Experience</h2>
+        <ul class="exp-list">
+            <li class="exp-item">
+                <span class="exp-date">Feb 2025 – Present</span>
+                <div class="exp-content">
+                    <h3>Aerospace Software Engineer</h3>
+                    <p class="exp-org">International Test Pilots School &middot; London, Ontario</p>
+                    <ul class="exp-details">
+                        <li>Leading R&D on a VR helmet-mounted display using computer vision and signal processing for sensor fusion</li>
+                        <li>Implementing ML models for pilot state detection and adaptive display systems</li>
+                        <li>Building multi-modal sensor pipelines (IMU, GPS, video)</li>
+                    </ul>
                 </div>
-                <div class="timeline-item retro-box">
-                    <div class="timeline-date text-green">September 2023 - December 2023</div>
-                    <div class="timeline-content">
-                        <h3>R&D Engineering Intern</h3>
-                        <p><strong>National Research Council Canada</strong> - London, Ontario</p>
-                        <ul>
-                            <li>Developed computer vision and signal processing pipelines to transform multi-modal
-                                sensor data (LiDAR point clouds, camera images, GPS signals) into simulated environments
-                                for autonomous vehicle testing</li>
-                            <li>Implemented data preprocessing algorithms for sensor fusion and coordinate
-                                transformation using MATLAB and Python</li>
-                            <li>Built ML-based data validation and quality assessment tools for sensor data streams</li>
-                        </ul>
-                    </div>
+            </li>
+            <li class="exp-item">
+                <span class="exp-date">May 2023 – Dec 2025</span>
+                <div class="exp-content">
+                    <h3>M.E.Sc. Software Engineering</h3>
+                    <p class="exp-org">Western University &middot; London, Ontario</p>
+                    <ul class="exp-details">
+                        <li>Research: ML and signal processing for autonomous vehicle systems (AiX Lab, EMRC Lab)</li>
+                        <li>Published first-author work in Springer Nature (2025) and IEEE (2024, 2026)</li>
+                    </ul>
                 </div>
-                <div class="timeline-item retro-box">
-                    <div class="timeline-date text-green">May 2023 - December 2025</div>
-                    <div class="timeline-content">
-                        <h3>M.E.Sc Software Engineering</h3>
-                        <p><strong>Western University</strong> - London, Ontario</p>
-                        <ul>
-                            <li>Research focus: Machine learning and signal processing for autonomous vehicle systems
-                            </li>
-                            <li>Developing ML models for driver state detection using physiological signal analysis
-                                (heart rate, EEG, eye-tracking)</li>
-                            <li>Applying statistical signal processing methods (E-Tests, Poisson modeling) to analyze
-                                driver behavior patterns</li>
-                            <li>Published first-author research on signal processing applications in transportation
-                                (Springer Nature, 2025)</li>
-                            <li>Part of the AiX Lab (AI & Autonomous Systems) and EMRC Lab (Engineering & Machine
-                                Learning Research)</li>
-                        </ul>
-                    </div>
+            </li>
+            <li class="exp-item">
+                <span class="exp-date">Sep 2023 – Dec 2023</span>
+                <div class="exp-content">
+                    <h3>R&D Engineering Intern</h3>
+                    <p class="exp-org">National Research Council Canada &middot; London, Ontario</p>
+                    <ul class="exp-details">
+                        <li>Built CV and signal processing pipelines for multi-modal sensor data (LiDAR, camera, GPS)</li>
+                        <li>Sensor fusion and coordinate transformation in MATLAB and Python</li>
+                    </ul>
                 </div>
-                <div class="timeline-item retro-box">
-                    <div class="timeline-date text-green">May 2021 - September 2022</div>
-                    <div class="timeline-content">
-                        <h3>Software Engineer / DevOps Intern</h3>
-                        <p><strong>IBM</strong> - Markham, Ontario</p>
-                        <ul>
-                            <li>Developed automated testing frameworks for IBM's Order Management System (OMS)</li>
-                            <li>Built frontend components and Dockerized virtual machines for test case execution and
-                                monitoring</li>
-                            <li>Mentored new interns and worked with Angular, Docker</li>
-                        </ul>
-                    </div>
+            </li>
+            <li class="exp-item">
+                <span class="exp-date">May 2021 – Sep 2022</span>
+                <div class="exp-content">
+                    <h3>Software Engineer / DevOps Intern</h3>
+                    <p class="exp-org">IBM &middot; Markham, Ontario</p>
+                    <ul class="exp-details">
+                        <li>Automated testing frameworks for IBM Order Management System using Angular and Docker</li>
+                    </ul>
                 </div>
-                <div class="timeline-item retro-box">
-                    <div class="timeline-date text-green">September 2018 - April 2023</div>
-                    <div class="timeline-content">
-                        <h3>B.E.Sc Software Engineering with IBM Coop</h3>
-                        <p><strong>Western University</strong> - London, Ontario</p>
-                        <ul>
-                            <li>Completed my undergraduate degree in Software Engineering.</li>
-                        </ul>
-                    </div>
+            </li>
+            <li class="exp-item">
+                <span class="exp-date">Sep 2018 – Apr 2023</span>
+                <div class="exp-content">
+                    <h3>B.E.Sc. Software Engineering (IBM Co-op)</h3>
+                    <p class="exp-org">Western University &middot; London, Ontario</p>
                 </div>
-            </div>
-        </div>
+            </li>
+        </ul>
     </section>
 
-    <!-- Projects and Publications -->
-    <section id="publications" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Featured Publications</h2>
-                <hr>
-            </div>
-            <div class="featured-project retro-box">
-                <h3>Navigating the Handover</h3>
-                <p><strong>IEEE Review</strong> | August 2024</p>
-                <p class="featured-subtitle">Published in IEEE Open Journal of Vehicular Technology</p>
-                <hr class="dotted">
-                <p><strong>Tags:</strong> First Author | Review Paper | Machine Learning | Autonomous Vehicles |
-                    Human-AI Interaction</p>
-                <p class="featured-description">
-                    A comprehensive review of takeover requests in Level 3 autonomous vehicles, analyzing
-                    human-centered design approaches and exploring the Operational Design Domain (ODD)
-                    concept for safe autonomous operation.
-                </p>
-                <ul class="featured-highlights">
-                    <li>First-authored comprehensive review paper</li>
-                    <li>Published in prestigious IEEE journal</li>
-                    <li>Identified key research gaps in AV handovers</li>
-                </ul>
-                <div class="featured-actions">
-                    <a href="https://doi.org/10.1109/ojvt.2024.3443630" class="btn primary" target="_blank"
-                        rel="noopener">
-                        Read Paper
-                    </a>
+    <!-- MNIST Demo -->
+    <section id="demo">
+        <h2>ML Demo: MNIST Digit Recognition</h2>
+        <p>CNN trained on MNIST. Draw a digit (0–9) in the canvas below.</p>
+        <div class="demo-container">
+            <div class="demo-canvas-area">
+                <canvas id="drawingCanvas" width="280" height="280"
+                    aria-label="Drawing canvas for digit input" role="img"></canvas>
+                <div class="demo-controls">
+                    <button id="clearBtn" class="btn" aria-label="Clear canvas">Clear</button>
+                    <button id="predictBtn" class="btn primary" aria-label="Predict digit">Predict</button>
                 </div>
             </div>
-
-            <div class="featured-project retro-box">
-                <h3>At the Heart of Intersections: Analyzing Their Influence on Driver Heart Behaviour</h3>
-                <p><strong>Springer Nature</strong> | 2025</p>
-                <p class="featured-subtitle">Published in Data Science for Transportation</p>
-                <hr class="dotted">
-                <p><strong>Tags:</strong> First Author | Signal Processing | Statistical Analysis | Machine Learning |
-                    Data Science | Transportation</p>
-                <p class="featured-description">
-                    This paper investigates the physiological impact of intersections on driver heart rate using <strong>signal processing</strong> and <strong>statistical machine learning</strong> techniques. Using video and heart rate data from the Honda Research Institute, we apply
-                    E-Tests to analyze Poisson distributions of HR events occurring within and outside intersections.
-                    Our findings support the hypothesis that intersections significantly influence driver heart rate,
-                    indicating heightened stress or cognitive load at these critical road junctures. This research demonstrates
-                    the application of <strong>signal processing</strong> methods to physiological data analysis and has
-                    implications for urban traffic design and vehicle technology development in automated driving
-                    environments.
-                </p>
-                <div class="tech-highlights">
-                    <div class="tech-highlight sp-highlight">
-                        <strong>Signal Processing:</strong> Physiological signal analysis and time-series processing
-                    </div>
-                    <div class="tech-highlight ml-highlight">
-                        <strong>Machine Learning:</strong> Statistical analysis using E-Tests and Poisson modeling
-                    </div>
+            <div class="demo-result">
+                <h3>Prediction</h3>
+                <div id="predictionResult" class="prediction-result" role="status" aria-live="polite" aria-atomic="true">
+                    <span class="prediction-number" aria-label="Predicted digit">—</span>
                 </div>
-                <ul class="featured-highlights">
-                    <li>First-authored research paper investigating driver physiology at intersections</li>
-                    <li>Utilized statistical analysis (E-Tests) on real-world driving data from Honda Research Institute
-                    </li>
-                    <li>Found significant evidence that intersections influence driver heart rate and stress levels</li>
-                    <li>Open-source code available for reproducibility and further research</li>
-                </ul>
-                <div class="featured-actions">
-                    <a href="https://doi.org/10.1007/s42421-025-00125-5" class="btn primary" target="_blank"
-                        rel="noopener">
-                        Read Paper
-                    </a>
-                    <a href="https://github.com/Joelmillr/Heart-and-Intersections" class="btn secondary" target="_blank"
-                        rel="noopener">
-                        View Code
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Research Projects -->
-    <section id="projects" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Research Projects</h2>
-                <hr>
-            </div>
-            <div class="featured-project retro-box">
-                <h3>AiX Lab Simulation Environment</h3>
-                <p><strong>Research Infrastructure</strong> | 2024</p>
-                <p><strong>Tags:</strong> Computer Vision | Signal Processing | Data Collection | Machine Learning</p>
-                <hr class="dotted">
-                <div class="featured-image">
-                    <img src="assets/sim_setup.png" alt="Simulation Setup with Triple Monitors">
-                </div>
-                <p class="featured-description">
-                    A comprehensive simulation environment for autonomous driving research with integrated <strong>computer vision</strong> and <strong>signal processing</strong> pipelines. Features multi-modal sensor data collection (video,
-                    physiological signals, vehicle dynamics) and real-time processing capabilities for <strong>ML model training</strong>
-                    and validation. Demonstrates expertise in building end-to-end ML pipelines from data collection to model deployment.
-                </p>
-                <div class="tech-highlights">
-                    <div class="tech-highlight cv-highlight">
-                        <strong>Computer Vision:</strong> Driver behavior analysis and gaze tracking
-                    </div>
-                    <div class="tech-highlight sp-highlight">
-                        <strong>Signal Processing:</strong> Physiological and vehicle dynamics data processing
-                    </div>
-                    <div class="tech-highlight ml-highlight">
-                        <strong>Machine Learning:</strong> ML model training and validation pipelines
-                    </div>
-                </div>
-                <ul class="featured-highlights">
-                    <li>Built data collection infrastructure for ML model training with synchronized multi-modal sensors
-                    </li>
-                    <li>Developed signal processing pipelines for physiological and vehicle dynamics data</li>
-                    <li>Created computer vision tools for driver behavior analysis and gaze tracking</li>
-                    <li>Integrated triple-monitor setup with comprehensive data logging for ML datasets</li>
-                </ul>
-            </div>
-
-            <div class="featured-project retro-box">
-                <h3>Reinforcement Learning for Autonomous Driving</h3>
-                <p><strong>Machine Learning Research</strong> | 2023</p>
-                <p><strong>Tags:</strong> Deep Learning | Reinforcement Learning | Computer Vision | Autonomous Vehicles
-                </p>
-                <hr class="dotted">
-                <div class="featured-image">
-                    <img src="assets/carla_sim.png" alt="CARLA Simulator Environment">
-                </div>
-                <p class="featured-description">
-                    Developed a <strong>deep reinforcement learning</strong> agent for autonomous navigation using <strong>computer vision-based</strong>
-                    perception. Implemented DQN and PPO algorithms with <strong>CNN feature extractors</strong> for processing camera
-                    inputs, trained on complex driving scenarios in the CARLA simulator, achieving robust navigation
-                    capabilities in diverse environments. This project showcases expertise in combining <strong>machine learning</strong> and <strong>computer vision</strong> for autonomous systems.
-                </p>
-                <div class="tech-highlights">
-                    <div class="tech-highlight ml-highlight">
-                        <strong>Machine Learning:</strong> Deep RL (DQN, PPO) with neural network architectures
-                    </div>
-                    <div class="tech-highlight cv-highlight">
-                        <strong>Computer Vision:</strong> CNN-based feature extraction and image processing
-                    </div>
-                </div>
-                <ul class="featured-highlights">
-                    <li>Implemented deep RL agents (DQN, PPO) with CNN-based computer vision processing</li>
-                    <li>Designed reward functions and state representations for autonomous driving tasks</li>
-                    <li>Trained models on complex multi-agent scenarios with varying weather and traffic conditions</li>
-                    <li>Integrated with CARLA simulator using OpenAI Gym interface for reproducible ML experiments</li>
-                </ul>
-            </div>
-        </div>
-    </section>
-
-    <!-- Machine Learning Demo -->
-    <section id="drawing" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Machine Learning Demo: MNIST Digit Recognition</h2>
-                <hr>
-            </div>
-            <div class="drawing-container">
-                <div class="drawing-area retro-box">
-                    <p><strong>Interactive Deep Learning Demo - Draw a single digit (0-9) below</strong></p>
-                    <p>This demonstrates a convolutional neural network (CNN) trained on the MNIST dataset for
-                        handwritten digit classification. The model processes your drawing using computer vision
-                        preprocessing techniques.</p>
-                    <canvas id="drawingCanvas" width="280" height="280" aria-label="Drawing canvas for digit input"
-                        role="img"></canvas>
-                    <div class="drawing-controls">
-                        <button id="clearBtn" class="btn secondary" aria-label="Clear canvas">Clear</button>
-                        <button id="predictBtn" class="btn primary" aria-label="Predict digit">Predict</button>
-                    </div>
-                </div>
-                <div class="prediction-area retro-box">
-                    <h3>CNN Prediction</h3>
-                    <div id="predictionResult" class="prediction-result" role="status" aria-live="polite"
-                        aria-atomic="true">
-                        <span class="prediction-number blink" aria-label="Predicted digit">-</span>
-                    </div>
-                    <p class="experiment-text">This CNN model demonstrates computer vision and deep learning
-                        capabilities. The model uses image preprocessing, feature extraction, and classification. Try
-                        different drawing styles to see how the model performs! 😄</p>
-                </div>
+                <p class="experiment-text">Draw clearly near the center of the canvas. The model uses image preprocessing and CNN feature extraction for classification.</p>
             </div>
         </div>
     </section>
 
     <!-- Contact -->
-    <section id="contact" class="section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Get in Touch</h2>
-                <hr>
-            </div>
-            <div class="contact-content">
-                <div class="contact-item retro-box">
-                    <p><strong>Email:</strong> <a href="mailto:joelmiller0430@gmail.com"
-                            aria-label="Email Joel Miller">joelmiller0430@gmail.com</a>
-                    </p>
-                </div>
-                <div class="contact-item retro-box">
-                    <p><strong>Phone:</strong> <a href="tel:9059337920" aria-label="Phone number">(905) 933-7920</a></p>
-                </div>
-                <div class="contact-item retro-box">
-                    <p><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/joelmillr/" target="_blank"
-                            rel="noopener" aria-label="LinkedIn profile (opens in new tab)">LinkedIn Profile</a></p>
-                </div>
-                <div class="contact-item retro-box">
-                    <p><strong>ORCID:</strong> <a href="https://orcid.org/0009-0004-5678-6601" target="_blank"
-                            rel="noopener" aria-label="ORCID profile (opens in new tab)">ORCID Profile</a></p>
-                </div>
-                <div class="contact-item retro-box">
-                    <p><strong>Resume:</strong> <a href="assets/Resume.pdf" target="_blank"
-                            aria-label="Download resume PDF (opens in new tab)">Download Resume (PDF)</a>
-                    </p>
-                </div>
-            </div>
-        </div>
+    <section id="contact">
+        <h2>Contact</h2>
+        <ul class="contact-list">
+            <li><strong>Email:</strong> <a href="mailto:joelmiller0430@gmail.com">joelmiller0430@gmail.com</a></li>
+            <li><strong>Phone:</strong> <a href="tel:9059337920">(905) 933-7920</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/joelmillr/" target="_blank" rel="noopener">linkedin.com/in/joelmillr</a></li>
+            <li><strong>ORCID:</strong> <a href="https://orcid.org/0009-0004-5678-6601" target="_blank" rel="noopener">0009-0004-5678-6601</a></li>
+            <li><strong>Resume:</strong> <a href="assets/Resume.pdf" target="_blank">Download PDF</a></li>
+        </ul>
     </section>
 
-    <!-- Footer -->
     <footer>
-        <div class="container">
-            <hr>
-            <p>Checkout this website's <a href="https://github.com/Joelmillr/Personal_Website">source code!</a></p>
-        </div>
+        <p>Website <a href="https://github.com/Joelmillr/Personal_Website">source code</a>.</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
