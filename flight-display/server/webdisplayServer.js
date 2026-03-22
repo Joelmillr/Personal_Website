@@ -604,9 +604,9 @@ function initWebdisplayBackend(httpServer) {
             const duration = Date.now() - startTime;
             console.log(`[INIT] Initialization completed successfully in ${duration}ms`);
             
-            // Add caching headers for initialization data (cache for 1 hour since data doesn't change)
-            res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
-            res.set('ETag', `"${summary.data_count}-${takeoffIndex}"`);
+            // Use no-cache so browser always validates via ETag (fast 304 if unchanged)
+            res.set('Cache-Control', 'no-cache');
+            res.set('ETag', `"${summary.data_count}-${takeoffIndex}-${YOUTUBE_VIDEO_ID || 'noyt'}"`);
             res.json(responseData);
         } catch (error) {
             const duration = Date.now() - startTime;
@@ -894,12 +894,14 @@ function initWebdisplayBackend(httpServer) {
     // API: Download all HMD data as a compact Float32 binary blob for client-side lookup.
     // Format: 4-byte UInt32LE row count, then rows of HMD_FIELDS Float32LE values each.
     // Fields per row (13): timestamp, VQX, VQY, VQZ, VQW, HQX, HQY, HQZ, HQW, GSPEED, VALT, VLAT, VLON
+    // Downsampled 3x (~33 Hz from 100 Hz source) — smooth for 30 fps rendering.
+    // Eliminates per-frame HTTP round-trips on Vercel; all lookups become local O(log n) on the client.
     apiRouter.get('/hmd-data', (req, res) => {
         if (!processor) {
             return res.status(503).json({ success: false, error: 'Data not initialized. Call /api/init first.' });
         }
         try {
-            const FIELDS = 13;
+            const FIELDS = 13; // ts, vqx, vqy, vqz, vqw, hqx, hqy, hqz, hqw, gspeed, valt, vlat, vlon
             const DOWNSAMPLE = 3; // ~33 Hz from 100 Hz source → ~1.8 MB binary
             const takeoffTimestamp = TIMESTAMPS[0] || 2643.0;
             const startIdx = processor.findIndexForTimestamp(takeoffTimestamp) || 0;

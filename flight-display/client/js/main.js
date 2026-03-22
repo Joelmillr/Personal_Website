@@ -331,6 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             response = await fetch('/api/init', {
                 signal: initController.signal,
+                cache: 'no-store',
                 headers: {
                     'Accept': 'application/json'
                 }
@@ -396,6 +397,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const takeoffIndex = result.takeoff_index || 0;
 
         // Kick off HMD binary download in parallel with YouTube player init (zero extra wait time)
+        // Eliminates per-frame HTTP round-trips; all lookups become local O(log n) binary search
         const _hmdFetchPromise = fetch('/api/hmd-data').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
 
         // Initialize YouTube video player
@@ -685,19 +687,69 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return null;
                     }
 
-                    // Store takeoffIndex in a way that's accessible to the callback
+                    // Parse HMD binary data (fetched in parallel during youtubePlayer.initialize())
+                    // Fields per row: timestamp, VQX, VQY, VQZ, VQW, HQX, HQY, HQZ, HQW, GSPEED, VALT, VLAT, VLON
+                    const HMD_FIELDS = 13;
+                    const HMD_TAKEOFF_TS = (result.timestamps && result.timestamps[0]) || 2643.0;
+                    const _ytTsMap = result.youtube?.timestamp_map || null; // array of [data_ts, video_time] pairs
+                    const _ytOffset = result.youtube?.start_offset || 0;
+                    let hmdFloats = null;
+                    let hmdRowCount = 0;
+                    try {
+                        const hmdBuf = await _hmdFetchPromise;
+                        if (hmdBuf && hmdBuf.byteLength > 4) {
+                            hmdRowCount = new DataView(hmdBuf).getUint32(0, true);
+                            hmdFloats = new Float32Array(hmdBuf, 4); // skip 4-byte row-count header
+                            console.log(`[MAIN] ✓ HMD binary loaded: ${hmdRowCount} rows (${(hmdBuf.byteLength / 1048576).toFixed(1)} MB) — local lookups active`);
+                        } else {
+                            console.warn('[MAIN] HMD binary data unavailable — per-frame HTTP fetch will be used as fallback');
+                        }
+                    } catch (e) {
+                        console.warn('[MAIN] HMD binary load error:', e.message);
+                    }
+
+                    // Convert YouTube video time → flight data timestamp using stored map or offset fallback
+                    function videoTimeToDataTs(vt) {
+                        if (_ytTsMap && _ytTsMap.length >= 2) {
+                            let lo = 0, hi = _ytTsMap.length - 1;
+                            while (lo < hi) { const mid = (lo + hi) >> 1; if (_ytTsMap[mid][1] < vt) lo = mid + 1; else hi = mid; }
+                            if (lo === 0) return _ytTsMap[0][0];
+                            const bef = _ytTsMap[lo - 1], aft = _ytTsMap[lo];
+                            const span = aft[1] - bef[1];
+                            return span <= 0 ? bef[0] : bef[0] + ((vt - bef[1]) / span) * (aft[0] - bef[0]);
+                        }
+                        return vt + _ytOffset;
+                    }
+
+                    // O(log n) binary search + linear interpolation in the local Float32 buffer
+                    function getLocalHmdData(dataTs) {
+                        if (!hmdFloats || hmdRowCount === 0) return null;
+                        let lo = 0, hi = hmdRowCount - 1;
+                        while (lo < hi) { const mid = (lo + hi) >> 1; if (hmdFloats[mid * HMD_FIELDS] < dataTs) lo = mid + 1; else hi = mid; }
+                        const r1 = lo, r0 = Math.max(0, lo - 1);
+                        const ts0 = hmdFloats[r0 * HMD_FIELDS], ts1 = hmdFloats[r1 * HMD_FIELDS];
+                        const t = ts1 === ts0 ? 0 : Math.max(0, Math.min(1, (dataTs - ts0) / (ts1 - ts0)));
+                        const f0 = r0 * HMD_FIELDS, f1 = r1 * HMD_FIELDS;
+                        const L = (a, b) => a + (b - a) * t;
+                        return {
+                            timestamp_seconds: dataTs, index: r0,
+                            VQX: L(hmdFloats[f0+1], hmdFloats[f1+1]), VQY: L(hmdFloats[f0+2], hmdFloats[f1+2]),
+                            VQZ: L(hmdFloats[f0+3], hmdFloats[f1+3]), VQW: L(hmdFloats[f0+4], hmdFloats[f1+4]),
+                            HQX: L(hmdFloats[f0+5], hmdFloats[f1+5]), HQY: L(hmdFloats[f0+6], hmdFloats[f1+6]),
+                            HQZ: L(hmdFloats[f0+7], hmdFloats[f1+7]), HQW: L(hmdFloats[f0+8], hmdFloats[f1+8]),
+                            GSPEED: L(hmdFloats[f0+9],  hmdFloats[f1+9]),
+                            VALT:   L(hmdFloats[f0+10], hmdFloats[f1+10]),
+                            VLAT:   L(hmdFloats[f0+11], hmdFloats[f1+11]),
+                            VLON:   L(hmdFloats[f0+12], hmdFloats[f1+12]),
+                        };
+                    }
+
                     const takeoffIndexForCallback = takeoffIndex;
 
                     youtubePlayer.enableBidirectionalSync(
-                        // onPlaybackStateChange: not used in pure video-driven mode
-                        (isPlaying) => {
-                            // No action needed - video time monitoring handles everything
-                        },
-                        // onSeek: not used in pure video-driven mode
-                        (dataTimestamp) => {
-                            // No action needed - video time monitoring will detect the change automatically
-                        },
-                        // onVideoTimeUpdate: THE ONLY JOB - check video time and fetch corresponding data
+                        (isPlaying) => { /* video state change — no action needed in video-driven mode */ },
+                        (dataTimestamp) => { /* seek event — video time monitoring detects this automatically */ },
+                        // onVideoTimeUpdate: all display updates driven by local HMD binary data (no per-frame HTTP)
                         async (videoTime) => {
                             // Debug: Log first few callbacks to verify they're firing
                             if (!window._videoTimeUpdateCount) window._videoTimeUpdateCount = 0;
@@ -919,14 +971,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                             if (hmdFloats) {
                                 const dataTs = videoTimeToDataTs(videoTime);
 
-                                // If before takeoff, seek video forward
+                                // If before takeoff, seek video forward to takeoff point
                                 if (dataTs < HMD_TAKEOFF_TS) {
                                     if (!window._lastTakeoffSeekTime || (Date.now() - window._lastTakeoffSeekTime) > 2000) {
                                         window._lastTakeoffSeekTime = Date.now();
-                                        const tvt = videoTimeToDataTs(HMD_TAKEOFF_TS - _ytOffset) || HMD_TAKEOFF_TS;
+                                        // Look up the exact video_time for takeoff using the timestamp map
                                         const takeoffVt = _ytTsMap
                                             ? (() => {
-                                                // Find video_time for HMD_TAKEOFF_TS using forward map
                                                 let lo = 0, hi = _ytTsMap.length - 1;
                                                 while (lo < hi) { const m = (lo + hi) >> 1; if (_ytTsMap[m][0] < HMD_TAKEOFF_TS) lo = m + 1; else hi = m; }
                                                 return _ytTsMap[lo][1];
@@ -959,7 +1010,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                             godotIframe.contentWindow.godotLastDataTime = Date.now();
                                         }
                                     } catch (e) { /* cross-origin fallback */ }
-                                    // Also emit via socket if connected (for any server-side listeners)
+                                    // Also emit via socket if connected
                                     if (playbackEngine.socket && playbackEngine.socket.connected) {
                                         playbackEngine.socket.emit('godot_data', godotData);
                                     }
@@ -978,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     }
                                 }
                             } else {
-                                // HMD binary not loaded — fall back to server fetch (handles map/chart updates too)
+                                // HMD binary not loaded — fall back to server fetch
                                 if (!window._lastFetchTime) window._lastFetchTime = 0;
                                 const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.1;
                                 const timeSinceLastFetch = now - window._lastFetchTime;
