@@ -465,29 +465,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return vt + _ytOffset;
                     }
 
-                    // O(log n) local lookup with linear interpolation between adjacent rows.
-                    function getLocalHmdData(dataTs) {
-                        if (!hmdFloats || hmdRowCount === 0) return null;
-                        let lo = 0, hi = hmdRowCount - 1;
-                        while (lo < hi) {
-                            const mid = (lo + hi) >> 1;
-                            if (hmdFloats[mid * HMD_FIELDS] < dataTs) lo = mid + 1; else hi = mid;
-                        }
-                        const r1 = lo, r0 = Math.max(0, lo - 1);
-                        const ts0 = hmdFloats[r0 * HMD_FIELDS], ts1 = hmdFloats[r1 * HMD_FIELDS];
-                        const t = ts1 === ts0 ? 0 : Math.max(0, Math.min(1, (dataTs - ts0) / (ts1 - ts0)));
-                        const f0 = r0 * HMD_FIELDS, f1 = r1 * HMD_FIELDS;
-                        const L = (a, b) => a + (b - a) * t;
-                        return {
-                            timestamp_seconds: dataTs, index: r0,
-                            VQX: L(hmdFloats[f0+1], hmdFloats[f1+1]), VQY: L(hmdFloats[f0+2], hmdFloats[f1+2]),
-                            VQZ: L(hmdFloats[f0+3], hmdFloats[f1+3]), VQW: L(hmdFloats[f0+4], hmdFloats[f1+4]),
-                            HQX: L(hmdFloats[f0+5], hmdFloats[f1+5]), HQY: L(hmdFloats[f0+6], hmdFloats[f1+6]),
-                            HQZ: L(hmdFloats[f0+7], hmdFloats[f1+7]), HQW: L(hmdFloats[f0+8], hmdFloats[f1+8]),
-                            GSPEED: L(hmdFloats[f0+9], hmdFloats[f1+9]), VALT: L(hmdFloats[f0+10], hmdFloats[f1+10]),
-                            VLAT: L(hmdFloats[f0+11], hmdFloats[f1+11]), VLON: L(hmdFloats[f0+12], hmdFloats[f1+12]),
-                        };
-                    }
                     // ────────────────────────────────────────────────────────────────────
 
                     // Enable video-driven sync: YouTube video is the master timeline
@@ -721,7 +698,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         return vt + _ytOffset;
                     }
 
-                    // O(log n) binary search + linear interpolation in the local Float32 buffer
+                    // O(log n) binary search + linear interpolation in the local Float32 buffer.
+                    // Returns index as full-dataset position so map/chart guards pass correctly.
+                    const HMD_BINARY_DOWNSAMPLE = 3; // must match server DOWNSAMPLE in /api/hmd-data
                     function getLocalHmdData(dataTs) {
                         if (!hmdFloats || hmdRowCount === 0) return null;
                         let lo = 0, hi = hmdRowCount - 1;
@@ -732,7 +711,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const f0 = r0 * HMD_FIELDS, f1 = r1 * HMD_FIELDS;
                         const L = (a, b) => a + (b - a) * t;
                         return {
-                            timestamp_seconds: dataTs, index: r0,
+                            timestamp_seconds: dataTs,
+                            // Convert binary row → full-dataset index so map/chart index guards pass
+                            index: takeoffIndex + r0 * HMD_BINARY_DOWNSAMPLE,
                             VQX: L(hmdFloats[f0+1], hmdFloats[f1+1]), VQY: L(hmdFloats[f0+2], hmdFloats[f1+2]),
                             VQZ: L(hmdFloats[f0+3], hmdFloats[f1+3]), VQW: L(hmdFloats[f0+4], hmdFloats[f1+4]),
                             HQX: L(hmdFloats[f0+5], hmdFloats[f1+5]), HQY: L(hmdFloats[f0+6], hmdFloats[f1+6]),
