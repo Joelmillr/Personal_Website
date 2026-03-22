@@ -585,7 +585,17 @@ function initWebdisplayBackend(httpServer) {
                     start_offset: YOUTUBE_START_OFFSET,
                     has_timestamp_map: videoTimestampMapper && videoTimestampMapper.isAvailable(),
                     timestamp_map: videoTimestampMapper && videoTimestampMapper.isAvailable()
-                        ? videoTimestampMapper.timestamps.slice(0, 2000)
+                        ? (() => {
+                            // Send timestampsByVideo (sorted by video_time) downsampled to ~2000 entries
+                            // covering the FULL video range so the client can map any video_time → data_timestamp
+                            const full = videoTimestampMapper.timestampsByVideo;
+                            if (full.length <= 2000) return full;
+                            const step = Math.max(1, Math.floor(full.length / 1999));
+                            const sampled = [];
+                            for (let i = 0; i < full.length; i += step) sampled.push(full[i]);
+                            if (sampled[sampled.length - 1] !== full[full.length - 1]) sampled.push(full[full.length - 1]);
+                            return sampled;
+                          })()
                         : null
                 } : null
             };
@@ -880,6 +890,55 @@ function initWebdisplayBackend(httpServer) {
             res.status(500).json({ success: false, error: error.message });
         }
     }
+
+    // API: Download all HMD data as a compact Float32 binary blob for client-side lookup.
+    // Format: 4-byte UInt32LE row count, then rows of HMD_FIELDS Float32LE values each.
+    // Fields per row (13): timestamp, VQX, VQY, VQZ, VQW, HQX, HQY, HQZ, HQW, GSPEED, VALT, VLAT, VLON
+    apiRouter.get('/hmd-data', (req, res) => {
+        if (!processor) {
+            return res.status(503).json({ success: false, error: 'Data not initialized. Call /api/init first.' });
+        }
+        try {
+            const FIELDS = 13;
+            const DOWNSAMPLE = 3; // ~33 Hz from 100 Hz source → ~1.8 MB binary
+            const takeoffTimestamp = TIMESTAMPS[0] || 2643.0;
+            const startIdx = processor.findIndexForTimestamp(takeoffTimestamp) || 0;
+            const count = processor.getDataCount();
+            const maxRows = Math.ceil((count - startIdx) / DOWNSAMPLE);
+            const buf = Buffer.allocUnsafe(4 + maxRows * FIELDS * 4);
+            let rowIdx = 0;
+            for (let i = startIdx; i < count; i += DOWNSAMPLE) {
+                const d = processor.getDataAtIndex(i);
+                if (!d) continue;
+                const off = 4 + rowIdx * FIELDS * 4;
+                buf.writeFloatLE(d.timestamp_seconds, off);
+                buf.writeFloatLE(d.VQX,    off +  4);
+                buf.writeFloatLE(d.VQY,    off +  8);
+                buf.writeFloatLE(d.VQZ,    off + 12);
+                buf.writeFloatLE(d.VQW,    off + 16);
+                buf.writeFloatLE(d.HQX,    off + 20);
+                buf.writeFloatLE(d.HQY,    off + 24);
+                buf.writeFloatLE(d.HQZ,    off + 28);
+                buf.writeFloatLE(d.HQW,    off + 32);
+                buf.writeFloatLE(d.GSPEED, off + 36);
+                buf.writeFloatLE(d.VALT,   off + 40);
+                buf.writeFloatLE(d.VLAT,   off + 44);
+                buf.writeFloatLE(d.VLON,   off + 48);
+                rowIdx++;
+            }
+            const out = rowIdx < maxRows ? buf.slice(0, 4 + rowIdx * FIELDS * 4) : buf;
+            out.writeUInt32LE(rowIdx, 0);
+            res.set('Cache-Control', 'public, max-age=3600');
+            res.set('Content-Type', 'application/octet-stream');
+            res.set('X-HMD-Rows', String(rowIdx));
+            res.set('X-HMD-Fields', String(FIELDS));
+            res.send(out);
+            console.log(`[HMD-DATA] Exported ${rowIdx} rows (DOWNSAMPLE=${DOWNSAMPLE}, ${(out.length / 1048576).toFixed(1)} MB)`);
+        } catch (error) {
+            console.error('[HMD-DATA] Error:', error);
+            if (!res.headersSent) res.status(500).json({ success: false, error: error.message });
+        }
+    });
 
     // API: Find index for timestamp
     apiRouter.get('/find-index/:timestamp', (req, res) => {

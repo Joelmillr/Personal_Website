@@ -395,6 +395,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Get takeoff index early so it's available for YouTube sync setup
         const takeoffIndex = result.takeoff_index || 0;
 
+        // Kick off HMD binary download in parallel with YouTube player init (zero extra wait time)
+        const _hmdFetchPromise = fetch('/api/hmd-data').then(r => r.ok ? r.arrayBuffer() : null).catch(() => null);
+
         // Initialize YouTube video player
         if (!result.youtube || !result.youtube.enabled) {
             console.warn('YouTube video not configured. Please set YOUTUBE_VIDEO_ID environment variable.');
@@ -419,6 +422,71 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.youtubePlayer = youtubePlayer;
                     console.log('✓ YouTube player initialized');
                     console.log('  Debug tools: youtubeSyncDebug.status() in console');
+
+                    // ── LOCAL HMD BINARY STORE ──────────────────────────────────────────
+                    // The timestamp_map from /api/init is sorted by video_time and covers
+                    // the full video range (fixed from previous slice(0,2000) bug).
+                    const HMD_FIELDS = 13;
+                    const HMD_TAKEOFF_TS = (result.timestamps && result.timestamps[0]) || 2643.0;
+                    // _ytTsMap: array of [data_ts, video_time] sorted by video_time
+                    const _ytTsMap = result.youtube?.timestamp_map || null;
+                    const _ytOffset = result.youtube?.start_offset || 0;
+                    let hmdFloats = null;
+                    let hmdRowCount = 0;
+                    try {
+                        const hmdBuf = await _hmdFetchPromise;
+                        if (hmdBuf && hmdBuf.byteLength > 4) {
+                            hmdRowCount = new DataView(hmdBuf).getUint32(0, true);
+                            hmdFloats = new Float32Array(hmdBuf, 4);
+                            console.log(`[MAIN] ✓ HMD binary loaded: ${hmdRowCount} rows (${(hmdBuf.byteLength / 1048576).toFixed(1)} MB) — local lookups active`);
+                        }
+                    } catch (e) {
+                        console.warn('[MAIN] HMD binary load error:', e.message);
+                    }
+
+                    // Convert video time → data timestamp using the full timestamp_map.
+                    // Falls back to offset formula when map is unavailable or out of range.
+                    function videoTimeToDataTs(vt) {
+                        if (_ytTsMap && _ytTsMap.length >= 2) {
+                            // Binary search by video_time (index [1]) — map is sorted by video_time
+                            let lo = 0, hi = _ytTsMap.length - 1;
+                            while (lo < hi) {
+                                const mid = (lo + hi) >> 1;
+                                if (_ytTsMap[mid][1] < vt) lo = mid + 1; else hi = mid;
+                            }
+                            if (lo === 0) return _ytTsMap[0][0];
+                            if (lo >= _ytTsMap.length) return _ytTsMap[_ytTsMap.length - 1][0];
+                            const bef = _ytTsMap[lo - 1], aft = _ytTsMap[lo];
+                            const span = aft[1] - bef[1]; // video_time span
+                            return span <= 0 ? bef[0] : bef[0] + ((vt - bef[1]) / span) * (aft[0] - bef[0]);
+                        }
+                        return vt + _ytOffset;
+                    }
+
+                    // O(log n) local lookup with linear interpolation between adjacent rows.
+                    function getLocalHmdData(dataTs) {
+                        if (!hmdFloats || hmdRowCount === 0) return null;
+                        let lo = 0, hi = hmdRowCount - 1;
+                        while (lo < hi) {
+                            const mid = (lo + hi) >> 1;
+                            if (hmdFloats[mid * HMD_FIELDS] < dataTs) lo = mid + 1; else hi = mid;
+                        }
+                        const r1 = lo, r0 = Math.max(0, lo - 1);
+                        const ts0 = hmdFloats[r0 * HMD_FIELDS], ts1 = hmdFloats[r1 * HMD_FIELDS];
+                        const t = ts1 === ts0 ? 0 : Math.max(0, Math.min(1, (dataTs - ts0) / (ts1 - ts0)));
+                        const f0 = r0 * HMD_FIELDS, f1 = r1 * HMD_FIELDS;
+                        const L = (a, b) => a + (b - a) * t;
+                        return {
+                            timestamp_seconds: dataTs, index: r0,
+                            VQX: L(hmdFloats[f0+1], hmdFloats[f1+1]), VQY: L(hmdFloats[f0+2], hmdFloats[f1+2]),
+                            VQZ: L(hmdFloats[f0+3], hmdFloats[f1+3]), VQW: L(hmdFloats[f0+4], hmdFloats[f1+4]),
+                            HQX: L(hmdFloats[f0+5], hmdFloats[f1+5]), HQY: L(hmdFloats[f0+6], hmdFloats[f1+6]),
+                            HQZ: L(hmdFloats[f0+7], hmdFloats[f1+7]), HQW: L(hmdFloats[f0+8], hmdFloats[f1+8]),
+                            GSPEED: L(hmdFloats[f0+9], hmdFloats[f1+9]), VALT: L(hmdFloats[f0+10], hmdFloats[f1+10]),
+                            VLAT: L(hmdFloats[f0+11], hmdFloats[f1+11]), VLON: L(hmdFloats[f0+12], hmdFloats[f1+12]),
+                        };
+                    }
+                    // ────────────────────────────────────────────────────────────────────
 
                     // Enable video-driven sync: YouTube video is the master timeline
                     // Data updates are driven by YouTube video time, not by automatic playback loop
@@ -846,301 +914,117 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 window._lastGodotDataSent = dataToSend; // Remember for fallback
                             }
 
-                            // OPTIMIZED FETCH: Fetch data at 30 FPS (reduced from 60 FPS for better performance)
-                            // Fetch every 33ms (~30 FPS) to balance smooth updates with network efficiency
-                            // This ensures cache has fresh data for interpolation without overwhelming the server
-                            // Note: 'now' already defined above for throttling
-                            if (!window._lastFetchTime) window._lastFetchTime = 0;
-                            const timeSinceLastFetch = now - window._lastFetchTime;
-                            const fetchInterval = 33; // 33ms = ~30 FPS (reduced from 60 FPS for better network performance)
+                            // LOCAL LOOKUP: O(log n) binary search in the downloaded HMD blob.
+                            // No per-frame network request — eliminates Vercel round-trip latency.
+                            if (hmdFloats) {
+                                const dataTs = videoTimeToDataTs(videoTime);
 
-                            // Also check if video time changed significantly (for other displays)
-                            // Increased threshold from 0.05s to 0.1s to reduce unnecessary fetches
-                            const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.1;
-
-                            // Fetch if:
-                            // 1. First fetch (initialization), OR
-                            // 2. Video time changed significantly (seeks/jumps), OR
-                            // 3. Cache is empty or too small (need data immediately), OR
-                            // 4. Enough time has passed for updates (16ms)
-                            const cacheEmpty = !window._godotDataCache || window._godotDataCache.length === 0;
-                            const cacheTooSmall = window._godotDataCache && window._godotDataCache.length < 3; // Need at least 3 points for smooth interpolation (reduced from 5)
-
-                            // If cache is empty or too small, fetch immediately (don't wait for interval)
-                            if (cacheEmpty || cacheTooSmall) {
-                                // Force immediate fetch - don't check timeSinceLastFetch
-                            } else if (lastRequestedVideoTime >= 0 && !videoTimeChangedForFetch && timeSinceLastFetch < fetchInterval) {
-                                return; // Skip fetch, but interpolated Godot data already sent above
-                            }
-
-                            // Update fetch time
-                            window._lastFetchTime = now;
-
-                            // Don't start a new request if one is already pending
-                            if (pendingDataRequest) {
-                                return; // Wait for current request to complete
-                            }
-
-                            // Track this as the latest requested time
-                            lastRequestedVideoTime = videoTime;
-                            updateCount++;
-
-                            // Track consecutive failures for backoff
-                            if (!window._dataFetchFailures) window._dataFetchFailures = 0;
-
-                            // Request data for current video time with pre-fetching
-                            // Create abort controller for timeout and cancellation
-                            // Increased timeout to 2 seconds for better reliability on slower connections
-                            const controller = new AbortController();
-                            const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout for better reliability
-
-                            const fetchPromise = fetch(`/api/data-for-video-time/${videoTime}`, {
-                                signal: controller.signal
-                            })
-                                .then(response => {
-                                    if (!response.ok) {
-                                        // Try to get error message from response
-                                        return response.json().then(err => {
-                                            throw new Error(`HTTP ${response.status}: ${err.error || response.statusText}`);
-                                        }).catch(() => {
-                                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                                        });
+                                // If before takeoff, seek video forward
+                                if (dataTs < HMD_TAKEOFF_TS) {
+                                    if (!window._lastTakeoffSeekTime || (Date.now() - window._lastTakeoffSeekTime) > 2000) {
+                                        window._lastTakeoffSeekTime = Date.now();
+                                        const tvt = videoTimeToDataTs(HMD_TAKEOFF_TS - _ytOffset) || HMD_TAKEOFF_TS;
+                                        const takeoffVt = _ytTsMap
+                                            ? (() => {
+                                                // Find video_time for HMD_TAKEOFF_TS using forward map
+                                                let lo = 0, hi = _ytTsMap.length - 1;
+                                                while (lo < hi) { const m = (lo + hi) >> 1; if (_ytTsMap[m][0] < HMD_TAKEOFF_TS) lo = m + 1; else hi = m; }
+                                                return _ytTsMap[lo][1];
+                                              })()
+                                            : Math.max(0, HMD_TAKEOFF_TS - _ytOffset);
+                                        if (window.youtubePlayer) window.youtubePlayer.player.seekTo(takeoffVt, true);
+                                        showNotification(`Flight data begins at takeoff. Video moved to ${takeoffVt.toFixed(1)}s.`, 'info', 5000);
+                                        if (window.resetVideoTimeTracking) window.resetVideoTimeTracking();
                                     }
-                                    return response.json();
-                                })
-                                .then(result => {
-                                    // Only process if this is still the latest request
-                                    if (pendingDataRequest !== fetchPromise) {
-                                        return; // This request was superseded by a newer one
+                                    return;
+                                }
+
+                                const localData = getLocalHmdData(dataTs);
+                                if (localData) {
+                                    const godotData = {
+                                        VQX: localData.VQX, VQY: localData.VQY, VQZ: localData.VQZ, VQW: localData.VQW,
+                                        HQX: localData.HQX, HQY: localData.HQY, HQZ: localData.HQZ, HQW: localData.HQW,
+                                        GSPEED: localData.GSPEED, VALT: localData.VALT,
+                                    };
+                                    window.addToCache(videoTime, godotData);
+                                    window._lastGodotDataSent = godotData;
+
+                                    // Send directly to Godot iframe (no socket dependency)
+                                    try {
+                                        const godotIframe = document.getElementById('godot-iframe');
+                                        if (godotIframe && godotIframe.contentWindow) {
+                                            godotIframe.contentWindow.godotLatestData = godotData;
+                                            if (!godotIframe.contentWindow.godotDataReceivedCount) godotIframe.contentWindow.godotDataReceivedCount = 0;
+                                            godotIframe.contentWindow.godotDataReceivedCount++;
+                                            godotIframe.contentWindow.godotLastDataTime = Date.now();
+                                        }
+                                    } catch (e) { /* cross-origin fallback */ }
+                                    // Also emit via socket if connected (for any server-side listeners)
+                                    if (playbackEngine.socket && playbackEngine.socket.connected) {
+                                        playbackEngine.socket.emit('godot_data', godotData);
                                     }
 
-                                    clearTimeout(timeoutId);
-                                    pendingDataRequest = null;
-                                    window._dataFetchFailures = 0; // Reset failure counter on success
+                                    localData.timestamp_info = {
+                                        video_time: videoTime, data_timestamp: dataTs, data_index: localData.index,
+                                        timestamp_display: `Video: ${videoTime.toFixed(2)}s | Data: ${dataTs.toFixed(2)}s`,
+                                    };
+                                    addDisplayDataToCache(videoTime, localData);
+                                    updateDisplaysWithData(localData);
+                                    lastRequestedVideoTime = videoTime;
+                                    updateCount++;
 
-                                    if (result.success && result.data) {
-                                        // Check if user sought before takeoff
-                                        if (result.is_before_takeoff && result.takeoff_video_time !== null && window.youtubePlayer) {
-                                            // Prevent infinite loop - only seek if we haven't already sought recently
-                                            const now = Date.now();
-                                            if (!window._lastTakeoffSeekTime || (now - window._lastTakeoffSeekTime) > 2000) {
-                                                window._lastTakeoffSeekTime = now;
+                                    if (updateCount <= 10 || updateCount % 500 === 0) {
+                                        console.log(`[MAIN] Local HMD #${updateCount}: vt=${videoTime.toFixed(2)}s → dataTs=${dataTs.toFixed(2)}s, VALT=${localData.VALT.toFixed(1)}, VQW=${localData.VQW.toFixed(3)}`);
+                                    }
+                                }
+                            } else {
+                                // HMD binary not loaded — fall back to server fetch (handles map/chart updates too)
+                                if (!window._lastFetchTime) window._lastFetchTime = 0;
+                                const videoTimeChangedForFetch = lastRequestedVideoTime < 0 || Math.abs(videoTime - lastRequestedVideoTime) >= 0.1;
+                                const timeSinceLastFetch = now - window._lastFetchTime;
+                                if (lastRequestedVideoTime >= 0 && !videoTimeChangedForFetch && timeSinceLastFetch < 100) return;
+                                if (pendingDataRequest) return;
+                                window._lastFetchTime = now;
+                                lastRequestedVideoTime = videoTime;
+                                updateCount++;
 
-                                                console.log(`[MAIN] Video time ${videoTime.toFixed(2)}s is before takeoff. Seeking to takeoff at ${result.takeoff_video_time.toFixed(2)}s`);
-
-                                                // Seek video to takeoff
-                                                window.youtubePlayer.setUserControlling(true);
-                                                window.youtubePlayer.player.seekTo(result.takeoff_video_time, true);
-
-                                                // Show notification to user
-                                                showNotification(
-                                                    `Flight data begins at takeoff (${result.takeoff_video_time.toFixed(1)}s). Video has been moved to this point.`,
-                                                    'info',
-                                                    5000
-                                                );
-
-                                                // Reset video time tracking to force immediate update after seek
-                                                if (window.resetVideoTimeTracking) {
-                                                    window.resetVideoTimeTracking();
-                                                }
-
-                                                // Don't process this data - wait for the seek to complete and fetch new data
-                                                return;
-                                            }
-                                        }
-
-                                        // Update displays with data corresponding to current video time
-                                        const data = result.data;
-                                        data.index = result.index;
-
-                                        // Attach timestamp info for display
-                                        if (result.timestamp_info) {
-                                            data.timestamp_info = result.timestamp_info;
-                                        } else if (result.data_timestamp !== undefined) {
-                                            // Create timestamp info if not provided
-                                            data.timestamp_info = {
-                                                video_time: result.video_time || videoTime,
-                                                data_timestamp: result.data_timestamp,
-                                                data_index: result.index,
-                                                timestamp_display: `Video: ${(result.video_time || videoTime).toFixed(2)}s | Data: ${result.data_timestamp.toFixed(2)}s`
-                                            };
-                                        }
-
-                                        // Add full data to display cache for interpolation
-                                        addDisplayDataToCache(videoTime, data);
-
-                                        // CRITICAL: Cache Godot data for interpolation
-                                        if (playbackEngine.socket && playbackEngine.socket.connected) {
+                                const controller = new AbortController();
+                                const timeoutId = setTimeout(() => controller.abort(), 3000);
+                                const fetchPromise = fetch(`/api/data-for-video-time/${videoTime}`, { signal: controller.signal })
+                                    .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+                                    .then(result => {
+                                        if (pendingDataRequest !== fetchPromise) return;
+                                        clearTimeout(timeoutId);
+                                        pendingDataRequest = null;
+                                        if (result.success && result.data) {
+                                            const data = result.data;
+                                            data.index = result.index;
+                                            if (result.timestamp_info) data.timestamp_info = result.timestamp_info;
+                                            addDisplayDataToCache(videoTime, data);
                                             const godotData = {
-                                                "VQX": data.VQX || 0,
-                                                "VQY": data.VQY || 0,
-                                                "VQZ": data.VQZ || 0,
-                                                "VQW": data.VQW || 1,
-                                                "HQX": data.HQX || 0,
-                                                "HQY": data.HQY || 0,
-                                                "HQZ": data.HQZ || 0,
-                                                "HQW": data.HQW || 1,
-                                                "GSPEED": data.GSPEED || 0,
-                                                "VALT": data.VALT || 0,
+                                                VQX: data.VQX || 0, VQY: data.VQY || 0, VQZ: data.VQZ || 0, VQW: data.VQW || 1,
+                                                HQX: data.HQX || 0, HQY: data.HQY || 0, HQZ: data.HQZ || 0, HQW: data.HQW || 1,
+                                                GSPEED: data.GSPEED || 0, VALT: data.VALT || 0,
                                             };
-
-                                            // Add to cache for interpolation
                                             window.addToCache(videoTime, godotData);
-
-                                            // Store as last sent data for fallback
                                             window._lastGodotDataSent = godotData;
-
-                                            // Send immediately when new data arrives - DIRECTLY to iframe first
-                                            let sentDirectly = false;
                                             try {
                                                 const godotIframe = document.getElementById('godot-iframe');
                                                 if (godotIframe && godotIframe.contentWindow) {
                                                     godotIframe.contentWindow.godotLatestData = godotData;
-                                                    if (!godotIframe.contentWindow.godotDataReceivedCount) {
-                                                        godotIframe.contentWindow.godotDataReceivedCount = 0;
-                                                    }
-                                                    godotIframe.contentWindow.godotDataReceivedCount++;
+                                                    godotIframe.contentWindow.godotDataReceivedCount = (godotIframe.contentWindow.godotDataReceivedCount || 0) + 1;
                                                     godotIframe.contentWindow.godotLastDataTime = Date.now();
-                                                    sentDirectly = true;
                                                 }
-                                            } catch (e) {
-                                                // Cross-origin - will use WebSocket fallback
-                                            }
-
-                                            // Fallback to WebSocket if direct access failed
-                                            if (!sentDirectly && playbackEngine.socket && playbackEngine.socket.connected) {
-                                                playbackEngine.socket.emit("godot_data", godotData);
-                                            }
-
-                                            // Debug: Log first few sends to verify
-                                            if (updateCount <= 10) {
-                                                console.log(`[MAIN] Sent Godot data #${updateCount}: VQX=${godotData.VQX.toFixed(3)}, VQY=${godotData.VQY.toFixed(3)}, VALT=${godotData.VALT.toFixed(1)}, cache_size=${window._godotDataCache.length}`);
-                                            }
-
-                                            // Pre-fetch next data point (0.2 seconds ahead) for smoother interpolation
-                                            // Increased from 0.1s to 0.2s to reduce prefetch frequency
-                                            // Only prefetch if we don't already have data for this time and no prefetch is in progress
-                                            const prefetchVideoTime = videoTime + 0.2;
-                                            const hasData = window._godotDataCache && window._godotDataCache.some(
-                                                entry => Math.abs(entry.videoTime - prefetchVideoTime) < 0.05
-                                            );
-                                            if (!hasData && !window._prefetchInProgress) {
-                                                window._prefetchInProgress = true;
-                                                fetch(`/api/data-for-video-time/${prefetchVideoTime}`)
-                                                    .then(response => {
-                                                        if (response.ok) {
-                                                            return response.json();
-                                                        }
-                                                        // Log non-OK responses for debugging (but don't spam console)
-                                                        if (response.status >= 400 && (!window._prefetchErrorCount || window._prefetchErrorCount < 5)) {
-                                                            if (!window._prefetchErrorCount) window._prefetchErrorCount = 0;
-                                                            window._prefetchErrorCount++;
-                                                            response.json().then(err => {
-                                                                console.warn(`[MAIN] Prefetch failed for video_time=${prefetchVideoTime.toFixed(3)}s: HTTP ${response.status} - ${err.error || response.statusText}`);
-                                                            }).catch(() => {
-                                                                console.warn(`[MAIN] Prefetch failed for video_time=${prefetchVideoTime.toFixed(3)}s: HTTP ${response.status}`);
-                                                            });
-                                                        }
-                                                        return null;
-                                                    })
-                                                    .then(prefetchResult => {
-                                                        window._prefetchInProgress = false;
-                                                        if (prefetchResult && prefetchResult.success && prefetchResult.data) {
-                                                            const prefetchGodotData = {
-                                                                "VQX": prefetchResult.data.VQX || 0,
-                                                                "VQY": prefetchResult.data.VQY || 0,
-                                                                "VQZ": prefetchResult.data.VQZ || 0,
-                                                                "VQW": prefetchResult.data.VQW || 1,
-                                                                "HQX": prefetchResult.data.HQX || 0,
-                                                                "HQY": prefetchResult.data.HQY || 0,
-                                                                "HQZ": prefetchResult.data.HQZ || 0,
-                                                                "HQW": prefetchResult.data.HQW || 1,
-                                                                "GSPEED": prefetchResult.data.GSPEED || 0,
-                                                                "VALT": prefetchResult.data.VALT || 0,
-                                                            };
-                                                            window.addToCache(prefetchVideoTime, prefetchGodotData);
-                                                        }
-                                                    })
-                                                    .catch(error => {
-                                                        window._prefetchInProgress = false;
-                                                        // Only log first few prefetch errors to avoid console spam
-                                                        if (!window._prefetchErrorCount || window._prefetchErrorCount < 5) {
-                                                            if (!window._prefetchErrorCount) window._prefetchErrorCount = 0;
-                                                            window._prefetchErrorCount++;
-                                                            if (error.name !== 'AbortError') {
-                                                                console.warn(`[MAIN] Prefetch error for video_time=${prefetchVideoTime.toFixed(3)}s:`, error.message || error.toString());
-                                                            }
-                                                        }
-                                                    });
-                                            }
-                                        } else {
-                                            // Debug: Log if WebSocket not connected
-                                            if (updateCount <= 10 || updateCount % 100 === 0) {
-                                                console.warn(`[MAIN] WebSocket not connected - cannot send Godot data:`, {
-                                                    hasSocket: !!playbackEngine.socket,
-                                                    isConnected: !!(playbackEngine.socket && playbackEngine.socket.connected)
-                                                });
-                                            }
+                                            } catch (e) { /* cross-origin */ }
+                                            if (playbackEngine.socket && playbackEngine.socket.connected) playbackEngine.socket.emit('godot_data', godotData);
+                                            updateDisplaysWithData(data);
                                         }
-
-                                        // Update all displays with interpolated data for smooth updates
-                                        // Use interpolated data if cache has enough points, otherwise use raw data
-                                        let displayData = data;
-                                        const displayCache = window._displayDataCache;
-                                        if (displayCache && displayCache.length >= 2) {
-                                            const interpolated = getInterpolatedDisplayData(videoTime);
-                                            if (interpolated) {
-                                                displayData = interpolated;
-                                                if (updateCount <= 5 || updateCount % 100 === 0) {
-                                                    console.log(`[MAIN] Using interpolated display data: videoTime=${videoTime.toFixed(3)}s, cache_size=${displayCache.length}`);
-                                                }
-                                            }
-                                        }
-
-                                        console.log(`[MAIN] Updating displays with data at index ${displayData.index}, videoTime=${videoTime.toFixed(3)}s`);
-                                        updateDisplaysWithData(displayData);
-
-                                        // Log periodically for debugging
-                                        if (updateCount % 100 === 0) {
-                                            console.log(`[MAIN] Video-driven update #${updateCount}: video=${videoTime.toFixed(3)}s, data_ts=${result.data_timestamp.toFixed(3)}s, index=${result.index}, cache=${window._godotDataCache.length}`);
-                                        }
-                                    } else {
-                                        // Log errors for debugging
-                                        if (updateCount % 50 === 0) {
-                                            console.warn(`[MAIN] Failed to get data for video time ${videoTime.toFixed(3)}s:`, result.error || 'Unknown error');
-                                        }
-                                    }
-                                })
-                                .catch(error => {
-                                    // Only process errors if this is still the latest request
-                                    if (pendingDataRequest !== fetchPromise) {
-                                        return; // This request was superseded by a newer one
-                                    }
-
-                                    clearTimeout(timeoutId);
-                                    pendingDataRequest = null;
-
-                                    // Don't count aborted requests as failures
-                                    if (error.name !== 'AbortError') {
-                                        window._dataFetchFailures++;
-
-                                        // Only log errors periodically to avoid console spam
-                                        if (updateCount % 50 === 0 || window._dataFetchFailures === 1) {
-                                            const errorMsg = error.message || error.toString();
-                                            console.warn(`[MAIN] Error fetching data for video time ${videoTime.toFixed(3)}s (failures: ${window._dataFetchFailures}):`, errorMsg);
-                                        }
-
-                                        // If too many failures, warn user
-                                        if (window._dataFetchFailures > 5) {
-                                            console.warn(`[MAIN] Multiple fetch failures detected. Consider checking server connection.`);
-                                        }
-                                    }
-                                });
-
-                            // Store abort controller and promise for cancellation
-                            fetchPromise._abortController = controller;
-                            fetchPromise._timeoutId = timeoutId;
-                            pendingDataRequest = fetchPromise;
+                                    })
+                                    .catch(err => { clearTimeout(timeoutId); pendingDataRequest = null; });
+                                fetchPromise._abortController = controller;
+                                fetchPromise._timeoutId = timeoutId;
+                                pendingDataRequest = fetchPromise;
+                            }
                         }
                     );
                 } catch (error) {
