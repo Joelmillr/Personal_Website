@@ -176,7 +176,10 @@ app.use((req, res, next) => {
                 }
                 // Set appropriate cache headers based on file type
                 const ext = path.extname(filePath).toLowerCase();
-                if (ext === '.wasm' || ext === '.pck' || ext === '.png' || ext === '.jpg' ||
+                if (ext === '.wasm') {
+                    res.set('Content-Type', 'application/wasm');
+                    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+                } else if (ext === '.pck' || ext === '.png' || ext === '.jpg' ||
                     ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
                     res.set('Cache-Control', 'public, max-age=31536000, immutable');
                 } else if (ext === '.js' || ext === '.css') {

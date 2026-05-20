@@ -12,8 +12,18 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joel Andrew Miller</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Joel Miller — ML Engineer</title>
+    <meta name="description" content="Joel Miller is a Machine Learning Engineer at ITPS Canada, building ML systems for pilot stress detection from physiological signals. M.E.Sc. from Western University.">
+    <meta property="og:title" content="Joel Miller — ML Engineer">
+    <meta property="og:description" content="ML Engineer building safety-critical systems from physiological signals and sensor fusion at ITPS Canada.">
+    <meta property="og:image" content="https://joelandrewmiller.com/assets/me.jpg">
+    <meta property="og:url" content="https://joelandrewmiller.com">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Joel Miller — ML Engineer">
+    <meta name="twitter:description" content="ML Engineer building safety-critical systems from physiological signals and sensor fusion at ITPS Canada.">
+    <meta name="twitter:image" content="https://joelandrewmiller.com/assets/me.jpg">
+    <link rel="stylesheet" href="styles.css?v=5">
 </head>
 
 <body>
@@ -23,13 +33,24 @@
     <nav class="navbar" role="navigation" aria-label="Main navigation">
         <div class="nav-content">
             <a href="#about" class="logo">Joel Miller</a>
+            <button class="mobile-menu-toggle" aria-label="Toggle menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
             <ul class="nav-links">
                 <li><a href="#publications">Publications</a></li>
                 <li><a href="#projects">Projects</a></li>
                 <li><a href="#experience">Experience</a></li>
-                <li><a href="#demo">Demo</a></li>
+                <li><a href="#demos">Demos</a></li>
                 <li><a href="#contact">Contact</a></li>
                 <li><a href="assets/Resume.pdf" target="_blank">Resume ↗</a></li>
+                <li>
+                    <button id="darkModeToggle" class="dark-mode-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <svg class="icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                        <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </button>
+                </li>
             </ul>
         </div>
     </nav>
@@ -40,15 +61,16 @@
         <div class="header-info">
             <h1>Joel Andrew Miller</h1>
             <p class="header-affiliation">
-                Aerospace Software Engineer at <a href="https://itpscanada.com" target="_blank" rel="noopener">ITPS Canada</a> &middot;
+                Machine Learning Engineer at <a href="https://itpscanada.com" target="_blank" rel="noopener">ITPS Canada</a> &middot;
                 M.E.Sc. <a href="https://www.uwo.ca" target="_blank" rel="noopener">Western University</a>
             </p>
             <p class="header-bio">
-                I develop ML-powered systems for aerospace and autonomous vehicle applications — including computer vision
-                algorithms for helmet-mounted displays and signal processing pipelines for real-time sensor fusion.
-                My research applies machine learning and statistical signal processing to physiological data and
-                autonomous systems.
+                I build ML systems that interpret human behaviour in high-stakes environments — from detecting
+                pilot stress through physiological signals to designing sensor fusion pipelines for helmet-mounted
+                displays. My work sits at the intersection of signal processing, computer vision, and applied machine
+                learning, with a focus on real-time, safety-critical applications.
             </p>
+            <p class="currently-line">Currently building ML models for pilot stress detection from multimodal physiological signals at ITPS Canada.</p>
             <p class="header-links">
                 <a href="mailto:joelmiller0430@gmail.com">Email</a><span class="sep">/</span>
                 <a href="https://www.linkedin.com/in/joelmillr/" target="_blank" rel="noopener">LinkedIn</a><span class="sep">/</span>
@@ -120,11 +142,63 @@
                 </p>
             </li>
             <li class="project-item">
+                <p class="project-title">lmnh — Local Speech-to-Text for macOS</p>
+                <p class="project-meta">Swift &middot; Whisper &middot; macOS &middot; 2025</p>
+                <p class="project-desc">
+                    Open-source menu bar app for macOS providing local speech-to-text and text-to-speech
+                    using Whisper — a privacy-first alternative to cloud-based dictation tools like Wispr and Speechify.
+                </p>
+                <p class="project-links">
+                    <a href="https://github.com/j0elmiller/lmnh" target="_blank" rel="noopener">[Code]</a>
+                </p>
+            </li>
+            <li class="project-item">
                 <p class="project-title">Reinforcement Learning for Autonomous Driving</p>
                 <p class="project-meta">Deep RL &middot; Computer Vision &middot; CARLA Simulator &middot; 2023</p>
                 <p class="project-desc">
                     Deep RL agents (DQN, PPO) for autonomous navigation using CNN-based visual perception, trained on
                     complex multi-agent driving scenarios in CARLA with varying weather and traffic conditions.
+                </p>
+            </li>
+            <li class="project-item">
+                <p class="project-title">RL Prisoner's Dilemma</p>
+                <p class="project-meta">Reinforcement Learning &middot; Game Theory &middot; 2023</p>
+                <p class="project-desc">
+                    Exploring how two RL agents behave when faced with the prisoner's dilemma — investigating
+                    emergent cooperation and defection strategies through repeated gameplay.
+                </p>
+                <p class="project-links">
+                    <a href="https://github.com/Joelmillr/RL-Prisoners-Dilemma" target="_blank" rel="noopener">[Code]</a>
+                </p>
+            </li>
+            <li class="project-item">
+                <p class="project-title">Micrograd from Scratch</p>
+                <p class="project-meta">Deep Learning &middot; Autograd &middot; Neural Networks &middot; 2024</p>
+                <p class="project-desc">
+                    A from-scratch implementation of an autograd engine and neural network library,
+                    building backpropagation and gradient descent from first principles.
+                </p>
+                <p class="project-links">
+                    <a href="https://github.com/Joelmillr/micrograd-from-scratch" target="_blank" rel="noopener">[Code]</a>
+                </p>
+            </li>
+            <li class="project-item">
+                <p class="project-title">FoodSnap — Nutritional Analysis from Photos</p>
+                <p class="project-meta">Computer Vision &middot; Image Segmentation &middot; Depth Estimation &middot; 2023</p>
+                <p class="project-desc">
+                    ML application that estimates calories and macronutrients from a single meal photo using image
+                    segmentation, monocular depth estimation, and the USDA food database. Capstone project at Western.
+                </p>
+            </li>
+            <li class="project-item">
+                <p class="project-title">Western AI Club — Waste Classification App</p>
+                <p class="project-meta">Transfer Learning &middot; iOS &middot; Project Management &middot; 2022</p>
+                <p class="project-desc">
+                    Led a team of five to build and deploy an iOS image classification app for waste categorization.
+                    Applied transfer learning to achieve 98% accuracy across waste types. Managed milestones and delivery as Project Manager.
+                </p>
+                <p class="project-links">
+                    <a href="https://github.com/Joelmillr/WAI-SmartWaste" target="_blank" rel="noopener">[Code]</a>
                 </p>
             </li>
         </ul>
@@ -135,19 +209,30 @@
         <h2>Experience</h2>
         <ul class="exp-list">
             <li class="exp-item">
-                <span class="exp-date">Feb 2025 – Present</span>
+                <span class="exp-date">Feb 2026 – Present</span>
                 <div class="exp-content">
-                    <h3>Aerospace Software Engineer</h3>
-                    <p class="exp-org">International Test Pilots School &middot; London, Ontario</p>
+                    <h3>Machine Learning Engineer — Biological Signals</h3>
+                    <p class="exp-org">ITPS Canada &middot; London, Ontario</p>
                     <ul class="exp-details">
-                        <li>Leading R&D on a VR helmet-mounted display using computer vision and signal processing for sensor fusion</li>
-                        <li>Implementing ML models for pilot state detection and adaptive display systems</li>
-                        <li>Building multi-modal sensor pipelines (IMU, GPS, video)</li>
+                        <li>Developing ML models to detect pilot stress and elevated cognitive workload from multimodal physiological signals (ECG, pupil data, flight logs)</li>
+                        <li>Built a structured flight database for systematic extraction of behavioural insights across pilots, sorties, and in-flight events</li>
                     </ul>
                 </div>
             </li>
             <li class="exp-item">
-                <span class="exp-date">May 2023 – Dec 2025</span>
+                <span class="exp-date">Feb 2025 – Feb 2026</span>
+                <div class="exp-content">
+                    <h3>R&D Aerospace Software Engineer</h3>
+                    <p class="exp-org">ITPS Canada &middot; London, Ontario</p>
+                    <ul class="exp-details">
+                        <li>Built a helmet-mounted display system from scratch with outside-in optical tracking and sensor fusion, achieving ~2° spatial accuracy</li>
+                        <li>Designed distributed wireless architecture and UDP networking layer with ~3 ms end-to-end latency</li>
+                        <li>Collaborated with pilots, test engineers, and leadership to translate operational needs into technical requirements</li>
+                    </ul>
+                </div>
+            </li>
+            <li class="exp-item">
+                <span class="exp-date">2023 – Dec 2024</span>
                 <div class="exp-content">
                     <h3>M.E.Sc. Software Engineering</h3>
                     <p class="exp-org">Western University &middot; London, Ontario</p>
@@ -188,25 +273,112 @@
         </ul>
     </section>
 
-    <!-- MNIST Demo -->
-    <section id="demo">
-        <h2>ML Demo: MNIST Digit Recognition</h2>
-        <p>CNN trained on MNIST. Draw a digit (0–9) in the canvas below.</p>
-        <div class="demo-container">
-            <div class="demo-canvas-area">
-                <canvas id="drawingCanvas" width="280" height="280"
-                    aria-label="Drawing canvas for digit input" role="img"></canvas>
-                <div class="demo-controls">
-                    <button id="clearBtn" class="btn" aria-label="Clear canvas">Clear</button>
-                    <button id="predictBtn" class="btn primary" aria-label="Predict digit">Predict</button>
+    <!-- Skills / Technologies -->
+    <section id="skills">
+        <h2>Technologies</h2>
+        <div class="skills-grid">
+            <span class="skill-tag">Python</span>
+            <span class="skill-tag">PyTorch</span>
+            <span class="skill-tag">TensorFlow</span>
+            <span class="skill-tag">scikit-learn</span>
+            <span class="skill-tag">OpenCV</span>
+            <span class="skill-tag">pandas</span>
+            <span class="skill-tag">NumPy</span>
+            <span class="skill-tag">SQL</span>
+            <span class="skill-tag">Docker</span>
+            <span class="skill-tag">Git</span>
+            <span class="skill-tag">Signal Processing</span>
+            <span class="skill-tag">Sensor Fusion</span>
+            <span class="skill-tag">Kalman Filtering</span>
+            <span class="skill-tag">Computer Vision</span>
+            <span class="skill-tag">Reinforcement Learning</span>
+            <span class="skill-tag">Real-Time Systems</span>
+            <span class="skill-tag">Swift</span>
+            <span class="skill-tag">Linux</span>
+        </div>
+    </section>
+
+    <!-- Interactive Demos -->
+    <section id="demos">
+        <h2>Interactive Demos</h2>
+        <div class="demo-tabs">
+            <button class="demo-tab active" data-tab="ecg">ECG Signal Analysis</button>
+            <button class="demo-tab" data-tab="hmd">HMD Flight Display</button>
+            <button class="demo-tab" data-tab="platformer">2D Platformer</button>
+        </div>
+
+        <!-- ECG Demo -->
+        <div class="demo-panel active" id="demo-ecg">
+            <p class="demo-description">ECG signal generated with <a href="https://github.com/neuropsychology/NeuroKit" target="_blank" rel="noopener">NeuroKit2</a> (ECGSYN model), processed through their signal processing pipeline — R-peak detection, PQRST delineation, and heart rate estimation. This is the kind of physiological signal analysis I do at ITPS Canada.</p>
+            <div class="ecg-demo">
+                <canvas id="ecgCanvas" width="760" height="280" aria-label="ECG signal visualization"></canvas>
+                <div class="ecg-controls">
+                    <div class="ecg-buttons">
+                        <button id="ecgPlayPause" class="btn primary">Pause</button>
+                        <button id="ecgReset" class="btn">Reset</button>
+                    </div>
+                    <div class="ecg-toggles">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="ecgShowRaw">
+                            <span>Raw Signal</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="ecgPeaks" checked>
+                            <span>R-Peaks</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="checkbox" id="ecgWaves">
+                            <span>PQST Waves</span>
+                        </label>
+                    </div>
+                    <div class="ecg-segment-select">
+                        <select id="ecgSegment">
+                            <option value="0">Normal Sinus (68 bpm)</option>
+                            <option value="1">Elevated HR (95 bpm)</option>
+                            <option value="2">Resting (55 bpm)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="ecg-stats">
+                    <span class="ecg-stat"><strong>HR:</strong> <span id="ecgBPM">—</span> bpm</span>
+                    <span class="ecg-stat"><strong>RR:</strong> <span id="ecgRR">—</span> ms</span>
+                    <span class="ecg-stat"><strong>Quality:</strong> <span id="ecgQuality">—</span></span>
+                    <span class="ecg-stat"><strong>Status:</strong> <span id="ecgStatus">Loading…</span></span>
+                </div>
+                <p class="ecg-credit">Signal: NeuroKit2 ECGSYN &middot; 250 Hz &middot; McSharry et al. (2003)</p>
+            </div>
+        </div>
+
+        <!-- HMD Flight Display Demo -->
+        <div class="demo-panel" id="demo-hmd">
+            <p class="demo-description">Helmet-mounted display system built for test pilots at ITPS Canada. Plays back real flight data through a Godot-rendered HMD with synchronized cockpit video, maps, and telemetry charts.</p>
+            <div class="hmd-preview">
+                <a href="/webdisplay" target="_blank" rel="noopener" class="hmd-launch-link">
+                    <div class="hmd-placeholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        <span>Launch HMD Flight Display</span>
+                        <span class="hmd-note">Opens in a new tab — best on desktop</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Platformer Demo -->
+        <div class="demo-panel" id="demo-platformer">
+            <p class="demo-description">A 2D platformer built in Unity with C#. Features a boss fight, gem-collecting double-bounce mechanic, and a hidden door. Controls: W/Up to jump, S/Down to crouch, A/D to move.</p>
+            <div class="platformer-embed" id="platformerEmbed">
+                <iframe id="platformerFrame" src="/games/platformer/index.html" allowfullscreen style="display:none;" title="Simple 2D Platformer"></iframe>
+                <div class="platformer-fallback" id="platformerFallback">
+                    <div class="hmd-placeholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="16" cy="11" r="1"/><circle cx="18" cy="13" r="1"/></svg>
+                        <span>WebGL build not yet available</span>
+                        <a href="https://github.com/Joelmillr/Simple-2d-Platformer" target="_blank" rel="noopener" class="platformer-link">View Source on GitHub →</a>
+                    </div>
                 </div>
             </div>
-            <div class="demo-result">
-                <h3>Prediction</h3>
-                <div id="predictionResult" class="prediction-result" role="status" aria-live="polite" aria-atomic="true">
-                    <span class="prediction-number" aria-label="Predicted digit">—</span>
-                </div>
-                <p class="experiment-text">Draw clearly near the center of the canvas. The model uses image preprocessing and CNN feature extraction for classification.</p>
+            <div class="platformer-controls">
+                <button id="platformerFullscreen" class="btn" style="display:none;">Fullscreen</button>
+                <a href="https://github.com/Joelmillr/Simple-2d-Platformer" target="_blank" rel="noopener" class="btn">Source Code</a>
             </div>
         </div>
     </section>
@@ -216,7 +388,6 @@
         <h2>Contact</h2>
         <ul class="contact-list">
             <li><strong>Email:</strong> <a href="mailto:joelmiller0430@gmail.com">joelmiller0430@gmail.com</a></li>
-            <li><strong>Phone:</strong> <a href="tel:9059337920">(905) 933-7920</a></li>
             <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/joelmillr/" target="_blank" rel="noopener">linkedin.com/in/joelmillr</a></li>
             <li><strong>ORCID:</strong> <a href="https://orcid.org/0009-0004-5678-6601" target="_blank" rel="noopener">0009-0004-5678-6601</a></li>
             <li><strong>Resume:</strong> <a href="assets/Resume.pdf" target="_blank">Download PDF</a></li>
@@ -227,8 +398,7 @@
         <p>Website <a href="https://github.com/Joelmillr/Personal_Website">source code</a>.</p>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js?v=5"></script>
 </body>
 
 </html>

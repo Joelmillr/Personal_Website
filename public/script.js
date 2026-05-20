@@ -1,11 +1,9 @@
-// Navbar scroll effect
+// ============================================
+// NAVBAR
+// ============================================
 const navbar = document.querySelector('.navbar');
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
 });
 
 // Mobile menu toggle
@@ -19,7 +17,6 @@ if (mobileMenuToggle && navLinks) {
         navLinks.classList.toggle('active');
     });
 
-    // Close menu when clicking on a link
     navLinks.querySelectorAll('a').forEach(link => {
         link.addEventListener('click', () => {
             mobileMenuToggle.setAttribute('aria-expanded', 'false');
@@ -27,7 +24,6 @@ if (mobileMenuToggle && navLinks) {
         });
     });
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!navbar.contains(e.target) && navLinks.classList.contains('active')) {
             mobileMenuToggle.setAttribute('aria-expanded', 'false');
@@ -36,244 +32,375 @@ if (mobileMenuToggle && navLinks) {
     });
 }
 
-// Drawing Canvas Setup
-const canvas = document.getElementById('drawingCanvas');
-const ctx = canvas.getContext('2d');
-const clearBtn = document.getElementById('clearBtn');
-const predictBtn = document.getElementById('predictBtn');
-const predictionNumber = document.querySelector('.prediction-number');
+// ============================================
+// DARK MODE
+// ============================================
+const darkModeToggle = document.getElementById('darkModeToggle');
 
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-
-// Set up canvas
-ctx.strokeStyle = '#000';
-ctx.lineWidth = 20;
-ctx.lineCap = 'round';
-ctx.lineJoin = 'round';
-
-// Drawing event listeners
-canvas.addEventListener('mousedown', startDrawing);
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseup', stopDrawing);
-canvas.addEventListener('mouseout', stopDrawing);
-
-// Touch events for mobile - improved
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault(); // Prevent scrolling while drawing
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    lastX = (touch.clientX - rect.left) * scaleX;
-    lastY = (touch.clientY - rect.top) * scaleY;
-    isDrawing = true;
-    // Draw a dot for touch start
-    ctx.beginPath();
-    ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
-    ctx.fill();
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault(); // Prevent scrolling while drawing
-    if (!isDrawing) return;
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const currentX = (touch.clientX - rect.left) * scaleX;
-    const currentY = (touch.clientY - rect.top) * scaleY;
-
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(currentX, currentY);
-    ctx.stroke();
-
-    lastX = currentX;
-    lastY = currentY;
-}, { passive: false });
-
-canvas.addEventListener('touchend', (e) => {
-    e.preventDefault();
-    stopDrawing();
-}, { passive: false });
-
-canvas.addEventListener('touchcancel', (e) => {
-    e.preventDefault();
-    stopDrawing();
-}, { passive: false });
-
-function startDrawing(e) {
-    isDrawing = true;
-    [lastX, lastY] = getCoordinates(e);
+function setDarkMode(enabled) {
+    document.body.classList.toggle('dark-mode', enabled);
+    localStorage.setItem('darkMode', enabled ? 'true' : 'false');
 }
 
-function draw(e) {
-    if (!isDrawing) return;
-    const [currentX, currentY] = getCoordinates(e);
-
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(currentX, currentY);
-    ctx.stroke();
-
-    [lastX, lastY] = [currentX, currentY];
+if (darkModeToggle) {
+    const stored = localStorage.getItem('darkMode');
+    if (stored === 'true') {
+        setDarkMode(true);
+    }
+    darkModeToggle.addEventListener('click', () => {
+        setDarkMode(!document.body.classList.contains('dark-mode'));
+    });
 }
 
-function stopDrawing() {
-    isDrawing = false;
-}
-
-function getCoordinates(e) {
-    const rect = canvas.getBoundingClientRect();
-    return [
-        e.clientX - rect.left,
-        e.clientY - rect.top
-    ];
-}
-
-// Clear canvas
-clearBtn.addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    predictionNumber.textContent = '-';
+// ============================================
+// DEMO TABS
+// ============================================
+document.querySelectorAll('.demo-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        const panel = document.getElementById('demo-' + tab.dataset.tab);
+        if (panel) panel.classList.add('active');
+        if (tab.dataset.tab === 'ecg' && ecgData && !ecgRunning) startECG();
+    });
 });
 
-// Neural Network Setup
-let model;
+// ============================================
+// ECG SIGNAL VISUALIZATION (NeuroKit2 data)
+// ============================================
+const ecgCanvas = document.getElementById('ecgCanvas');
+let ecgCtx = null;
+let ecgData = null;
+let ecgSegment = null;
+let ecgRunning = false;
+let ecgPaused = false;
+let ecgAnimId = null;
+let ecgOffset = 0;
+let ecgLastTime = 0;
 
-async function loadModel() {
+const ECG_WINDOW_SEC = 4;
+
+async function loadECGData() {
     try {
-        predictionNumber.textContent = 'Loading model...';
-        model = await tf.loadLayersModel('/mnist_model/model.json');
-        predictionNumber.textContent = 'Ready!';
-    } catch (error) {
-        console.error('Error loading MNIST model:', error);
-        predictionNumber.textContent = 'Error loading model. Please refresh the page.';
+        const resp = await fetch('/assets/ecg_data.json');
+        ecgData = await resp.json();
+        setECGSegment(0);
+        startECG();
+    } catch (err) {
+        console.error('Failed to load ECG data:', err);
+        const statusEl = document.getElementById('ecgStatus');
+        if (statusEl) statusEl.textContent = 'Data unavailable';
     }
 }
 
-// Preprocess the drawing for prediction
-function preprocessDrawing() {
-    // Create a temporary canvas to resize the drawing
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = 28;
-    tempCanvas.height = 28;
-    const tempCtx = tempCanvas.getContext('2d');
+function setECGSegment(idx) {
+    ecgSegment = ecgData.segments[idx];
+    ecgOffset = 0;
+    ecgLastTime = 0;
+    updateECGStats(0);
+}
 
-    // Fill with white background
-    tempCtx.fillStyle = 'white';
-    tempCtx.fillRect(0, 0, 28, 28);
+function updateECGStats(centerSample) {
+    if (!ecgSegment) return;
+    const bpmEl = document.getElementById('ecgBPM');
+    const rrEl = document.getElementById('ecgRR');
+    const qualEl = document.getElementById('ecgQuality');
+    const statusEl = document.getElementById('ecgStatus');
 
-    // Get the bounding box of the drawing
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = imageData.data;
+    const hr = ecgSegment.heart_rate;
+    const idx = Math.min(Math.floor(centerSample), hr.length - 1);
+    const currentHR = Math.round(hr[Math.max(0, idx)]);
 
-    let minX = canvas.width, minY = canvas.height;
-    let maxX = 0, maxY = 0;
+    if (bpmEl) bpmEl.textContent = currentHR;
 
-    // Find the bounds of the drawing
-    for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-            const idx = (y * canvas.width + x) * 4;
-            if (pixels[idx + 3] > 0) { // If pixel is not transparent
-                minX = Math.min(minX, x);
-                minY = Math.min(minY, y);
-                maxX = Math.max(maxX, x);
-                maxY = Math.max(maxY, y);
+    // Find the nearest R-R interval
+    const peaks = ecgSegment.r_peaks;
+    let nearestRR = '—';
+    for (let i = 1; i < peaks.length; i++) {
+        if (peaks[i] >= centerSample - ecgSegment.sampling_rate * 2) {
+            nearestRR = Math.round((peaks[i] - peaks[i - 1]) / ecgSegment.sampling_rate * 1000);
+            break;
+        }
+    }
+    if (rrEl) rrEl.textContent = nearestRR;
+
+    // Quality
+    const q = ecgSegment.quality;
+    const qIdx = Math.min(Math.floor(centerSample), q.length - 1);
+    const currentQ = q[Math.max(0, qIdx)];
+    if (qualEl) qualEl.textContent = currentQ >= 0.9 ? 'Excellent' : currentQ >= 0.7 ? 'Good' : 'Fair';
+
+    // Status
+    if (statusEl) {
+        if (currentHR < 60) statusEl.textContent = 'Bradycardia';
+        else if (currentHR > 100) statusEl.textContent = 'Tachycardia';
+        else statusEl.textContent = 'Normal Sinus';
+    }
+}
+
+function drawECG(timestamp) {
+    if (!ecgRunning || !ecgCtx || !ecgSegment) return;
+
+    if (!ecgPaused) {
+        if (ecgLastTime === 0) ecgLastTime = timestamp;
+        const dt = (timestamp - ecgLastTime) / 1000;
+        ecgLastTime = timestamp;
+        ecgOffset += dt * ecgSegment.sampling_rate;
+        if (ecgOffset >= ecgSegment.num_samples) ecgOffset = 0;
+    } else {
+        ecgLastTime = timestamp;
+    }
+
+    const sr = ecgSegment.sampling_rate;
+    const windowSamples = ECG_WINDOW_SEC * sr;
+    const startIdx = Math.floor(ecgOffset);
+
+    const dpr = window.devicePixelRatio || 1;
+    const w = ecgCanvas.width / dpr;
+    const h = ecgCanvas.height / dpr;
+
+    const isDark = document.body.classList.contains('dark-mode');
+    const bgColor = isDark ? '#0f1419' : '#ffffff';
+    const gridColor = isDark ? '#1a2030' : '#f0f0f0';
+    const gridMajor = isDark ? '#222a38' : '#e0e0e0';
+    const traceColor = isDark ? '#34d399' : '#1a6b38';
+    const rawColor = isDark ? '#4b5563' : '#ccc';
+    const peakColor = isDark ? '#f87171' : '#dc2626';
+    const pColor = isDark ? '#60a5fa' : '#3b82f6';
+    const tColor = isDark ? '#fbbf24' : '#d97706';
+    const qsColor = isDark ? '#a78bfa' : '#7c3aed';
+    const textColor = isDark ? '#6b7280' : '#999';
+
+    // Background
+    ecgCtx.fillStyle = bgColor;
+    ecgCtx.fillRect(0, 0, w, h);
+
+    // Grid
+    const gridSpacing = 20;
+    ecgCtx.lineWidth = 0.5;
+    for (let x = 0; x < w; x += gridSpacing) {
+        ecgCtx.strokeStyle = (x % (gridSpacing * 5) === 0) ? gridMajor : gridColor;
+        ecgCtx.beginPath();
+        ecgCtx.moveTo(x, 0);
+        ecgCtx.lineTo(x, h);
+        ecgCtx.stroke();
+    }
+    for (let y = 0; y < h; y += gridSpacing) {
+        ecgCtx.strokeStyle = (y % (gridSpacing * 5) === 0) ? gridMajor : gridColor;
+        ecgCtx.beginPath();
+        ecgCtx.moveTo(0, y);
+        ecgCtx.lineTo(w, y);
+        ecgCtx.stroke();
+    }
+
+    const showRaw = document.getElementById('ecgShowRaw')?.checked;
+    const showPeaks = document.getElementById('ecgPeaks')?.checked;
+    const showWaves = document.getElementById('ecgWaves')?.checked;
+
+    const clean = ecgSegment.signal_clean;
+    const raw = ecgSegment.signal_raw;
+    const yCenter = h * 0.5;
+    const yScale = h * 0.32;
+    const xStep = w / windowSamples;
+
+    function getSample(arr, i) {
+        const idx = (startIdx + i) % arr.length;
+        return arr[idx];
+    }
+
+    // Draw raw signal (faded, behind)
+    if (showRaw) {
+        ecgCtx.strokeStyle = rawColor;
+        ecgCtx.lineWidth = 1;
+        ecgCtx.beginPath();
+        for (let i = 0; i < windowSamples; i++) {
+            const x = i * xStep;
+            const y = yCenter - getSample(raw, i) * yScale;
+            if (i === 0) ecgCtx.moveTo(x, y); else ecgCtx.lineTo(x, y);
+        }
+        ecgCtx.stroke();
+    }
+
+    // Draw cleaned signal
+    ecgCtx.strokeStyle = traceColor;
+    ecgCtx.lineWidth = 1.5;
+    ecgCtx.lineJoin = 'round';
+    ecgCtx.beginPath();
+    for (let i = 0; i < windowSamples; i++) {
+        const x = i * xStep;
+        const y = yCenter - getSample(clean, i) * yScale;
+        if (i === 0) ecgCtx.moveTo(x, y); else ecgCtx.lineTo(x, y);
+    }
+    ecgCtx.stroke();
+
+    // Helper: draw markers for a set of peak indices
+    function drawMarkers(peakArray, color, label, yOff) {
+        ecgCtx.fillStyle = color;
+        ecgCtx.font = '9px Inter, sans-serif';
+        ecgCtx.textAlign = 'center';
+        for (const pk of peakArray) {
+            const rel = pk - startIdx;
+            const wrapped = ((rel % clean.length) + clean.length) % clean.length;
+            if (wrapped >= 0 && wrapped < windowSamples) {
+                const x = wrapped * xStep;
+                const y = yCenter - clean[pk % clean.length] * yScale;
+                ecgCtx.beginPath();
+                ecgCtx.arc(x, y + yOff, 3, 0, Math.PI * 2);
+                ecgCtx.fill();
+                if (label) ecgCtx.fillText(label, x, y + yOff - 7);
             }
         }
     }
 
-    // Add padding around the digit
-    const padding = 4;
-    minX = Math.max(0, minX - padding);
-    minY = Math.max(0, minY - padding);
-    maxX = Math.min(canvas.width - 1, maxX + padding);
-    maxY = Math.min(canvas.height - 1, maxY + padding);
+    // R-peaks
+    if (showPeaks) {
+        drawMarkers(ecgSegment.r_peaks, peakColor, null, -6);
 
-    // Calculate the scale to fit the digit
-    const digitWidth = maxX - minX;
-    const digitHeight = maxY - minY;
-    const scale = Math.min(20 / digitWidth, 20 / digitHeight);
-
-    // Calculate the position to center the digit
-    const scaledWidth = digitWidth * scale;
-    const scaledHeight = digitHeight * scale;
-    const xOffset = (28 - scaledWidth) / 2;
-    const yOffset = (28 - scaledHeight) / 2;
-
-    // Draw the scaled and centered digit
-    tempCtx.save();
-    tempCtx.translate(xOffset, yOffset);
-    tempCtx.scale(scale, scale);
-    tempCtx.drawImage(canvas, minX, minY, digitWidth, digitHeight, 0, 0, digitWidth, digitHeight);
-    tempCtx.restore();
-
-    // Get the processed image data
-    const processedImageData = tempCtx.getImageData(0, 0, 28, 28);
-    const processedPixels = processedImageData.data;
-
-    // Convert to grayscale and normalize (MNIST format: 0 = white, 1 = black)
-    const input = new Float32Array(28 * 28);
-    for (let i = 0; i < processedPixels.length; i += 4) {
-        const gray = (processedPixels[i] + processedPixels[i + 1] + processedPixels[i + 2]) / 3;
-        input[i / 4] = 1 - (gray / 255.0); // Invert colors to match MNIST format
+        // R-R intervals between visible peaks
+        ecgCtx.font = '10px Inter, sans-serif';
+        ecgCtx.fillStyle = textColor;
+        ecgCtx.textAlign = 'center';
+        const peaks = ecgSegment.r_peaks;
+        for (let i = 1; i < peaks.length; i++) {
+            const r1 = ((peaks[i - 1] - startIdx) % clean.length + clean.length) % clean.length;
+            const r2 = ((peaks[i] - startIdx) % clean.length + clean.length) % clean.length;
+            if (r1 >= 0 && r1 < windowSamples && r2 > r1 && r2 < windowSamples) {
+                const x1 = r1 * xStep;
+                const x2 = r2 * xStep;
+                const rrMs = Math.round((peaks[i] - peaks[i - 1]) / sr * 1000);
+                ecgCtx.fillText(rrMs + 'ms', (x1 + x2) / 2, 14);
+            }
+        }
     }
 
-    return input;
+    // PQST wave markers
+    if (showWaves) {
+        drawMarkers(ecgSegment.p_peaks, pColor, 'P', -6);
+        drawMarkers(ecgSegment.q_peaks, qsColor, 'Q', 6);
+        drawMarkers(ecgSegment.s_peaks, qsColor, 'S', 6);
+        drawMarkers(ecgSegment.t_peaks, tColor, 'T', -6);
+    }
+
+    // Scale labels
+    ecgCtx.font = '10px Inter, sans-serif';
+    ecgCtx.fillStyle = textColor;
+    ecgCtx.textAlign = 'left';
+    ecgCtx.fillText('25mm/s  10mm/mV', 6, h - 6);
+    ecgCtx.textAlign = 'right';
+    ecgCtx.fillText(ecgSegment.label, w - 6, h - 6);
+
+    // Update stats
+    updateECGStats(startIdx + windowSamples / 2);
+
+    ecgAnimId = requestAnimationFrame(drawECG);
 }
 
-// Make prediction
-async function predict() {
-    if (!model) {
-        predictionNumber.textContent = 'Model not loaded';
-        return;
-    }
-
-    const input = preprocessDrawing();
-    // Reshape the input to match the model's expected shape (28x28x1)
-    const tensor = tf.tensor3d(input, [28, 28, 1]).expandDims(0);
-
-    try {
-        const prediction = await model.predict(tensor).data();
-        const maxIndex = Array.from(prediction).indexOf(Math.max(...prediction));
-        const confidence = (prediction[maxIndex] * 100).toFixed(1);
-
-        // Update the prediction display with confidence
-        predictionNumber.innerHTML = `${maxIndex}`;
-    } catch (error) {
-        console.error('Prediction error:', error);
-        predictionNumber.textContent = 'Error';
-    } finally {
-        tensor.dispose();
-    }
+function resizeECGCanvas() {
+    if (!ecgCanvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = ecgCanvas.getBoundingClientRect();
+    ecgCanvas.width = rect.width * dpr;
+    ecgCanvas.height = rect.height * dpr;
+    ecgCtx = ecgCanvas.getContext('2d');
+    ecgCtx.scale(dpr, dpr);
 }
 
-// Predict button click handler
-predictBtn.addEventListener('click', predict);
+function startECG() {
+    if (ecgRunning) return;
+    resizeECGCanvas();
+    ecgRunning = true;
+    ecgPaused = false;
+    ecgLastTime = 0;
+    ecgAnimId = requestAnimationFrame(drawECG);
+}
 
-// Load the model when the page loads
-loadModel();
+function stopECG() {
+    ecgRunning = false;
+    if (ecgAnimId) cancelAnimationFrame(ecgAnimId);
+}
 
-// Smooth scroll handling
-document.addEventListener('DOMContentLoaded', function () {
-    // Handle all anchor links with hash
+// ECG Controls
+const ecgPlayPause = document.getElementById('ecgPlayPause');
+const ecgResetBtn = document.getElementById('ecgReset');
+const ecgSegmentSelect = document.getElementById('ecgSegment');
+
+if (ecgPlayPause) {
+    ecgPlayPause.addEventListener('click', () => {
+        ecgPaused = !ecgPaused;
+        ecgPlayPause.textContent = ecgPaused ? 'Play' : 'Pause';
+    });
+}
+
+if (ecgResetBtn) {
+    ecgResetBtn.addEventListener('click', () => {
+        ecgOffset = 0;
+        ecgLastTime = 0;
+        ecgPaused = false;
+        if (ecgPlayPause) ecgPlayPause.textContent = 'Pause';
+    });
+}
+
+if (ecgSegmentSelect) {
+    ecgSegmentSelect.addEventListener('change', () => {
+        if (!ecgData) return;
+        setECGSegment(parseInt(ecgSegmentSelect.value));
+        ecgPaused = false;
+        if (ecgPlayPause) ecgPlayPause.textContent = 'Pause';
+    });
+}
+
+window.addEventListener('resize', () => {
+    if (ecgRunning) resizeECGCanvas();
+});
+
+// Load ECG data and start
+if (ecgCanvas) {
+    loadECGData();
+}
+
+// ============================================
+// PLATFORMER EMBED DETECTION
+// ============================================
+(function () {
+    const frame = document.getElementById('platformerFrame');
+    const fallback = document.getElementById('platformerFallback');
+    const fsBtn = document.getElementById('platformerFullscreen');
+    if (!frame) return;
+
+    fetch('/games/platformer/index.html', { method: 'HEAD' })
+        .then(resp => {
+            if (resp.ok) {
+                frame.style.display = 'block';
+                if (fallback) fallback.style.display = 'none';
+                if (fsBtn) fsBtn.style.display = 'inline-block';
+            }
+        })
+        .catch(() => {});
+
+    if (fsBtn) {
+        fsBtn.addEventListener('click', () => {
+            const embed = document.getElementById('platformerEmbed');
+            if (embed.requestFullscreen) embed.requestFullscreen();
+            else if (embed.webkitRequestFullscreen) embed.webkitRequestFullscreen();
+        });
+    }
+})();
+
+// ============================================
+// SMOOTH SCROLL
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
+        anchor.addEventListener('click', (e) => {
             e.preventDefault();
-            const targetId = this.getAttribute('href');
+            const targetId = anchor.getAttribute('href');
             const targetElement = document.querySelector(targetId);
-
             if (targetElement) {
                 const navbarHeight = document.querySelector('.navbar').offsetHeight;
                 const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
-
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
+                window.scrollTo({ top: targetPosition, behavior: 'smooth' });
             }
         });
     });
-}); 
+});
