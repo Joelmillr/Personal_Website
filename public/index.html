@@ -23,7 +23,7 @@
     <meta name="twitter:title" content="Joel Miller — ML Engineer">
     <meta name="twitter:description" content="ML Engineer building safety-critical systems from physiological signals and sensor fusion at ITPS Canada.">
     <meta name="twitter:image" content="https://joelandrewmiller.com/assets/me.jpg">
-    <link rel="stylesheet" href="styles.css?v=6">
+    <link rel="stylesheet" href="styles.css?v=7">
 </head>
 
 <body>
@@ -116,92 +116,110 @@
     <!-- Projects -->
     <section id="projects">
         <h2>Projects</h2>
-        <ul class="project-list">
-            <li class="project-item">
-                <p class="project-title">Helmet-Mounted Display (HMD) VR System for Pilots</p>
-                <p class="project-meta">VR &middot; Computer Vision &middot; Signal Processing &middot; 2024–2025</p>
-                <p class="project-desc">
-                    A VR helmet-mounted display system for pilots with real-time information overlay using computer vision
-                    and sensor fusion. Processes multi-modal flight data (IMU, GPS, attitude sensors) through a Godot-based
-                    3D rendering pipeline with quaternion-based orientation tracking.
-                </p>
-                <p class="project-links">
-                    <a href="/webdisplay" target="_blank" rel="noopener">[Live Demo]</a>
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">AiX Lab Autonomous Driving Simulation Environment</p>
-                <p class="project-meta">Computer Vision &middot; Signal Processing &middot; Data Collection &middot; 2024</p>
-                <p class="project-desc">
-                    Multi-modal simulation environment for autonomous driving research with synchronized data collection
-                    (video, physiological signals, vehicle dynamics) and integrated CV and signal processing pipelines
-                    for ML model training and validation.
-                </p>
-                <p class="project-links">
-                    <a href="https://www.aixlab.ca/home" target="_blank" rel="noopener">[AiX Lab]</a>
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">lmnh — Local Speech-to-Text for macOS</p>
-                <p class="project-meta">Swift &middot; Whisper &middot; macOS &middot; 2025</p>
-                <p class="project-desc">
-                    Open-source menu bar app for macOS providing local speech-to-text and text-to-speech
-                    using Whisper — a privacy-first alternative to cloud-based dictation tools like Wispr and Speechify.
-                </p>
-                <p class="project-links">
-                    <a href="https://github.com/j0elmiller/lmnh" target="_blank" rel="noopener">[Code]</a>
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">Reinforcement Learning for Autonomous Driving</p>
-                <p class="project-meta">Deep RL &middot; Computer Vision &middot; CARLA Simulator &middot; 2023</p>
-                <p class="project-desc">
-                    Deep RL agents (DQN, PPO) for autonomous navigation using CNN-based visual perception, trained on
-                    complex multi-agent driving scenarios in CARLA with varying weather and traffic conditions.
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">RL Prisoner's Dilemma</p>
-                <p class="project-meta">Reinforcement Learning &middot; Game Theory &middot; 2023</p>
-                <p class="project-desc">
-                    Exploring how two RL agents behave when faced with the prisoner's dilemma — investigating
-                    emergent cooperation and defection strategies through repeated gameplay.
-                </p>
-                <p class="project-links">
-                    <a href="https://github.com/Joelmillr/RL-Prisoners-Dilemma" target="_blank" rel="noopener">[Code]</a>
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">Micrograd from Scratch</p>
-                <p class="project-meta">Deep Learning &middot; Autograd &middot; Neural Networks &middot; 2024</p>
-                <p class="project-desc">
-                    A from-scratch implementation of an autograd engine and neural network library,
-                    building backpropagation and gradient descent from first principles.
-                </p>
-                <p class="project-links">
-                    <a href="https://github.com/Joelmillr/micrograd-from-scratch" target="_blank" rel="noopener">[Code]</a>
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">FoodSnap — Nutritional Analysis from Photos</p>
-                <p class="project-meta">Computer Vision &middot; Image Segmentation &middot; Depth Estimation &middot; 2023</p>
-                <p class="project-desc">
-                    ML application that estimates calories and macronutrients from a single meal photo using image
-                    segmentation, monocular depth estimation, and the USDA food database. Capstone project at Western.
-                </p>
-            </li>
-            <li class="project-item">
-                <p class="project-title">Western AI Club — Waste Classification App</p>
-                <p class="project-meta">Transfer Learning &middot; iOS &middot; Project Management &middot; 2022</p>
-                <p class="project-desc">
-                    Led a team of five to build and deploy an iOS image classification app for waste categorization.
-                    Applied transfer learning to achieve 98% accuracy across waste types. Managed milestones and delivery as Project Manager.
-                </p>
-                <p class="project-links">
-                    <a href="https://github.com/Joelmillr/WAI-SmartWaste" target="_blank" rel="noopener">[Code]</a>
-                </p>
-            </li>
-        </ul>
+        <div class="project-grid">
+            <div class="project-card has-thumb">
+                <img src="assets/sim_setup.png" alt="Driving simulator with three monitors and racing seat" class="project-thumb" loading="lazy">
+                <div class="project-body">
+                    <p class="project-title">AiX Lab Autonomous Driving Simulation Environment</p>
+                    <p class="project-meta">Computer Vision &middot; Signal Processing &middot; Data Collection &middot; 2024</p>
+                    <p class="project-desc">
+                        Multi-modal simulation environment for autonomous driving research with synchronized data collection
+                        (video, physiological signals, vehicle dynamics) and integrated CV and signal processing pipelines
+                        for ML model training and validation.
+                    </p>
+                    <p class="project-links">
+                        <a href="https://www.aixlab.ca/home" target="_blank" rel="noopener">[AiX Lab]</a>
+                    </p>
+                </div>
+            </div>
+            <div class="project-card has-thumb">
+                <img src="assets/carla_sim.png" alt="CARLA simulator aerial intersection view" class="project-thumb" loading="lazy">
+                <div class="project-body">
+                    <p class="project-title">Reinforcement Learning for Autonomous Driving</p>
+                    <p class="project-meta">Deep RL &middot; Computer Vision &middot; CARLA Simulator &middot; 2023</p>
+                    <p class="project-desc">
+                        Deep RL agents (DQN, PPO) for autonomous navigation using CNN-based visual perception, trained on
+                        complex multi-agent driving scenarios in CARLA with varying weather and traffic conditions.
+                    </p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-body">
+                    <p class="project-title">Helmet-Mounted Display (HMD) VR System for Pilots</p>
+                    <p class="project-meta">VR &middot; Computer Vision &middot; Signal Processing &middot; 2024–2025</p>
+                    <p class="project-desc">
+                        A VR helmet-mounted display system for pilots with real-time information overlay using computer vision
+                        and sensor fusion. Processes multi-modal flight data (IMU, GPS, attitude sensors) through a Godot-based
+                        3D rendering pipeline with quaternion-based orientation tracking.
+                    </p>
+                    <p class="project-links">
+                        <a href="/webdisplay" target="_blank" rel="noopener">[Live Demo]</a>
+                    </p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-body">
+                    <p class="project-title">lmnh — Local Speech-to-Text for macOS</p>
+                    <p class="project-meta">Swift &middot; Whisper &middot; macOS &middot; 2025</p>
+                    <p class="project-desc">
+                        Open-source menu bar app for macOS providing local speech-to-text and text-to-speech
+                        using Whisper — a privacy-first alternative to cloud-based dictation tools like Wispr and Speechify.
+                    </p>
+                    <p class="project-links">
+                        <a href="https://github.com/j0elmiller/lmnh" target="_blank" rel="noopener">[Code]</a>
+                    </p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-body">
+                    <p class="project-title">FoodSnap — Nutritional Analysis from Photos</p>
+                    <p class="project-meta">Computer Vision &middot; Image Segmentation &middot; Depth Estimation &middot; 2023</p>
+                    <p class="project-desc">
+                        ML application that estimates calories and macronutrients from a single meal photo using image
+                        segmentation, monocular depth estimation, and the USDA food database. Capstone project at Western.
+                    </p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-body">
+                    <p class="project-title">RL Prisoner's Dilemma</p>
+                    <p class="project-meta">Reinforcement Learning &middot; Game Theory &middot; 2023</p>
+                    <p class="project-desc">
+                        Exploring how two RL agents behave when faced with the prisoner's dilemma — investigating
+                        emergent cooperation and defection strategies through repeated gameplay.
+                    </p>
+                    <p class="project-links">
+                        <a href="https://github.com/Joelmillr/RL-Prisoners-Dilemma" target="_blank" rel="noopener">[Code]</a>
+                    </p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-body">
+                    <p class="project-title">Micrograd from Scratch</p>
+                    <p class="project-meta">Deep Learning &middot; Autograd &middot; Neural Networks &middot; 2024</p>
+                    <p class="project-desc">
+                        A from-scratch implementation of an autograd engine and neural network library,
+                        building backpropagation and gradient descent from first principles.
+                    </p>
+                    <p class="project-links">
+                        <a href="https://github.com/Joelmillr/micrograd-from-scratch" target="_blank" rel="noopener">[Code]</a>
+                    </p>
+                </div>
+            </div>
+            <div class="project-card">
+                <div class="project-body">
+                    <p class="project-title">Western AI Club — Waste Classification App</p>
+                    <p class="project-meta">Transfer Learning &middot; iOS &middot; Project Management &middot; 2022</p>
+                    <p class="project-desc">
+                        Led a team of five to build and deploy an iOS image classification app for waste categorization.
+                        Applied transfer learning to achieve 98% accuracy across waste types. Managed milestones and delivery as Project Manager.
+                    </p>
+                    <p class="project-links">
+                        <a href="https://github.com/Joelmillr/WAI-SmartWaste" target="_blank" rel="noopener">[Code]</a>
+                    </p>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Experience -->
@@ -398,7 +416,7 @@
         <p>Website <a href="https://github.com/Joelmillr/Personal_Website">source code</a>.</p>
     </footer>
 
-    <script src="script.js?v=6"></script>
+    <script src="script.js?v=7"></script>
 </body>
 
 </html>

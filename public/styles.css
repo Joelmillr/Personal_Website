@@ -355,12 +355,35 @@ a:hover {
 /* ============================================
    PROJECTS
    ============================================ */
-.project-list {
-    list-style: none;
+.project-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
 }
 
-.project-item {
-    margin-bottom: 1.5rem;
+.project-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.project-card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.project-thumb {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--border);
+}
+
+.project-body {
+    padding: 1rem 1.25rem 1.25rem;
 }
 
 .project-title {
@@ -374,14 +397,14 @@ a:hover {
 .project-meta {
     font-size: 0.8125rem;
     color: var(--text-muted);
-    margin-bottom: 0.35rem;
+    margin-bottom: 0.5rem;
 }
 
 .project-desc {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--text-secondary);
-    line-height: 1.7;
-    margin-bottom: 0.35rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
 }
 
 .project-links a {
@@ -389,6 +412,12 @@ a:hover {
     color: var(--link);
     margin-right: 0.75rem;
     font-weight: 500;
+}
+
+@media (max-width: 640px) {
+    .project-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ============================================
