@@ -40,17 +40,14 @@ def generate_segment(duration, heart_rate, noise_level, label, seed):
     t = np.arange(n_samples) / SAMPLING_RATE
 
     # Powerline interference (60 Hz mains hum)
-    powerline = 0.04 * noise_level * np.sin(2 * np.pi * 60 * t)
-
-    # Baseline wander (slow drift, ~0.3 Hz)
-    wander = 0.08 * noise_level * np.sin(2 * np.pi * 0.3 * t + rng.uniform(0, 2 * np.pi))
-    wander += 0.04 * noise_level * np.sin(2 * np.pi * 0.1 * t + rng.uniform(0, 2 * np.pi))
+    powerline = 0.06 * noise_level * np.sin(2 * np.pi * 60 * t)
 
     # High-frequency EMG / electrode noise
-    hf_noise = noise_level * 0.04 * rng.standard_normal(n_samples)
+    hf_noise = noise_level * 0.05 * rng.standard_normal(n_samples)
 
-    # Combine into noisy raw signal
-    ecg_raw = ecg_base + powerline + wander + hf_noise
+    # Combine into noisy raw signal (no baseline wander — it causes the
+    # bandpass filter to shift the clean signal away from the raw)
+    ecg_raw = ecg_base + powerline + hf_noise
 
     # 3. Process the noisy signal — NeuroKit2 will bandpass-filter, remove
     #    baseline wander, and detect peaks on the cleaned version.
