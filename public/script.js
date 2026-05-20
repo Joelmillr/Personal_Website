@@ -165,7 +165,7 @@ function drawECG(timestamp) {
     const gridColor = isDark ? '#1a2030' : '#f0f0f0';
     const gridMajor = isDark ? '#222a38' : '#e0e0e0';
     const traceColor = isDark ? '#34d399' : '#1a6b38';
-    const rawColor = isDark ? '#4b5563' : '#ccc';
+    const rawColor = isDark ? '#6b7280' : '#9ca3af';
     const peakColor = isDark ? '#f87171' : '#dc2626';
     const pColor = isDark ? '#60a5fa' : '#3b82f6';
     const tColor = isDark ? '#fbbf24' : '#d97706';

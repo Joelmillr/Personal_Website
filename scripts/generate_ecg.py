@@ -15,17 +15,45 @@ SAMPLING_RATE = 250
 OUTPUT_PATH = "../public/assets/ecg_data.json"
 
 
-def generate_segment(duration, heart_rate, noise, label, seed):
-    """Generate and process one ECG segment."""
-    ecg_raw = nk.ecg_simulate(
+def generate_segment(duration, heart_rate, noise_level, label, seed):
+    """Generate and process one ECG segment.
+
+    Strategy: simulate a clean ECG, then add realistic noise artifacts
+    (powerline interference, baseline wander, high-frequency EMG noise)
+    to create the 'raw' signal.  NeuroKit2's ecg_process() then cleans
+    it up, producing a visibly improved 'clean' trace.
+    """
+    rng = np.random.default_rng(seed)
+
+    # 1. Generate base ECG with minimal simulator noise
+    ecg_base = nk.ecg_simulate(
         duration=duration,
         sampling_rate=SAMPLING_RATE,
         heart_rate=heart_rate,
-        noise=noise,
+        noise=0.005,          # very small — just enough for natural variation
         method="ecgsyn",
         random_state=seed,
     )
 
+    # 2. Build realistic noise to add on top
+    n_samples = len(ecg_base)
+    t = np.arange(n_samples) / SAMPLING_RATE
+
+    # Powerline interference (60 Hz mains hum)
+    powerline = 0.12 * noise_level * np.sin(2 * np.pi * 60 * t)
+
+    # Baseline wander (slow drift, ~0.3 Hz)
+    wander = 0.25 * noise_level * np.sin(2 * np.pi * 0.3 * t + rng.uniform(0, 2 * np.pi))
+    wander += 0.12 * noise_level * np.sin(2 * np.pi * 0.1 * t + rng.uniform(0, 2 * np.pi))
+
+    # High-frequency EMG / electrode noise
+    hf_noise = noise_level * 0.15 * rng.standard_normal(n_samples)
+
+    # Combine into noisy raw signal
+    ecg_raw = ecg_base + powerline + wander + hf_noise
+
+    # 3. Process the noisy signal — NeuroKit2 will bandpass-filter, remove
+    #    baseline wander, and detect peaks on the cleaned version.
     signals, info = nk.ecg_process(ecg_raw, sampling_rate=SAMPLING_RATE)
 
     r_peaks = info["ECG_R_Peaks"].tolist()
@@ -74,9 +102,9 @@ def generate_segment(duration, heart_rate, noise, label, seed):
 
 def main():
     segments = [
-        generate_segment(20, 68, 0.01, "Normal Sinus Rhythm", seed=42),
-        generate_segment(20, 95, 0.02, "Elevated Heart Rate", seed=123),
-        generate_segment(20, 55, 0.01, "Resting / Bradycardia", seed=77),
+        generate_segment(20, 68, 1.0, "Normal Sinus Rhythm", seed=42),
+        generate_segment(20, 95, 1.5, "Elevated Heart Rate", seed=123),
+        generate_segment(20, 55, 1.0, "Resting / Bradycardia", seed=77),
     ]
 
     output = {
