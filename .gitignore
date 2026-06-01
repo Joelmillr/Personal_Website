@@ -13,3 +13,6 @@ package-lock.json
 # Preprocessed data files (too large for GitHub, generated during build on Render)
 flight-display/merged_data.json
 flight-display/merged_data.json.gz
+
+# Runtime-generated leaderboard data
+leaderboard/scores.json

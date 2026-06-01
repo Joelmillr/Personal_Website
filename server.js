@@ -95,6 +95,15 @@ let webdisplayBackend = null;
 // Create HTTP server first (needed for Socket.IO)
 const server = http.createServer(app);
 
+// Leaderboard API (independent of webdisplay)
+try {
+    const { createLeaderboardRouter } = require('./leaderboard/leaderboardServer');
+    app.use('/api/leaderboard', createLeaderboardRouter());
+    console.log('✓ Leaderboard API mounted at /api/leaderboard');
+} catch (lbError) {
+    console.warn('Leaderboard module not available:', lbError.message);
+}
+
 // Integrate webdisplay backend BEFORE static file middleware and logging
 console.log('========================================');
 console.log('LOADING WEBDISPLAY BACKEND...');

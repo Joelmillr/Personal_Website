@@ -56,11 +56,12 @@
       }
 
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/platformer.loader.js";
+      var cacheBust = "?v=2";
+      var loaderUrl = buildUrl + "/platformer.loader.js" + cacheBust;
       var config = {
-        dataUrl: buildUrl + "/platformer.data",
-        frameworkUrl: buildUrl + "/platformer.framework.js",
-        codeUrl: buildUrl + "/platformer.wasm",
+        dataUrl: buildUrl + "/platformer.data" + cacheBust,
+        frameworkUrl: buildUrl + "/platformer.framework.js" + cacheBust,
+        codeUrl: buildUrl + "/platformer.wasm" + cacheBust,
         streamingAssetsUrl: "StreamingAssets",
         companyName: "DefaultCompany",
         productName: "App-03-COMPSCI-4482",
@@ -104,13 +105,14 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           progressBarFull.style.width = 100 * progress + "%";
-        }).then((unityInstance) => {
+        }).then((instance) => {
+          window.unityInstance = instance; // expose for .jslib SendMessage
           loadingBar.style.display = "none";
           fullscreenButton.onclick = () => {
-            unityInstance.SetFullscreen(1);
+            instance.SetFullscreen(1);
           };
         }).catch((message) => {
-          alert(message);
+          console.error('Unity load failed:', message);
         });
       };
       document.body.appendChild(script);
