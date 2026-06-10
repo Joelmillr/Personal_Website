@@ -189,7 +189,8 @@ app.use((req, res, next) => {
                     res.set('Content-Type', 'application/wasm');
                     res.set('Cache-Control', 'public, max-age=31536000, immutable');
                 } else if (ext === '.pck' || ext === '.png' || ext === '.jpg' ||
-                    ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2') {
+                    ext === '.jpeg' || ext === '.ico' || ext === '.woff' || ext === '.woff2' ||
+                    ext === '.webp' || ext === '.mp4') {
                     res.set('Cache-Control', 'public, max-age=31536000, immutable');
                 } else if (ext === '.js' || ext === '.css') {
                     res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
