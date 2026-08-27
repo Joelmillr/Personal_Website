@@ -1,0 +1,20 @@
+# Keep the image lean: exclude VCS, local env, logs, and junk
+.git
+.gitignore
+*.md
+!README.md
+.hermes-installs.md
+AGENTS.md
+.claude/
+.DS_Store
+node_modules
+yarn-error.log
+*.log
+.env
+.env.*
+!.env.example
+flight-display/.env
+leaderboard/scores.json
+flight-display/merged_data.json
+flight-display/merged_data.json.gz
+camera_frames_flipped/

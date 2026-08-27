@@ -1,0 +1,49 @@
+# ============================================
+# personal-website — docker-compose.yml
+# Local hosting target: site + (later) cloudflared tunnel.
+# restart: unless-stopped gives restart-on-boot alongside a
+# docker.service enabled at boot.
+# ============================================
+services:
+  website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: personal-website:latest
+    container_name: personal-website
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Flight-display HMD vars — values currently only in Render's dashboard.
+      # Ask Joel for these before cutover; harmless defaults in the meantime.
+      - YOUTUBE_VIDEO_ID=${YOUTUBE_VIDEO_ID:-}
+      - YOUTUBE_START_OFFSET=${YOUTUBE_START_OFFSET:-0.0}
+      - WS_URL=${WS_URL:-}
+      - DOWNSAMPLE_FACTOR=${DOWNSAMPLE_FACTOR:-50}
+    # Container-level healthcheck (also defined in Dockerfile)
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1);return r.json()}).then(d=>{if(d.status!=='OK')process.exit(1);console.log('healthy')}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    volumes:
+      # Leaderboard scores persist across container restarts
+      - leaderboard_data:/app/leaderboard
+
+  # Placeholder for Phase 2 (Cloudflare Tunnel). Fill in tunnel token,
+  # uncomment, and it joins the same network. Do NOT cut over DNS yet.
+  # cloudflared:
+  #   image: cloudflare/cloudflared:latest
+  #   container_name: cloudflared
+  #   restart: unless-stopped
+  #   command: tunnel run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+  #   depends_on:
+  #     - website
+  #   network_mode: host
+
+volumes:
+  leaderboard_data:
