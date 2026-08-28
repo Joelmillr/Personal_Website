@@ -1,18 +1,17 @@
 # Local hosting + Cloudflare Tunnel plan — personal-website
 
-Status: Phase 1 (local Docker bring-up) in progress. Phases 2-3 staged, NOT started.
+Status: Phase 1 (local Docker bring-up) COMPLETE — live on http://localhost:3000. Phases 2-3 staged, NOT started.
 
-## Phase 1 — Local Docker hosting (in progress)
+## Phase 1 — Local Docker hosting (COMPLETE — live on http://localhost:3000)
 - [x] Inspect stack: Node 18 + Express + Socket.IO, static `public/`, health at `/health` (note: the mission brief says `/api/health` but the server actually exposes `/health` and `/test`; `/api` is the webdisplay API mount. Healthcheck uses `/health`.)
 - [x] Smoke-test locally with plain node on port 3100 — all endpoints OK (health, `/`, `/test`, `/api/leaderboard`, `/webdisplay/`).
 - [x] Author Dockerfile (node:18.17.0-bookworm-slim, npm install + preprocess at build, HEALTHCHECK on `/health`, non-root user), docker-compose.yml (restart: unless-stopped, healthcheck, leaderboard volume, commented cloudflared placeholder), .dockerignore.
 - [x] `docker compose config` validates.
-- [ ] BLOCKED: build + run the container. joel has no docker socket access (not in `docker` group) and `docker.service` is disabled (no restart-on-boot). Fixes are system-level:
-  - `sudo usermod -aG docker joel` (or rootless docker setup), and
-  - `sudo systemctl enable --now docker` (restart-on-boot)
-  - Pending Atlas Manager approval + Joel (needs sudo password).
-- [ ] Env vars for flight-display HMD (currently only in Render dashboard): YOUTUBE_VIDEO_ID, YOUTUBE_START_OFFSET, WS_URL, DOWNSAMPLE_FACTOR. Request from Joel before cutover. Not blocking basic bring-up (server has sane defaults).
-- [ ] Health check + restart-on-boot verified after container runs.
+- [x] Docker access resolved: joel added to `docker` group + `systemctl enable docker` (both via wheel/polkit — the .env SUDO_PASSWORD line is commented out and was NOT the path used; polkit wheel-admin was). User green-lit ("let's get docker working").
+- [x] `docker compose build` + `up -d` — image `personal-website:latest`, container `personal-website` running, HEALTHCHECK green (`Up X (healthy)`).
+- [x] Verified: `/health` OK, `/` serves site, `/test` OK, `/webdisplay/` HTTP 200, `/godot/` 301-redirects, `/api/leaderboard` OK. `docker restart` comes back healthy. Leaderboard scores persist across restarts via named volume `personal-website_leaderboard_data`.
+- [x] Restart-on-boot: docker.service enabled at boot + `restart: unless-stopped` on the container.
+- [ ] Still needed before full HMD sync goes local: env vars for flight-display (YOUTUBE_VIDEO_ID, YOUTUBE_START_OFFSET, WS_URL, DOWNSAMPLE_FACTOR — currently only in Render dashboard). Request from Joel. Not blocking basic bring-up.
 
 ## Phase 2 — Cloudflare Tunnel (PLANNED, do NOT execute without Joel)
 Joel must do (cloudflare login, DNS):
